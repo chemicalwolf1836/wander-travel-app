@@ -1,13 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps'
 import type { Destination } from '@/types'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
-// world-atlas uses ISO 3166-1 numeric IDs on each feature.
-// Map alpha-2 codes so we can highlight the active country.
 const ISO_NUMERIC: Record<string, string> = {
   AF:'4',AL:'8',DZ:'12',AO:'24',AR:'32',AM:'51',AU:'36',AT:'40',AZ:'31',
   BS:'44',BH:'48',BD:'50',BB:'52',BY:'112',BE:'56',BZ:'84',BJ:'204',BT:'64',
@@ -44,6 +43,8 @@ interface WorldMapProps {
 const RING_COUNT = 22
 
 export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: WorldMapProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
   const activeCountryCode = destinations[activeIndex]?.countryCode ?? ''
   const highlightedId = ISO_NUMERIC[activeCountryCode] ?? ''
 
@@ -76,12 +77,9 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
         style={{ width: '100%', height: '100%' }}
       >
         <defs>
-          {/* Base halftone — vivid in both modes */}
           <pattern id="halftone" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
             <circle cx="3" cy="3" r="1.5" fill="var(--color-text)" opacity="0.65" />
           </pattern>
-
-          {/* Highlighted country — uses the live accent color */}
           <pattern id="halftone-country" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
             <circle cx="3" cy="3" r="1.9" fill="var(--color-accent)" opacity="0.9" />
           </pattern>
@@ -91,8 +89,9 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
           <Geographies geography={GEO_URL}>
             {({ geographies }: { geographies: Array<{ rsmKey: string; id?: string }> }) =>
               geographies.map((geo) => {
-                const isHighlighted = highlightedId !== '' && geo.id === highlightedId
-                const fill = isHighlighted ? 'url(#halftone-country)' : 'url(#halftone)'
+                const fill = highlightedId && geo.id === highlightedId
+                  ? 'url(#halftone-country)'
+                  : 'url(#halftone)'
                 return (
                   <Geography
                     key={geo.rsmKey}
@@ -109,7 +108,19 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
           </Geographies>
 
           {destinations.map((dest, i) => {
-            const isActive = activeIndex === i
+            const isActive  = activeIndex === i
+            const isHovered = hoveredIndex === i
+            const accent    = dest.culturalTheme.accent
+
+            // Label color: accent when active, high-contrast text on hover, subtle otherwise
+            const labelColor = isActive
+              ? accent
+              : isHovered
+                ? 'var(--color-text)'
+                : 'var(--color-subtle)'
+
+            const dotRadius = isActive ? 5 : isHovered ? 4.5 : 3.5
+
             return (
               <Marker
                 key={dest.city}
@@ -117,39 +128,68 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                 onClick={() => onPinClick(i)}
                 style={{ cursor: 'pointer' }}
               >
+                {/* Invisible large hit area for hover detection */}
+                <circle
+                  r={20}
+                  fill="transparent"
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                />
+
+                {/* Pulse ring */}
                 <motion.circle
                   r={0}
                   fill="none"
-                  stroke={dest.culturalTheme.accent}
+                  stroke={accent}
                   strokeWidth={1.5}
                   animate={isActive ? { r: [6, 18], opacity: [0.7, 0] } : { r: 0, opacity: 0 }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
                 />
+
+                {/* Dot */}
                 <motion.circle
-                  r={isActive ? 5 : 3.5}
-                  fill={dest.culturalTheme.accent}
-                  animate={{ r: isActive ? 5 : 3.5 }}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${dest.culturalTheme.accent})`,
-                  }}
+                  r={dotRadius}
+                  fill={accent}
+                  animate={{ r: dotRadius }}
+                  transition={{ duration: 0.2 }}
+                  style={{ filter: `drop-shadow(0 0 ${isActive ? 8 : isHovered ? 5 : 3}px ${accent})` }}
                 />
+
+                {/* City label */}
                 <motion.text
                   textAnchor="middle"
-                  y={isActive ? -12 : -10}
+                  y={-14}
                   style={{
                     fontFamily: 'var(--font-dm-sans), sans-serif',
-                    fontSize: isActive ? '8px' : '7px',
-                    fill: isActive ? dest.culturalTheme.accent : 'var(--color-subtle)',
-                    fontWeight: isActive ? 600 : 400,
+                    fontSize: isActive || isHovered ? '9px' : '7px',
+                    fill: labelColor,
+                    fontWeight: isActive || isHovered ? 700 : 400,
                     pointerEvents: 'none',
-                    letterSpacing: '0.03em',
+                    letterSpacing: '0.04em',
                   }}
+                  animate={{ fill: labelColor }}
+                  transition={{ duration: 0.2 }}
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.15 + 0.4 }}
                 >
                   {dest.flagEmoji} {dest.city}
+                </motion.text>
+
+                {/* Country name — appears on hover or when active */}
+                <motion.text
+                  textAnchor="middle"
+                  y={-4}
+                  style={{
+                    fontFamily: 'var(--font-dm-sans), sans-serif',
+                    fontSize: '6px',
+                    fill: isActive ? accent : 'var(--color-subtle)',
+                    pointerEvents: 'none',
+                    letterSpacing: '0.06em',
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isActive || isHovered ? 1 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {dest.country.toUpperCase()}
                 </motion.text>
               </Marker>
             )
