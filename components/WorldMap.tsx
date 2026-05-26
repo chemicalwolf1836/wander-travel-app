@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps'
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps'
 import type { Destination } from '@/types'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
@@ -71,80 +71,71 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
           </pattern>
         </defs>
 
-        <Geographies geography={GEO_URL}>
-          {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
-            geographies.map((geo) => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                style={{
-                  default: {
-                    fill: 'url(#halftone)',
-                    stroke: 'none',
-                    outline: 'none',
-                  },
-                  hover: {
-                    fill: 'url(#halftone)',
-                    stroke: 'none',
-                    outline: 'none',
-                  },
-                  pressed: { outline: 'none' },
-                }}
-              />
-            ))
-          }
-        </Geographies>
+        <ZoomableGroup zoom={1} minZoom={0.6} maxZoom={5}>
+          <Geographies geography={GEO_URL}>
+            {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
+              geographies.map((geo) => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  style={{
+                    default: { fill: 'url(#halftone)', stroke: 'none', outline: 'none' },
+                    hover: { fill: 'url(#halftone)', stroke: 'none', outline: 'none' },
+                    pressed: { outline: 'none' },
+                  }}
+                />
+              ))
+            }
+          </Geographies>
 
-        {/* Destination markers */}
-        {destinations.map((dest, i) => {
-          const isActive = activeIndex === i
-          return (
-            <Marker
-              key={dest.city}
-              coordinates={[dest.coordinates.lng, dest.coordinates.lat]}
-              onClick={() => onPinClick(i)}
-              style={{ cursor: 'pointer' }}
-            >
-              {/* Outer pulse ring */}
-              <motion.circle
-                r={0}
-                fill="none"
-                stroke={dest.culturalTheme.accent}
-                strokeWidth={1.5}
-                animate={isActive ? { r: [6, 18], opacity: [0.6, 0] } : { r: 0, opacity: 0 }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
-              />
-              {/* Inner glow */}
-              <motion.circle
-                r={isActive ? 5 : 3.5}
-                fill={dest.culturalTheme.accent}
-                animate={{ r: isActive ? 5 : 3.5 }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${dest.culturalTheme.accent})`,
-                }}
-              />
-              {/* City label */}
-              <motion.text
-                textAnchor="middle"
-                y={isActive ? -12 : -10}
-                style={{
-                  fontFamily: 'var(--font-dm-sans), sans-serif',
-                  fontSize: isActive ? '8px' : '7px',
-                  fill: isActive ? dest.culturalTheme.accent : 'var(--color-subtle)',
-                  fontWeight: isActive ? 600 : 400,
-                  pointerEvents: 'none',
-                  letterSpacing: '0.03em',
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.15 + 0.4 }}
+          {/* Destination markers */}
+          {destinations.map((dest, i) => {
+            const isActive = activeIndex === i
+            return (
+              <Marker
+                key={dest.city}
+                coordinates={[dest.coordinates.lng, dest.coordinates.lat]}
+                onClick={() => onPinClick(i)}
+                style={{ cursor: 'pointer' }}
               >
-                {dest.flagEmoji} {dest.city}
-              </motion.text>
-            </Marker>
-          )
-        })}
+                <motion.circle
+                  r={0}
+                  fill="none"
+                  stroke={dest.culturalTheme.accent}
+                  strokeWidth={1.5}
+                  animate={isActive ? { r: [6, 18], opacity: [0.6, 0] } : { r: 0, opacity: 0 }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+                />
+                <motion.circle
+                  r={isActive ? 5 : 3.5}
+                  fill={dest.culturalTheme.accent}
+                  animate={{ r: isActive ? 5 : 3.5 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${dest.culturalTheme.accent})`,
+                  }}
+                />
+                <motion.text
+                  textAnchor="middle"
+                  y={isActive ? -12 : -10}
+                  style={{
+                    fontFamily: 'var(--font-dm-sans), sans-serif',
+                    fontSize: isActive ? '8px' : '7px',
+                    fill: isActive ? dest.culturalTheme.accent : 'var(--color-subtle)',
+                    fontWeight: isActive ? 600 : 400,
+                    pointerEvents: 'none',
+                    letterSpacing: '0.03em',
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.15 + 0.4 }}
+                >
+                  {dest.flagEmoji} {dest.city}
+                </motion.text>
+              </Marker>
+            )
+          })}
+        </ZoomableGroup>
       </ComposableMap>
     </motion.div>
   )

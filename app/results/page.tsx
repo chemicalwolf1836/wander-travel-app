@@ -3,9 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RefreshCw, MapPin, ArrowLeft } from 'lucide-react'
+import { RefreshCw, X, ArrowRight, Utensils, Landmark } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
-import { DestinationCard } from '@/components/DestinationCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
@@ -18,27 +17,20 @@ function clearAccent() {
   document.documentElement.style.removeProperty('--color-accent')
 }
 
-type View = 'map' | 'cards'
-
 export default function ResultsPage() {
   const router = useRouter()
   const [destinations, setDestinations] = useState<Destination[]>([])
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [view, setView] = useState<View>('map')
   const [mapExiting, setMapExiting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     const raw = sessionStorage.getItem('wander_destinations')
-    if (!raw) {
-      router.push('/discover')
-      return
-    }
+    if (!raw) { router.push('/discover'); return }
     try {
-      const parsed: Destination[] = JSON.parse(raw)
-      setDestinations(parsed)
+      setDestinations(JSON.parse(raw) as Destination[])
       setLoading(false)
     } catch {
       setError(true)
@@ -46,23 +38,19 @@ export default function ResultsPage() {
     }
   }, [router])
 
-  // Shift accent color to match active destination
+  // Shift accent to match selected (or first) destination
   useEffect(() => {
-    const dest = destinations[activeIndex]
+    const i = selectedIndex ?? 0
+    const dest = destinations[i]
     if (dest) applyAccent(dest.culturalTheme.accent)
     return () => { clearAccent() }
-  }, [activeIndex, destinations])
+  }, [selectedIndex, destinations])
 
   const handlePinClick = useCallback((index: number) => {
-    setActiveIndex(index)
-    setView('cards')
+    setSelectedIndex(index)
   }, [])
 
-  const handleCardHover = useCallback((index: number) => {
-    setActiveIndex(index)
-  }, [])
-
-  const handleCardClick = useCallback((destination: Destination) => {
+  const handleNavigate = useCallback((destination: Destination) => {
     setMapExiting(true)
     sessionStorage.setItem(`wander_dest_${destination.city}`, JSON.stringify(destination))
     setTimeout(() => {
@@ -72,148 +60,193 @@ export default function ResultsPage() {
 
   if (error) {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center gap-4"
-        style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
-      >
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4"
+        style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
         <p className="text-4xl">😕</p>
         <p className="text-lg">Something went wrong finding your destinations.</p>
-        <button
-          onClick={() => router.push('/discover')}
+        <button onClick={() => router.push('/discover')}
           className="flex items-center gap-2 px-6 py-3 rounded-full text-sm"
-          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
-        >
-          <RefreshCw size={14} />
-          Try Again
+          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+          <RefreshCw size={14} /> Try Again
         </button>
       </div>
     )
   }
 
+  const selected = selectedIndex !== null ? destinations[selectedIndex] : null
+
   return (
-    <div
-      className="min-h-screen overflow-hidden"
-      style={{ backgroundColor: 'var(--color-bg)', transition: 'background-color 600ms ease-in-out' }}
-    >
+    <div className="h-screen overflow-hidden"
+      style={{ backgroundColor: 'var(--color-bg)', transition: 'background-color 600ms ease-in-out' }}>
       <Navbar onSettingsOpen={() => setSettingsOpen(!settingsOpen)} />
       <CustomizationPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      <AnimatePresence mode="wait">
-        {view === 'map' ? (
-          /* ── MAP VIEW ── */
+      {/* Map — fills everything below navbar */}
+      <div className="absolute inset-0 top-16">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-full gap-6">
+            <div className="w-48 h-48 rounded-full border border-dashed animate-pulse opacity-20"
+              style={{ borderColor: 'var(--color-accent)' }} />
+            <p className="text-xs tracking-widest uppercase animate-pulse"
+              style={{ color: 'var(--color-subtle)' }}>
+              Finding your perfect destinations...
+            </p>
+          </div>
+        ) : (
+          <WorldMap
+            destinations={destinations}
+            activeIndex={selectedIndex ?? 0}
+            onPinClick={handlePinClick}
+            exiting={mapExiting}
+          />
+        )}
+
+        {/* Hint when nothing is selected */}
+        {!loading && selectedIndex === null && (
+          <motion.p
+            className="absolute bottom-8 left-0 right-0 text-center text-xs tracking-widest uppercase"
+            style={{ color: 'var(--color-subtle)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4 }}
+          >
+            Tap a pin to explore
+          </motion.p>
+        )}
+      </div>
+
+      {/* Dim backdrop when card is open */}
+      <AnimatePresence>
+        {selected && (
           <motion.div
-            key="map"
-            className="fixed inset-0 pt-16 flex flex-col"
+            className="absolute inset-0 top-16 z-10"
+            style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setSelectedIndex(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Destination card — slides up from bottom */}
+      <AnimatePresence>
+        {selected && (
+          <motion.div
+            key={selected.city}
+            className="absolute bottom-0 left-0 right-0 z-20 rounded-t-3xl overflow-hidden"
+            style={{
+              backgroundColor: 'var(--color-card-bg)',
+              borderTop: `1px solid color-mix(in srgb, ${selected.culturalTheme.accent} 30%, transparent)`,
+              maxHeight: '62vh',
+            }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 280 }}
           >
-            {/* Map fills the space */}
-            <div className="flex-1 relative">
-              {loading ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
-                  <div
-                    className="w-48 h-48 rounded-full border border-dashed animate-pulse opacity-20"
-                    style={{ borderColor: 'var(--color-accent)' }}
-                  />
-                  <p
-                    className="text-xs tracking-widest uppercase animate-pulse"
-                    style={{ color: 'var(--color-subtle)' }}
-                  >
-                    Finding your perfect destinations...
-                  </p>
-                </div>
-              ) : (
-                <WorldMap
-                  destinations={destinations}
-                  activeIndex={activeIndex}
-                  onPinClick={handlePinClick}
-                  exiting={mapExiting}
-                />
-              )}
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full opacity-30"
+                style={{ backgroundColor: 'var(--color-text)' }} />
             </div>
 
-            {/* CTA at bottom — fades in after map loads */}
-            {!loading && (
-              <motion.div
-                className="flex-shrink-0 flex flex-col items-center gap-4 pb-10"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.6 }}
-              >
-                <p
-                  className="text-xs tracking-widest uppercase"
-                  style={{ color: 'var(--color-subtle)' }}
-                >
-                  {destinations.length} destinations found
-                </p>
+            <div className="overflow-y-auto px-6 pb-8" style={{ maxHeight: 'calc(62vh - 24px)' }}>
+              {/* Header row */}
+              <div className="flex items-start justify-between mb-4 mt-1">
+                <div className="flex-1 pr-4">
+                  <h2
+                    className="text-4xl md:text-5xl leading-tight mb-1"
+                    style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+                  >
+                    {selected.emoji} {selected.city}
+                  </h2>
+                  <p className="text-sm" style={{ color: 'var(--color-subtle)' }}>
+                    {selected.flagEmoji} {selected.country}
+                  </p>
+                </div>
                 <button
-                  onClick={() => setView('cards')}
-                  className="flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
-                  style={{
-                    backgroundColor: 'var(--color-accent)',
-                    color: 'var(--color-bg)',
-                    boxShadow: `0 0 32px color-mix(in srgb, var(--color-accent) 45%, transparent)`,
-                  }}
+                  onClick={() => setSelectedIndex(null)}
+                  className="flex-shrink-0 mt-1 p-2 rounded-full hover:opacity-60 transition-opacity"
+                  style={{ color: 'var(--color-text)' }}
                 >
-                  <MapPin size={14} />
-                  Explore your destinations
+                  <X size={18} />
                 </button>
-              </motion.div>
-            )}
-          </motion.div>
-        ) : (
-          /* ── CARDS VIEW ── */
-          <motion.div
-            key="cards"
-            className="min-h-screen pt-16"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-          >
-            {/* Back to map */}
-            <motion.div
-              className="flex justify-center pt-10 pb-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <button
-                onClick={() => setView('map')}
-                className="flex items-center gap-2 text-xs tracking-widest uppercase opacity-50 hover:opacity-100 transition-opacity"
-                style={{ color: 'var(--color-text)' }}
-              >
-                <ArrowLeft size={12} />
-                Back to map
-              </button>
-            </motion.div>
-
-            <p
-              className="text-center text-xs tracking-widest uppercase pb-8"
-              style={{ color: 'var(--color-subtle)' }}
-            >
-              Your destinations
-            </p>
-
-            <div className="px-6 pb-24 max-w-5xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {destinations.map((dest, i) => (
-                  <DestinationCard
-                    key={dest.city}
-                    destination={dest}
-                    index={i}
-                    isActive={activeIndex === i}
-                    onHover={() => handleCardHover(i)}
-                    onClick={() => handleCardClick(dest)}
-                  />
-                ))}
               </div>
+
+              {/* Tagline */}
+              <p className="text-sm italic mb-4 leading-relaxed"
+                style={{ color: selected.culturalTheme.accent }}>
+                {selected.tagline}
+              </p>
+
+              {/* Description */}
+              <p className="text-sm leading-relaxed mb-5 line-clamp-2"
+                style={{ color: 'var(--color-text)', opacity: 0.8 }}>
+                {selected.description}
+              </p>
+
+              {/* Quick info row */}
+              <div className="flex gap-4 mb-6">
+                {selected.attractions.length > 0 && (
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Landmark size={11} style={{ color: selected.culturalTheme.accent }} />
+                      <span className="text-xs tracking-widest uppercase"
+                        style={{ color: selected.culturalTheme.accent }}>See</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {selected.attractions.slice(0, 3).map((a) => (
+                        <span key={a} className="text-xs" style={{ color: 'var(--color-text)', opacity: 0.75 }}>
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.food.dishes.length > 0 && (
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Utensils size={11} style={{ color: selected.culturalTheme.accent }} />
+                      <span className="text-xs tracking-widest uppercase"
+                        style={{ color: selected.culturalTheme.accent }}>Eat</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {selected.food.dishes.slice(0, 3).map((d) => (
+                        <span key={d} className="text-xs" style={{ color: 'var(--color-text)', opacity: 0.75 }}>
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => handleNavigate(selected)}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  backgroundColor: selected.culturalTheme.accent,
+                  color: selected.culturalTheme.background,
+                  boxShadow: `0 0 28px color-mix(in srgb, ${selected.culturalTheme.accent} 40%, transparent)`,
+                }}
+              >
+                Explore {selected.city}
+                <ArrowRight size={15} />
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Loading skeleton cards (only during initial load) */}
+      {loading && (
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-6 grid grid-cols-1 gap-3">
+          {[0, 1].map((i) => <SkeletonCard key={i} />)}
+        </div>
+      )}
     </div>
   )
 }
