@@ -146,12 +146,12 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                   style={{
                     fontFamily: 'var(--font-dm-sans), sans-serif',
                     fontSize: isActive ? '13px' : '11px',
-                    fill: isActive || isHovered ? accent : 'var(--color-text)',
+                    fill: accent,
                     fontWeight: isActive || isHovered ? 700 : 500,
                     cursor: 'pointer',
                     letterSpacing: '0.04em',
                   }}
-                  animate={{ opacity: isActive || isHovered ? 1 : 0.8 }}
+                  animate={{ opacity: isActive || isHovered ? 1 : 0.65 }}
                   initial={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   onMouseEnter={() => setHoveredIndex(i)}
