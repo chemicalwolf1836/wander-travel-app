@@ -139,26 +139,28 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                   onMouseLeave={() => setHoveredIndex(null)}
                 />
 
-                {/* City label — hover target */}
+                {/* City label */}
                 <motion.text
                   textAnchor="middle"
                   y={isActive ? -12 : -10}
                   style={{
                     fontFamily: 'var(--font-dm-sans), sans-serif',
-                    fontSize: isActive ? '8px' : '7px',
-                    fill: isActive || isHovered ? accent : 'var(--color-subtle)',
-                    fontWeight: isActive || isHovered ? 600 : 400,
+                    fontSize: isActive ? '9px' : '8px',
+                    fill: isActive || isHovered ? accent : 'var(--color-text)',
+                    fontWeight: isActive || isHovered ? 700 : 500,
                     cursor: 'pointer',
-                    letterSpacing: '0.03em',
-                    filter: isHovered
-                      ? `drop-shadow(0 0 6px ${accent}) drop-shadow(0 0 3px ${accent})`
+                    letterSpacing: '0.04em',
+                  }}
+                  animate={{
+                    opacity: isActive || isHovered ? 1 : 0.8,
+                    filter: isActive || isHovered
+                      ? `drop-shadow(0 0 8px ${accent}) drop-shadow(0 0 4px ${accent})`
                       : 'none',
                   }}
+                  initial={{ opacity: 0, filter: 'none' }}
+                  transition={{ duration: 0.2 }}
                   onMouseEnter={() => setHoveredIndex(i)}
                   onMouseLeave={() => setHoveredIndex(null)}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.15 + 0.4 }}
                 >
                   {dest.flagEmoji} {dest.city}
                 </motion.text>
