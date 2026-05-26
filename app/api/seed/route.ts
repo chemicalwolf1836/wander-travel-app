@@ -84,40 +84,49 @@ export async function GET(request: Request) {
   else counts.countries = countryRows.length
   console.log(`[seed] Countries done: ${counts.countries}`)
 
-  // Step 2: Seed cities from GeoDB (top 500 by population)
+  // Step 2: Seed cities from GeoDB - paginate to get up to 100 cities (10 per request, free tier)
   const geoKey = process.env.GEODB_API_KEY
   if (geoKey) {
-    console.log('[seed] Fetching cities from GeoDB...')
-    const geoRes = await fetch(
-      'https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=10&minPopulation=500000&sort=-population&types=CITY',
-      { headers: { 'X-RapidAPI-Key': geoKey, 'X-RapidAPI-Host': 'wft-geo-db.p.rapidapi.com' } }
-    )
-    const geoData: GeoDBResponse = await geoRes.json()
+    console.log('[seed] Fetching cities from GeoDB (paginated)...')
 
-    if (geoData.data?.length) {
-      // Resolve country IDs
-      const { data: dbCountries } = await supabase.from('countries').select('id, code')
-      const codeToId: Record<string, string> = {}
-      for (const c of dbCountries ?? []) codeToId[c.code] = c.id
+    const { data: dbCountries } = await supabase.from('countries').select('id, code')
+    const codeToId: Record<string, string> = {}
+    for (const c of dbCountries ?? []) codeToId[c.code] = c.id
 
-      const cityRows = geoData.data
-        .filter((c) => codeToId[c.countryCode])
-        .map((c) => ({
-          name: c.city,
-          country_id: codeToId[c.countryCode],
-          country_code: c.countryCode,
-          latitude: c.latitude,
-          longitude: c.longitude,
-          population: c.population,
-        }))
+    const allCities: GeoDBCity[] = []
+    const pages = 10 // 10 pages x 10 results = 100 cities
 
-      const { error: citiesError } = await supabase
-        .from('cities')
-        .upsert(cityRows, { onConflict: 'name,country_code', ignoreDuplicates: true })
-
-      if (citiesError) console.error('[seed] Cities error:', citiesError.message)
-      else counts.cities = cityRows.length
+    for (let page = 0; page < pages; page++) {
+      const offset = page * 10
+      const geoRes = await fetch(
+        `https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=10&offset=${offset}&minPopulation=500000&sort=-population&types=CITY`,
+        { headers: { 'X-RapidAPI-Key': geoKey, 'X-RapidAPI-Host': 'wft-geo-db.p.rapidapi.com' } }
+      )
+      const geoData: GeoDBResponse = await geoRes.json()
+      if (!geoData.data?.length) break
+      allCities.push(...geoData.data)
+      console.log(`[seed] GeoDB page ${page + 1}: ${allCities.length} cities so far`)
+      // Respect free tier rate limit - 1 request per second
+      await new Promise((r) => setTimeout(r, 1100))
     }
+
+    const cityRows = allCities
+      .filter((c) => codeToId[c.countryCode])
+      .map((c) => ({
+        name: c.city,
+        country_id: codeToId[c.countryCode],
+        country_code: c.countryCode,
+        latitude: c.latitude,
+        longitude: c.longitude,
+        population: c.population,
+      }))
+
+    const { error: citiesError } = await supabase
+      .from('cities')
+      .upsert(cityRows, { onConflict: 'name,country_code', ignoreDuplicates: true })
+
+    if (citiesError) console.error('[seed] Cities error:', citiesError.message)
+    else counts.cities = cityRows.length
     console.log(`[seed] Cities done: ${counts.cities}`)
   } else {
     console.log('[seed] Skipping GeoDB (no API key)')
