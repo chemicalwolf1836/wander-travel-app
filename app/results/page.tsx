@@ -86,12 +86,12 @@ export default function ResultsPage() {
 
       <CustomizationPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      <div className="pt-16">
-        {/* Globe section */}
-        <div className="h-[45vh] w-full flex items-center justify-center">
+      {/* Globe - full viewport height, sticky so cards scroll over it */}
+      <div className="relative" style={{ height: 'calc(100vh - 64px)' }}>
+        <div className="sticky top-16 w-full h-[calc(100vh-64px)] flex flex-col items-center justify-center">
           {loading ? (
             <div
-              className="w-64 h-64 rounded-full border-2 border-dashed animate-pulse opacity-20"
+              className="w-64 h-64 rounded-full border border-dashed animate-pulse opacity-20"
               style={{ borderColor: 'var(--color-accent)' }}
             />
           ) : (
@@ -102,25 +102,54 @@ export default function ResultsPage() {
               exiting={globeExiting}
             />
           )}
-        </div>
 
-        {/* Loading message */}
-        {loading && (
-          <p
-            className="text-center text-sm animate-pulse py-4"
+          {loading && (
+            <p
+              className="absolute bottom-12 text-xs tracking-widest uppercase animate-pulse"
+              style={{ color: 'var(--color-subtle)' }}
+            >
+              Finding your perfect destinations...
+            </p>
+          )}
+
+          {/* Scroll hint */}
+          {!loading && (
+            <motion.p
+              className="absolute bottom-8 text-xs tracking-widest uppercase"
+              style={{ color: 'var(--color-subtle)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+            >
+              Scroll to explore
+            </motion.p>
+          )}
+        </div>
+      </div>
+
+      {/* Cards - scroll in from below the globe */}
+      <div
+        className="relative z-10 px-6 pb-24"
+        style={{ backgroundColor: 'var(--color-bg)', transition: 'background-color 600ms ease-in-out' }}
+      >
+        {/* Section label */}
+        {!loading && (
+          <motion.p
+            className="text-center text-xs tracking-widest uppercase pt-16 pb-10"
             style={{ color: 'var(--color-subtle)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
-            Finding your perfect destinations...
-          </p>
+            Your destinations
+          </motion.p>
         )}
 
-        {/* Destination cards */}
-        <div className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-3 gap-5"
           >
             {loading
               ? [0, 1, 2].map((i) => <SkeletonCard key={i} />)

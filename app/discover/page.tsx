@@ -65,12 +65,20 @@ export default function DiscoverPage() {
 
     if (data.ready && data.preferences) {
       setSearching(true)
-      // Fetch destination suggestions then hand off to results page
       const suggestRes = await fetch('/api/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ preferences: data.preferences }),
       })
+
+      if (!suggestRes.ok) {
+        const errText = await suggestRes.text()
+        console.error('[discover] suggest failed:', suggestRes.status, errText)
+        setSearching(false)
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'I had trouble finding destinations. Let\'s try again - tell me more about your trip.' }])
+        return
+      }
+
       const suggestions: unknown = await suggestRes.json()
       sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
       router.push('/results')
