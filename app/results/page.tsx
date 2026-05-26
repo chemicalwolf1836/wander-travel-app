@@ -9,7 +9,7 @@ import { DestinationCard } from '@/components/DestinationCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
-import { applyTheme } from '@/lib/applyTheme'
+import { applyTheme, resetTheme } from '@/lib/applyTheme'
 import type { Destination } from '@/types'
 
 export default function ResultsPage() {
@@ -44,6 +44,11 @@ export default function ResultsPage() {
       applyTheme(dest.culturalTheme, dest.weather?.condition)
     }
   }, [activeIndex, destinations])
+
+  // Reset inline theme styles on unmount so dark/light mode works on other pages
+  useEffect(() => {
+    return () => { resetTheme() }
+  }, [])
 
   const handleCardHover = useCallback((index: number) => {
     setActiveIndex(index)

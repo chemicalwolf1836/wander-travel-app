@@ -98,8 +98,15 @@ No markdown. No extra text. Only the JSON array.`
     messages: [{ role: 'user', content: systemPrompt }],
   })
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '[]'
-  const suggestions: Destination[] = JSON.parse(text)
+  const raw = response.content[0].type === 'text' ? response.content[0].text : '[]'
+  const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
+
+  let suggestions: Destination[]
+  try {
+    suggestions = JSON.parse(text)
+  } catch {
+    return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
+  }
 
   // Step 4: Cache result
   await supabase
