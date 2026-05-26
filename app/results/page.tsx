@@ -7,7 +7,7 @@ import { RefreshCw } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { DestinationCard } from '@/components/DestinationCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
-import { GlobeView } from '@/components/GlobeView'
+import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
 import { applyTheme } from '@/lib/applyTheme'
 import type { Destination } from '@/types'
@@ -95,7 +95,7 @@ export default function ResultsPage() {
               style={{ borderColor: 'var(--color-accent)' }}
             />
           ) : (
-            <GlobeView
+            <WorldMap
               destinations={destinations}
               activeIndex={activeIndex}
               onPinClick={handleCardHover}
