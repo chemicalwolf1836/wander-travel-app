@@ -2,22 +2,23 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { RefreshCw } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { RefreshCw, MapPin, ArrowLeft } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { DestinationCard } from '@/components/DestinationCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
-// applyTheme sets inline styles that override dark/light mode, so on results
-// we only tint the accent color and let CSS classes control bg/text.
+import type { Destination } from '@/types'
+
 function applyAccent(accent: string) {
   document.documentElement.style.setProperty('--color-accent', accent)
 }
 function clearAccent() {
   document.documentElement.style.removeProperty('--color-accent')
 }
-import type { Destination } from '@/types'
+
+type View = 'map' | 'cards'
 
 export default function ResultsPage() {
   const router = useRouter()
@@ -25,7 +26,8 @@ export default function ResultsPage() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [globeExiting, setGlobeExiting] = useState(false)
+  const [view, setView] = useState<View>('map')
+  const [mapExiting, setMapExiting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
@@ -44,19 +46,24 @@ export default function ResultsPage() {
     }
   }, [router])
 
-  // Shift the accent color to match the active destination
+  // Shift accent color to match active destination
   useEffect(() => {
     const dest = destinations[activeIndex]
     if (dest) applyAccent(dest.culturalTheme.accent)
     return () => { clearAccent() }
   }, [activeIndex, destinations])
 
+  const handlePinClick = useCallback((index: number) => {
+    setActiveIndex(index)
+    setView('cards')
+  }, [])
+
   const handleCardHover = useCallback((index: number) => {
     setActiveIndex(index)
   }, [])
 
   const handleCardClick = useCallback((destination: Destination) => {
-    setGlobeExiting(true)
+    setMapExiting(true)
     sessionStorage.setItem(`wander_dest_${destination.city}`, JSON.stringify(destination))
     setTimeout(() => {
       router.push(`/destination/${encodeURIComponent(destination.city)}`)
@@ -85,81 +92,114 @@ export default function ResultsPage() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen overflow-hidden"
       style={{ backgroundColor: 'var(--color-bg)', transition: 'background-color 600ms ease-in-out' }}
     >
       <Navbar onSettingsOpen={() => setSettingsOpen(!settingsOpen)} />
-
       <CustomizationPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      {/* Globe - full viewport height, sticky so cards scroll over it */}
-      <div className="relative" style={{ height: 'calc(100vh - 64px)' }}>
-        <div className="sticky top-16 w-full h-[calc(100vh-64px)] flex flex-col items-center justify-center">
-          {loading ? (
-            <div
-              className="w-64 h-64 rounded-full border border-dashed animate-pulse opacity-20"
-              style={{ borderColor: 'var(--color-accent)' }}
-            />
-          ) : (
-            <WorldMap
-              destinations={destinations}
-              activeIndex={activeIndex}
-              onPinClick={handleCardHover}
-              exiting={globeExiting}
-            />
-          )}
+      <AnimatePresence mode="wait">
+        {view === 'map' ? (
+          /* ── MAP VIEW ── */
+          <motion.div
+            key="map"
+            className="fixed inset-0 pt-16 flex flex-col"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+          >
+            {/* Map fills the space */}
+            <div className="flex-1 relative">
+              {loading ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+                  <div
+                    className="w-48 h-48 rounded-full border border-dashed animate-pulse opacity-20"
+                    style={{ borderColor: 'var(--color-accent)' }}
+                  />
+                  <p
+                    className="text-xs tracking-widest uppercase animate-pulse"
+                    style={{ color: 'var(--color-subtle)' }}
+                  >
+                    Finding your perfect destinations...
+                  </p>
+                </div>
+              ) : (
+                <WorldMap
+                  destinations={destinations}
+                  activeIndex={activeIndex}
+                  onPinClick={handlePinClick}
+                  exiting={mapExiting}
+                />
+              )}
+            </div>
 
-          {loading && (
-            <p
-              className="absolute bottom-12 text-xs tracking-widest uppercase animate-pulse"
-              style={{ color: 'var(--color-subtle)' }}
-            >
-              Finding your perfect destinations...
-            </p>
-          )}
-
-          {/* Scroll hint */}
-          {!loading && (
-            <motion.p
-              className="absolute bottom-8 text-xs tracking-widest uppercase"
-              style={{ color: 'var(--color-subtle)' }}
+            {/* CTA at bottom — fades in after map loads */}
+            {!loading && (
+              <motion.div
+                className="flex-shrink-0 flex flex-col items-center gap-4 pb-10"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2, duration: 0.6 }}
+              >
+                <p
+                  className="text-xs tracking-widest uppercase"
+                  style={{ color: 'var(--color-subtle)' }}
+                >
+                  {destinations.length} destinations found
+                </p>
+                <button
+                  onClick={() => setView('cards')}
+                  className="flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: 'var(--color-accent)',
+                    color: 'var(--color-bg)',
+                    boxShadow: `0 0 32px color-mix(in srgb, var(--color-accent) 45%, transparent)`,
+                  }}
+                >
+                  <MapPin size={14} />
+                  Explore your destinations
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        ) : (
+          /* ── CARDS VIEW ── */
+          <motion.div
+            key="cards"
+            className="min-h-screen pt-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+          >
+            {/* Back to map */}
+            <motion.div
+              className="flex justify-center pt-10 pb-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.5 }}
+              transition={{ delay: 0.3 }}
             >
-              Scroll to explore
-            </motion.p>
-          )}
-        </div>
-      </div>
+              <button
+                onClick={() => setView('map')}
+                className="flex items-center gap-2 text-xs tracking-widest uppercase opacity-50 hover:opacity-100 transition-opacity"
+                style={{ color: 'var(--color-text)' }}
+              >
+                <ArrowLeft size={12} />
+                Back to map
+              </button>
+            </motion.div>
 
-      {/* Cards - scroll in from below the globe */}
-      <div
-        className="relative z-10 px-6 pb-24"
-        style={{ backgroundColor: 'var(--color-bg)', transition: 'background-color 600ms ease-in-out' }}
-      >
-        {/* Section label */}
-        {!loading && (
-          <motion.p
-            className="text-center text-xs tracking-widest uppercase pt-16 pb-10"
-            style={{ color: 'var(--color-subtle)' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Your destinations
-          </motion.p>
-        )}
+            <p
+              className="text-center text-xs tracking-widest uppercase pb-8"
+              style={{ color: 'var(--color-subtle)' }}
+            >
+              Your destinations
+            </p>
 
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-5"
-          >
-            {loading
-              ? [0, 1, 2].map((i) => <SkeletonCard key={i} />)
-              : destinations.map((dest, i) => (
+            <div className="px-6 pb-24 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {destinations.map((dest, i) => (
                   <DestinationCard
                     key={dest.city}
                     destination={dest}
@@ -169,9 +209,11 @@ export default function ResultsPage() {
                     onClick={() => handleCardClick(dest)}
                   />
                 ))}
+              </div>
+            </div>
           </motion.div>
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
