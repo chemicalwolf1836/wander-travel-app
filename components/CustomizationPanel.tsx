@@ -59,6 +59,9 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
     } else if (next.fontSize === 'default') {
       document.documentElement.style.fontSize = ''
     }
+
+    // Notify other components of the settings change
+    window.dispatchEvent(new CustomEvent('wander-settings', { detail: updated }))
   }
 
   if (!mounted) return null

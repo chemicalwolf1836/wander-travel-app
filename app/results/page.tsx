@@ -7,7 +7,16 @@ import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Star, Calendar } 
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
-import type { Destination } from '@/types'
+import type { Destination, AppSettings } from '@/types'
+
+const STORAGE_KEY = 'wander_settings'
+function loadSettings(): Pick<AppSettings, 'mapStyle' | 'cardLayout'> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw) as AppSettings
+  } catch { /* ignore */ }
+  return { mapStyle: 'default', cardLayout: 'grid' }
+}
 
 function applyAccent(accent: string) {
   document.documentElement.style.setProperty('--color-accent', accent)
@@ -47,6 +56,8 @@ export default function ResultsPage() {
   const [error, setError] = useState(false)
   const [navigating, setNavigating] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [mapStyle, setMapStyle] = useState<AppSettings['mapStyle']>('default')
+  const [cardLayout, setCardLayout] = useState<AppSettings['cardLayout']>('grid')
 
   useEffect(() => {
     const raw = sessionStorage.getItem('wander_destinations')
@@ -59,6 +70,20 @@ export default function ResultsPage() {
       setLoading(false)
     }
   }, [router])
+
+  // Read settings on mount and listen for live changes from CustomizationPanel
+  useEffect(() => {
+    const s = loadSettings()
+    setMapStyle(s.mapStyle)
+    setCardLayout(s.cardLayout)
+    const handler = (e: Event) => {
+      const s = (e as CustomEvent<AppSettings>).detail
+      setMapStyle(s.mapStyle)
+      setCardLayout(s.cardLayout)
+    }
+    window.addEventListener('wander-settings', handler)
+    return () => window.removeEventListener('wander-settings', handler)
+  }, [])
 
   useEffect(() => {
     const dest = destinations[selectedIndex]
@@ -119,7 +144,7 @@ export default function ResultsPage() {
             ) : (
               <>
                 <WorldMap destinations={destinations} activeIndex={selectedIndex}
-                  onPinClick={handlePinClick} exiting={navigating} />
+                  onPinClick={handlePinClick} exiting={navigating} mapStyle={mapStyle} />
                 <motion.p className="absolute bottom-8 left-0 right-0 text-center text-xs tracking-widest uppercase"
                   style={{ color: 'var(--color-subtle)' }}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
@@ -131,17 +156,43 @@ export default function ResultsPage() {
         )}
 
         {/* ── CARD VIEW ── */}
-        {view === 'card' && selected && (
-          <motion.div key={`card-${selected.city}`}
-            className="absolute inset-0 top-16 flex flex-col items-center justify-center px-4 md:px-8"
+        {view === 'card' && (
+          <motion.div key="card-view"
+            className="absolute inset-0 top-16 flex flex-col items-center justify-center px-4 md:px-8 overflow-y-auto py-6"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.45, ease: 'easeInOut' }}>
 
-            <DestinationDetailCard
-              destination={selected}
-              onExplore={() => handleNavigate(selected)}
-              onBack={() => setView('map')}
-            />
+            {cardLayout === 'list' && selected ? (
+              /* Single card (list mode) */
+              <DestinationDetailCard
+                destination={selected}
+                onExplore={() => handleNavigate(selected)}
+                onBack={() => setView('map')}
+              />
+            ) : (
+              /* Grid mode — all 3 cards */
+              <div className="w-full" style={{ maxWidth: 1200 }}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                  {destinations.map((dest, i) => (
+                    <DestinationDetailCard
+                      key={dest.city}
+                      destination={dest}
+                      compact
+                      isActive={selectedIndex === i}
+                      onExplore={() => handleNavigate(dest)}
+                      onBack={() => {}}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <button onClick={() => setView('map')}
+                    className="flex items-center gap-2 text-xs tracking-widest uppercase opacity-50 hover:opacity-100 transition-opacity"
+                    style={{ color: 'var(--color-text)' }}>
+                    <ArrowLeft size={12} /> Back to map
+                  </button>
+                </div>
+              </div>
+            )}
 
           </motion.div>
         )}
@@ -156,18 +207,23 @@ function DestinationDetailCard({
   destination: dest,
   onExplore,
   onBack,
+  compact = false,
+  isActive = false,
 }: {
   destination: Destination
   onExplore: () => void
   onBack: () => void
+  compact?: boolean
+  isActive?: boolean
 }) {
   const imageUrl = useWikiImage(dest.city)
   const theme = dest.culturalTheme
+  const heroHeight = compact ? 160 : 260
 
   return (
     <motion.div
       className="w-full flex flex-col"
-      style={{ maxWidth: 1100, maxHeight: 'calc(100vh - 96px)' }}
+      style={compact ? undefined : { maxWidth: 1100, maxHeight: 'calc(100vh - 96px)' }}
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
@@ -176,148 +232,130 @@ function DestinationDetailCard({
         className="rounded-3xl overflow-hidden flex flex-col"
         style={{
           backgroundColor: 'var(--color-card-bg)',
-          border: `1px solid color-mix(in srgb, ${theme.accent} 22%, transparent)`,
-          boxShadow: `0 0 80px color-mix(in srgb, ${theme.accent} 18%, transparent), 0 32px 64px rgba(0,0,0,0.3)`,
-          maxHeight: 'calc(100vh - 136px)',
+          border: `1px solid color-mix(in srgb, ${theme.accent} ${isActive ? 50 : 22}%, transparent)`,
+          boxShadow: isActive
+            ? `0 0 48px color-mix(in srgb, ${theme.accent} 30%, transparent), 0 16px 40px rgba(0,0,0,0.3)`
+            : `0 0 80px color-mix(in srgb, ${theme.accent} 18%, transparent), 0 32px 64px rgba(0,0,0,0.3)`,
+          maxHeight: compact ? undefined : 'calc(100vh - 136px)',
         }}
       >
         {/* Hero image */}
-        <div className="relative flex-shrink-0 overflow-hidden" style={{ height: 260 }}>
+        <div className="relative flex-shrink-0 overflow-hidden" style={{ height: heroHeight }}>
           {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={dest.city}
-              className="w-full h-full object-cover"
-              style={{ filter: 'brightness(0.72)' }}
-            />
+            <img src={imageUrl} alt={dest.city} className="w-full h-full object-cover"
+              style={{ filter: 'brightness(0.72)' }} />
           ) : (
             <div className="w-full h-full"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
           )}
-          {/* Gradient overlay */}
           <div className="absolute inset-0"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)' }} />
-
-          {/* City name over image */}
-          <div className="absolute bottom-0 left-0 right-0 px-8 pb-6">
-            <h2 className="text-5xl md:text-6xl leading-none text-white mb-1"
+          <div className={`absolute bottom-0 left-0 right-0 pb-5 ${compact ? 'px-5' : 'px-8 pb-6'}`}>
+            <h2 className={`leading-none text-white mb-1 ${compact ? 'text-3xl' : 'text-5xl md:text-6xl'}`}
               style={{ fontFamily: 'var(--font-playfair)' }}>
               {dest.emoji} {dest.city}
             </h2>
-            <p className="text-sm text-white/70">{dest.flagEmoji} {dest.country} · {dest.region}</p>
+            <p className="text-xs text-white/70">{dest.flagEmoji} {dest.country} · {dest.region}</p>
           </div>
         </div>
 
-        {/* Body — scrollable */}
-        <div className="overflow-y-auto flex-1 px-8 py-6">
-
-          {/* Tagline */}
-          <p className="text-base italic leading-relaxed mb-4"
+        {/* Body */}
+        <div className={`overflow-y-auto flex-1 ${compact ? 'px-5 py-4' : 'px-8 py-6'}`}>
+          <p className={`italic leading-relaxed mb-3 ${compact ? 'text-sm' : 'text-base'}`}
             style={{ color: theme.accent }}>
             {dest.tagline}
           </p>
 
-          {/* Description */}
-          <p className="text-sm leading-relaxed mb-6"
+          <p className="text-xs leading-relaxed mb-4 line-clamp-2"
             style={{ color: 'var(--color-text)', opacity: 0.82 }}>
             {dest.description}
           </p>
 
-          {/* 3-column info grid */}
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          {!compact && (
+            <>
+              <div className="grid grid-cols-3 gap-6 mb-6">
+                {dest.attractions.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <Landmark size={12} style={{ color: theme.accent }} />
+                      <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>See</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {dest.attractions.slice(0, 4).map((a) => (
+                        <span key={a} className="text-xs leading-snug"
+                          style={{ color: 'var(--color-text)', opacity: 0.75 }}>{a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {dest.food.dishes.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <Utensils size={12} style={{ color: theme.accent }} />
+                      <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Eat</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {dest.food.dishes.slice(0, 4).map((d) => (
+                        <span key={d} className="text-xs leading-snug"
+                          style={{ color: 'var(--color-text)', opacity: 0.75 }}>{d}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {dest.bestFor.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <Star size={12} style={{ color: theme.accent }} />
+                      <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Best for</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {dest.bestFor.slice(0, 4).map((b) => (
+                        <span key={b} className="text-xs leading-snug"
+                          style={{ color: 'var(--color-text)', opacity: 0.75 }}>{b}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            {/* See */}
-            {dest.attractions.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Landmark size={12} style={{ color: theme.accent }} />
-                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>See</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {dest.attractions.slice(0, 4).map((a) => (
-                    <span key={a} className="text-xs leading-snug"
-                      style={{ color: 'var(--color-text)', opacity: 0.75 }}>{a}</span>
+              {dest.bestSeasons && dest.bestSeasons.length > 0 && (
+                <div className="flex items-center gap-2 mb-6 flex-wrap">
+                  <Calendar size={12} style={{ color: theme.accent }} />
+                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Best time</span>
+                  {dest.bestSeasons.map((s) => (
+                    <span key={s} className="text-xs px-2.5 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${theme.accent} 15%, transparent)`,
+                        color: theme.accent,
+                        border: `1px solid color-mix(in srgb, ${theme.accent} 30%, transparent)`,
+                      }}>{s}</span>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Eat */}
-            {dest.food.dishes.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Utensils size={12} style={{ color: theme.accent }} />
-                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Eat</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {dest.food.dishes.slice(0, 4).map((d) => (
-                    <span key={d} className="text-xs leading-snug"
-                      style={{ color: 'var(--color-text)', opacity: 0.75 }}>{d}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Best for */}
-            {dest.bestFor.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Star size={12} style={{ color: theme.accent }} />
-                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Best for</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {dest.bestFor.slice(0, 4).map((b) => (
-                    <span key={b} className="text-xs leading-snug"
-                      style={{ color: 'var(--color-text)', opacity: 0.75 }}>{b}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Best seasons row */}
-          {dest.bestSeasons && dest.bestSeasons.length > 0 && (
-            <div className="flex items-center gap-2 mb-6 flex-wrap">
-              <Calendar size={12} style={{ color: theme.accent }} />
-              <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Best time</span>
-              {dest.bestSeasons.map((s) => (
-                <span key={s} className="text-xs px-2.5 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: `color-mix(in srgb, ${theme.accent} 15%, transparent)`,
-                    color: theme.accent,
-                    border: `1px solid color-mix(in srgb, ${theme.accent} 30%, transparent)`,
-                  }}>
-                  {s}
-                </span>
-              ))}
-            </div>
+              )}
+            </>
           )}
 
-          {/* CTA */}
-          <button
-            onClick={onExplore}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-medium transition-all hover:scale-[1.015] active:scale-[0.99]"
+          <button onClick={onExplore}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-all hover:scale-[1.015] active:scale-[0.99]"
             style={{
+              padding: compact ? '10px 0' : '14px 0',
               backgroundColor: theme.accent,
               color: theme.background,
               boxShadow: `0 0 28px color-mix(in srgb, ${theme.accent} 40%, transparent)`,
-            }}
-          >
-            Explore {dest.city}
-            <ArrowRight size={15} />
+            }}>
+            Explore {dest.city} <ArrowRight size={14} />
           </button>
         </div>
       </div>
 
-      {/* Back link below card */}
-      <motion.button
-        onClick={onBack}
-        className="mt-4 flex items-center gap-2 text-xs tracking-widest uppercase self-center transition-opacity"
-        style={{ color: 'var(--color-text)', opacity: 0.45 }}
-        whileHover={{ opacity: 1 }}
-      >
-        <ArrowLeft size={12} /> Back to map
-      </motion.button>
+      {!compact && (
+        <motion.button onClick={onBack}
+          className="mt-4 flex items-center gap-2 text-xs tracking-widest uppercase self-center transition-opacity"
+          style={{ color: 'var(--color-text)', opacity: 0.45 }}
+          whileHover={{ opacity: 1 }}>
+          <ArrowLeft size={12} /> Back to map
+        </motion.button>
+      )}
     </motion.div>
   )
 }

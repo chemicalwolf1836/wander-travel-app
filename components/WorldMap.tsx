@@ -38,12 +38,18 @@ interface WorldMapProps {
   activeIndex: number
   onPinClick: (index: number) => void
   exiting?: boolean
+  mapStyle?: 'default' | 'satellite' | 'minimal'
 }
 
 const RING_COUNT = 22
 
-export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: WorldMapProps) {
+export function WorldMap({ destinations, activeIndex, onPinClick, exiting, mapStyle = 'default' }: WorldMapProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
+  // Dot config per map style
+  const dotRadius   = mapStyle === 'minimal' ? 1.0 : mapStyle === 'satellite' ? 2.1 : 1.5
+  const dotOpacity  = mapStyle === 'minimal' ? 0.4 : mapStyle === 'satellite' ? 0.85 : 0.65
+  const showRings   = mapStyle !== 'minimal'
 
   const highlightIndex = hoveredIndex ?? activeIndex
   const highlightedId = ISO_NUMERIC[destinations[highlightIndex]?.countryCode ?? ''] ?? ''
@@ -55,21 +61,23 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
       animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
     >
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <svg width="100%" height="100%">
-          {Array.from({ length: RING_COUNT }).map((_, i) => (
-            <circle
-              key={i}
-              cx="54%" cy="44%"
-              r={`${(i + 1) * 4.2}%`}
-              fill="none"
-              stroke="var(--color-text)"
-              strokeWidth="0.4"
-              opacity={0.07 - i * 0.002}
-            />
-          ))}
-        </svg>
-      </div>
+      {showRings && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <svg width="100%" height="100%">
+            {Array.from({ length: RING_COUNT }).map((_, i) => (
+              <circle
+                key={i}
+                cx="54%" cy="44%"
+                r={`${(i + 1) * 4.2}%`}
+                fill="none"
+                stroke="var(--color-text)"
+                strokeWidth="0.4"
+                opacity={0.07 - i * 0.002}
+              />
+            ))}
+          </svg>
+        </div>
+      )}
 
       <ComposableMap
         projectionConfig={{ scale: 155, center: [0, 10] }}
@@ -77,10 +85,10 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
       >
         <defs>
           <pattern id="halftone" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
-            <circle cx="3" cy="3" r="1.5" fill="var(--color-text)" opacity="0.65" />
+            <circle cx="3" cy="3" r={dotRadius} fill="var(--color-text)" opacity={dotOpacity} />
           </pattern>
           <pattern id="halftone-country" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
-            <circle cx="3" cy="3" r="1.9" fill="var(--color-accent)" opacity="0.9" />
+            <circle cx="3" cy="3" r={dotRadius + 0.4} fill="var(--color-accent)" opacity="0.9" />
           </pattern>
         </defs>
 
