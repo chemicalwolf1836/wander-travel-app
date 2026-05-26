@@ -142,10 +142,10 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                 {/* City label */}
                 <motion.text
                   textAnchor="middle"
-                  y={isActive ? -12 : -10}
+                  y={isActive ? -16 : -13}
                   style={{
                     fontFamily: 'var(--font-dm-sans), sans-serif',
-                    fontSize: isActive ? '9px' : '8px',
+                    fontSize: isActive ? '13px' : '11px',
                     fill: isActive || isHovered ? accent : 'var(--color-text)',
                     fontWeight: isActive || isHovered ? 700 : 500,
                     cursor: 'pointer',
