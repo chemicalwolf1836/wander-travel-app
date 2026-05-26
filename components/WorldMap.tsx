@@ -55,7 +55,6 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
       animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
     >
-      {/* Concentric rings overlay */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <svg width="100%" height="100%">
           {Array.from({ length: RING_COUNT }).map((_, i) => (
@@ -112,15 +111,6 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
             const isHovered = hoveredIndex === i
             const accent    = dest.culturalTheme.accent
 
-            // Label color: accent when active, high-contrast text on hover, subtle otherwise
-            const labelColor = isActive
-              ? accent
-              : isHovered
-                ? 'var(--color-text)'
-                : 'var(--color-subtle)'
-
-            const dotRadius = isActive ? 5 : isHovered ? 4.5 : 3.5
-
             return (
               <Marker
                 key={dest.city}
@@ -128,14 +118,6 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                 onClick={() => onPinClick(i)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Invisible large hit area for hover detection */}
-                <circle
-                  r={20}
-                  fill="transparent"
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                />
-
                 {/* Pulse ring */}
                 <motion.circle
                   r={0}
@@ -146,48 +128,53 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
                 />
 
-                {/* Dot */}
+                {/* Dot — unchanged from original */}
                 <motion.circle
-                  r={dotRadius}
+                  r={isActive ? 5 : 3.5}
                   fill={accent}
-                  animate={{ r: dotRadius }}
-                  transition={{ duration: 0.2 }}
-                  style={{ filter: `drop-shadow(0 0 ${isActive ? 8 : isHovered ? 5 : 3}px ${accent})` }}
+                  animate={{ r: isActive ? 5 : 3.5 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${accent})` }}
                 />
 
-                {/* City label */}
+                {/* City label — hover target */}
                 <motion.text
                   textAnchor="middle"
-                  y={-14}
+                  y={isActive ? -12 : -10}
                   style={{
                     fontFamily: 'var(--font-dm-sans), sans-serif',
-                    fontSize: isActive || isHovered ? '9px' : '7px',
-                    fill: labelColor,
-                    fontWeight: isActive || isHovered ? 700 : 400,
-                    pointerEvents: 'none',
-                    letterSpacing: '0.04em',
+                    fontSize: isActive ? '8px' : '7px',
+                    fill: isActive || isHovered ? accent : 'var(--color-subtle)',
+                    fontWeight: isActive || isHovered ? 600 : 400,
+                    cursor: 'pointer',
+                    letterSpacing: '0.03em',
+                    filter: isHovered
+                      ? `drop-shadow(0 0 6px ${accent}) drop-shadow(0 0 3px ${accent})`
+                      : 'none',
                   }}
-                  animate={{ fill: labelColor }}
-                  transition={{ duration: 0.2 }}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                   initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.15 + 0.4 }}
                 >
                   {dest.flagEmoji} {dest.city}
                 </motion.text>
 
-                {/* Country name — appears on hover or when active */}
+                {/* Country name — glows in below the city on hover */}
                 <motion.text
                   textAnchor="middle"
-                  y={-4}
+                  y={isActive ? -2 : -1}
                   style={{
                     fontFamily: 'var(--font-dm-sans), sans-serif',
-                    fontSize: '6px',
-                    fill: isActive ? accent : 'var(--color-subtle)',
+                    fontSize: '5.5px',
+                    fill: accent,
                     pointerEvents: 'none',
-                    letterSpacing: '0.06em',
+                    letterSpacing: '0.08em',
+                    filter: `drop-shadow(0 0 5px ${accent})`,
                   }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isActive || isHovered ? 1 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  animate={{ opacity: isHovered || isActive ? 1 : 0 }}
+                  transition={{ duration: 0.18 }}
                 >
                   {dest.country.toUpperCase()}
                 </motion.text>
