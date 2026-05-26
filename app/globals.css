@@ -117,8 +117,19 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Wander theme variables - written dynamically by applyTheme.ts */
+/* Wander theme variables - light mode defaults */
 :root {
+  --color-primary: #1B2B4B;
+  --color-accent: #d97706;
+  --color-bg: #f5f0e8;
+  --color-card-bg: #ffffff;
+  --color-text: #1a1a2e;
+  --color-subtle: #6b7a99;
+  --weather-filter: '';
+}
+
+/* Wander theme variables - dark mode defaults */
+.dark {
   --color-primary: #1B2B4B;
   --color-accent: #F59E0B;
   --color-bg: #0a0f1e;
@@ -126,11 +137,6 @@
   --color-text: #f0f4ff;
   --color-subtle: #6b7a99;
   --weather-filter: '';
-
-  /* Smooth transitions when applyTheme updates CSS vars */
-  transition:
-    background-color 600ms ease-in-out,
-    color 600ms ease-in-out;
 }
 
 @layer base {
