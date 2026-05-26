@@ -139,7 +139,7 @@ export default function ResultsPage() {
             <motion.div
               className="w-full rounded-3xl overflow-hidden"
               style={{
-                maxWidth: 480,
+                maxWidth: 680,
                 maxHeight: 'calc(100vh - 120px)',
                 backgroundColor: 'var(--color-card-bg)',
                 border: `1px solid color-mix(in srgb, ${selected.culturalTheme.accent} 25%, transparent)`,
