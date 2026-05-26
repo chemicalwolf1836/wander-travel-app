@@ -217,12 +217,13 @@ export async function GET(request: Request) {
       const prompt = `For each country below, write a single evocative sentence (max 25 words) describing the travel experience. Respond with a JSON object mapping country name to summary. Countries: ${batch.map((c) => c.name).join(', ')}`
 
       const res = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }],
       })
 
-      const text = res.content[0].type === 'text' ? res.content[0].text : '{}'
+      const raw = res.content[0].type === 'text' ? res.content[0].text : '{}'
+      const text = raw.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim()
       const summaries: Record<string, string> = JSON.parse(text)
 
       for (const country of batch) {

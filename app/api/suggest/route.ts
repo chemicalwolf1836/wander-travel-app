@@ -93,7 +93,7 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
 No markdown. No extra text. Only the JSON array.`
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4096,
     messages: [{ role: 'user', content: systemPrompt }],
   })
