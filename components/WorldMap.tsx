@@ -161,23 +161,6 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                   {dest.flagEmoji} {dest.city}
                 </motion.text>
 
-                {/* Country name — glows in below the city on hover */}
-                <motion.text
-                  textAnchor="middle"
-                  y={isActive ? -2 : -1}
-                  style={{
-                    fontFamily: 'var(--font-dm-sans), sans-serif',
-                    fontSize: '5.5px',
-                    fill: accent,
-                    pointerEvents: 'none',
-                    letterSpacing: '0.08em',
-                    filter: `drop-shadow(0 0 5px ${accent})`,
-                  }}
-                  animate={{ opacity: isHovered || isActive ? 1 : 0 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  {dest.country.toUpperCase()}
-                </motion.text>
               </Marker>
             )
           })}
