@@ -14,7 +14,7 @@ const ACCENT_SWATCHES = [
   '#34D399', // emerald
   '#F472B6', // pink
   '#A78BFA', // purple
-  '#FB923C', // orange
+  '#991B1B', // dark red
 ]
 
 const DEFAULT_SETTINGS: AppSettings = {
