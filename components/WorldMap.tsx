@@ -144,7 +144,7 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                   textAnchor="middle"
                   y={isActive ? -16 : -13}
                   style={{
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif",
+                    fontFamily: "var(--font-manrope), sans-serif",
                     fontSize: isActive ? '13px' : '11px',
                     fill: accent,
                     fontWeight: isActive || isHovered ? 700 : 500,
