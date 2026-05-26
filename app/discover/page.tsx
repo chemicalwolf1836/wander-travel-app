@@ -51,6 +51,12 @@ export default function DiscoverPage() {
       body: JSON.stringify({ messages: newMessages }),
     })
 
+    if (!res.ok) {
+      setLoading(false)
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
+      return
+    }
+
     const data: ChatResponse = await res.json()
     setLoading(false)
 

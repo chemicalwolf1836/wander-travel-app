@@ -61,8 +61,12 @@ export async function POST(request: Request) {
 
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
 
-  // Claude is instructed to always return valid JSON
-  const parsed_response: unknown = JSON.parse(text)
-
-  return NextResponse.json(parsed_response)
+  // Claude is instructed to return JSON, but occasionally responds in plain text.
+  // If parsing fails, treat the response as a conversational message and continue.
+  try {
+    const parsed: unknown = JSON.parse(text)
+    return NextResponse.json(parsed)
+  } catch {
+    return NextResponse.json({ ready: false, message: text })
+  }
 }
