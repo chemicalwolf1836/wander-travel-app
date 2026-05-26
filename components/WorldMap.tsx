@@ -151,13 +151,8 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                     cursor: 'pointer',
                     letterSpacing: '0.04em',
                   }}
-                  animate={{
-                    opacity: isActive || isHovered ? 1 : 0.8,
-                    filter: isActive || isHovered
-                      ? `drop-shadow(0 0 8px ${accent}) drop-shadow(0 0 4px ${accent})`
-                      : 'none',
-                  }}
-                  initial={{ opacity: 0, filter: 'none' }}
+                  animate={{ opacity: isActive || isHovered ? 1 : 0.8 }}
+                  initial={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   onMouseEnter={() => setHoveredIndex(i)}
                   onMouseLeave={() => setHoveredIndex(null)}
