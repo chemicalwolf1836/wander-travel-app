@@ -9,7 +9,14 @@ import { DestinationCard } from '@/components/DestinationCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
-import { applyTheme, resetTheme } from '@/lib/applyTheme'
+// applyTheme sets inline styles that override dark/light mode, so on results
+// we only tint the accent color and let CSS classes control bg/text.
+function applyAccent(accent: string) {
+  document.documentElement.style.setProperty('--color-accent', accent)
+}
+function clearAccent() {
+  document.documentElement.style.removeProperty('--color-accent')
+}
 import type { Destination } from '@/types'
 
 export default function ResultsPage() {
@@ -37,18 +44,12 @@ export default function ResultsPage() {
     }
   }, [router])
 
-  // Apply theme when active destination changes
+  // Shift the accent color to match the active destination
   useEffect(() => {
     const dest = destinations[activeIndex]
-    if (dest) {
-      applyTheme(dest.culturalTheme, dest.weather?.condition)
-    }
+    if (dest) applyAccent(dest.culturalTheme.accent)
+    return () => { clearAccent() }
   }, [activeIndex, destinations])
-
-  // Reset inline theme styles on unmount so dark/light mode works on other pages
-  useEffect(() => {
-    return () => { resetTheme() }
-  }, [])
 
   const handleCardHover = useCallback((index: number) => {
     setActiveIndex(index)
