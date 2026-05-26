@@ -45,8 +45,8 @@ const RING_COUNT = 22
 export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: WorldMapProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  const activeCountryCode = destinations[activeIndex]?.countryCode ?? ''
-  const highlightedId = ISO_NUMERIC[activeCountryCode] ?? ''
+  const highlightIndex = hoveredIndex ?? activeIndex
+  const highlightedId = ISO_NUMERIC[destinations[highlightIndex]?.countryCode ?? ''] ?? ''
 
   return (
     <motion.div
@@ -128,13 +128,15 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting }: Wor
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
                 />
 
-                {/* Dot — unchanged from original */}
+                {/* Dot */}
                 <motion.circle
                   r={isActive ? 5 : 3.5}
                   fill={accent}
                   animate={{ r: isActive ? 5 : 3.5 }}
                   transition={{ duration: 0.3 }}
-                  style={{ filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${accent})` }}
+                  style={{ filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${accent})`, cursor: 'pointer' }}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                 />
 
                 {/* City label — hover target */}
