@@ -10,6 +10,7 @@ export interface Destination {
   food: { summary: string; dishes: string[] }
   attractions: string[]
   bestFor: string[]
+  bestSeasons?: string[]
   emoji: string
   culturalTheme: CulturalTheme
   weather?: WeatherData

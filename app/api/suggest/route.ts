@@ -79,6 +79,7 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
   "food": { "summary": string, "dishes": string[] },
   "attractions": string[],
   "bestFor": string[],
+  "bestSeasons": string[],
   "emoji": string,
   "culturalTheme": {
     "primary": string,
