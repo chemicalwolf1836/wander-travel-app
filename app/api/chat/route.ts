@@ -59,7 +59,10 @@ export async function POST(request: Request) {
     messages,
   })
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  const raw = response.content[0].type === 'text' ? response.content[0].text : ''
+
+  // Strip markdown code fences Claude sometimes wraps around JSON
+  const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
 
   // Claude is instructed to return JSON, but occasionally responds in plain text.
   // If parsing fails, treat the response as a conversational message and continue.
@@ -67,6 +70,6 @@ export async function POST(request: Request) {
     const parsed: unknown = JSON.parse(text)
     return NextResponse.json(parsed)
   } catch {
-    return NextResponse.json({ ready: false, message: text })
+    return NextResponse.json({ ready: false, message: raw.trim() })
   }
 }
