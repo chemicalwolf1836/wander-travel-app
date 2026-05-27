@@ -1,8 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
-import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps'
+import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Graticule, Sphere } = require('react-simple-maps') as {
+  Graticule: React.ComponentType<{ stroke?: string; strokeWidth?: number }>
+  Sphere: React.ComponentType<{ id: string; fill?: string; stroke?: string; strokeWidth?: number }>
+}
+import React from 'react'
 import type { Destination } from '@/types'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
@@ -41,71 +48,116 @@ interface WorldMapProps {
   mapStyle?: 'default' | 'satellite' | 'minimal'
 }
 
-const RING_COUNT = 22
-
 export function WorldMap({ destinations, activeIndex, onPinClick, exiting, mapStyle = 'default' }: WorldMapProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
-  // Dot config per map style
-  const dotRadius   = mapStyle === 'minimal' ? 1.0 : mapStyle === 'satellite' ? 2.1 : 1.5
-  const dotOpacity  = mapStyle === 'minimal' ? 0.4 : mapStyle === 'satellite' ? 0.85 : 0.65
-  const showRings   = mapStyle !== 'minimal'
+  // Scroll-to-zoom, no drag
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = (e: WheelEvent) => {
+      e.preventDefault()
+      setZoom(prev => Math.min(3.5, Math.max(1, prev - e.deltaY * 0.0008)))
+    }
+    el.addEventListener('wheel', handler, { passive: false })
+    return () => el.removeEventListener('wheel', handler)
+  }, [])
 
-  const highlightIndex = hoveredIndex ?? activeIndex
-  const highlightedId = ISO_NUMERIC[destinations[highlightIndex]?.countryCode ?? ''] ?? ''
+  const highlightIndex  = hoveredIndex ?? activeIndex
+  const highlightedId   = ISO_NUMERIC[destinations[highlightIndex]?.countryCode ?? ''] ?? ''
+  const highlightAccent = destinations[highlightIndex]?.culturalTheme.accent ?? 'var(--color-accent)'
+
+  const isMinimal   = mapStyle === 'minimal'
+  const isSatellite = mapStyle === 'satellite'
 
   return (
     <motion.div
-      className="relative w-full h-full"
+      ref={containerRef}
+      className="relative w-full h-full overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
+      style={{ cursor: zoom > 1 ? 'zoom-out' : 'default' }}
     >
-      {showRings && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <svg width="100%" height="100%">
-            {Array.from({ length: RING_COUNT }).map((_, i) => (
-              <circle
-                key={i}
-                cx="54%" cy="44%"
-                r={`${(i + 1) * 4.2}%`}
-                fill="none"
-                stroke="var(--color-text)"
-                strokeWidth="0.4"
-                opacity={0.07 - i * 0.002}
-              />
-            ))}
-          </svg>
-        </div>
-      )}
-
-      <ComposableMap
-        projectionConfig={{ scale: 155, center: [0, 10] }}
-        style={{ width: '100%', height: '100%' }}
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          transform: `scale(${zoom})`,
+          transformOrigin: 'center center',
+          transition: 'transform 0.12s ease-out',
+        }}
       >
-        <defs>
-          <pattern id="halftone" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
-            <circle cx="3" cy="3" r={dotRadius} fill="var(--color-text)" opacity={dotOpacity} />
-          </pattern>
-          <pattern id="halftone-country" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
-            <circle cx="3" cy="3" r={dotRadius + 0.4} fill="var(--color-accent)" opacity="0.9" />
-          </pattern>
-        </defs>
+        <ComposableMap
+          projectionConfig={{ scale: 155, center: [0, 10] }}
+          style={{ width: '100%', height: '100%' }}
+        >
+          {/* Ocean — color shifts per style */}
+          <Sphere
+            id="ocean-sphere"
+            fill={
+              isSatellite ? (isDark ? '#0d1b2a' : '#b8d4e8')
+              : isMinimal  ? 'color-mix(in srgb, var(--color-text) 3%, transparent)'
+              :               'color-mix(in srgb, var(--color-text) 6%, transparent)'
+            }
+            stroke={
+              isSatellite ? (isDark ? '#1a3a5c' : '#8ab4ce')
+              : 'color-mix(in srgb, var(--color-text) 12%, transparent)'
+            }
+            strokeWidth={0.5}
+          />
 
-        <ZoomableGroup zoom={1} minZoom={0.6} maxZoom={5}>
+          {/* Grid lines — visible in default and satellite, hidden in minimal */}
+          {!isMinimal && (
+            <Graticule
+              stroke={isSatellite ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)') : 'color-mix(in srgb, var(--color-text) 5%, transparent)'}
+              strokeWidth={0.3}
+            />
+          )}
+
           <Geographies geography={GEO_URL}>
             {({ geographies }: { geographies: Array<{ rsmKey: string; id?: string }> }) =>
               geographies.map((geo) => {
-                const fill = highlightedId && geo.id === highlightedId
-                  ? 'url(#halftone-country)'
-                  : 'url(#halftone)'
+                const isHighlighted = highlightedId !== '' && geo.id === highlightedId
+
+                const fill = isHighlighted
+                  ? highlightAccent
+                  : isSatellite
+                  ? (isDark ? '#1e3a52' : '#7aaabf')
+                  : isMinimal
+                  ? 'color-mix(in srgb, var(--color-text) 6%, transparent)'
+                  : 'color-mix(in srgb, var(--color-text) 16%, transparent)'
+
+                const stroke = isHighlighted
+                  ? 'rgba(0,0,0,0.2)'
+                  : isSatellite
+                  ? (isDark ? '#2a5278' : '#5a8fa8')
+                  : isMinimal
+                  ? 'color-mix(in srgb, var(--color-text) 12%, transparent)'
+                  : 'color-mix(in srgb, var(--color-bg) 60%, transparent)'
+
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
                     style={{
-                      default: { fill, stroke: 'none', outline: 'none' },
-                      hover:   { fill, stroke: 'none', outline: 'none' },
+                      default: {
+                        fill,
+                        stroke,
+                        strokeWidth: isMinimal ? 0.8 : 0.5,
+                        outline: 'none',
+                        transition: 'fill 0.3s ease',
+                      },
+                      hover: {
+                        fill,
+                        stroke,
+                        strokeWidth: isMinimal ? 0.8 : 0.5,
+                        outline: 'none',
+                      },
                       pressed: { outline: 'none' },
                     }}
                   />
@@ -130,49 +182,37 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting, mapSt
                 <motion.circle
                   r={0}
                   fill="none"
-                  stroke={accent}
-                  strokeWidth={1.5}
-                  animate={isActive ? { r: [6, 18], opacity: [0.7, 0] } : { r: 0, opacity: 0 }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+                  stroke="white"
+                  strokeWidth={1.2}
+                  animate={isActive || isHovered ? { r: [4, 13], opacity: [0.5, 0] } : { r: 0, opacity: 0 }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
                 />
 
-                {/* Dot */}
+                {/* Core dot */}
                 <motion.circle
-                  r={isActive ? 5 : 3.5}
-                  fill={accent}
-                  animate={{ r: isActive ? 5 : 3.5 }}
+                  r={isActive ? 3.5 : 2.5}
+                  fill="white"
+                  animate={{ r: isActive ? 3.5 : 2.5 }}
                   transition={{ duration: 0.3 }}
-                  style={{ filter: `drop-shadow(0 0 ${isActive ? 8 : 3}px ${accent})`, cursor: 'pointer' }}
+                  style={{ cursor: 'pointer' }}
                   onMouseEnter={() => setHoveredIndex(i)}
                   onMouseLeave={() => setHoveredIndex(null)}
                 />
-
-                {/* City label */}
-                <motion.text
-                  textAnchor="middle"
-                  y={isActive ? -16 : -13}
-                  style={{
-                    fontFamily: "var(--font-manrope), sans-serif",
-                    fontSize: isActive ? '13px' : '11px',
-                    fill: accent,
-                    fontWeight: isActive || isHovered ? 700 : 500,
-                    cursor: 'pointer',
-                    letterSpacing: '0.04em',
-                  }}
-                  animate={{ opacity: isActive || isHovered ? 1 : 0.65 }}
-                  initial={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                  {dest.flagEmoji} {dest.city}
-                </motion.text>
-
               </Marker>
             )
           })}
-        </ZoomableGroup>
-      </ComposableMap>
+        </ComposableMap>
+      </div>
+
+      {/* Zoom hint */}
+      {zoom === 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
+          <p className="text-xs tracking-widest uppercase opacity-30"
+            style={{ color: 'var(--color-text)' }}>
+            scroll to zoom
+          </p>
+        </div>
+      )}
     </motion.div>
   )
 }
