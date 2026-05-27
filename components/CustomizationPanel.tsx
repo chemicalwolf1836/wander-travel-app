@@ -9,12 +9,12 @@ import type { AppSettings } from '@/types'
 const STORAGE_KEY = 'wander_settings'
 
 const ACCENT_SWATCHES = [
-  '#F59E0B', // amber (default)
-  '#60A5FA', // blue
-  '#34D399', // emerald
-  '#F472B6', // pink
-  '#A78BFA', // purple
-  '#991B1B', // dark red
+  '#F59E0B', // amber — warm, travel-y default
+  '#0EA5E9', // sky blue — vivid on dark and light maps
+  '#10B981', // emerald — nature, readable
+  '#F97316', // orange — energetic, distinct from amber
+  '#8B5CF6', // violet — premium, rich
+  '#EC4899', // rose — bold, clearly distinct
 ]
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -147,28 +147,6 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       }}
                     >
                       {size}
-                    </button>
-                  ))}
-                </div>
-              </Section>
-
-              {/* Card layout */}
-              <Section label="Card Layout">
-                <div className="flex gap-2">
-                  {(['grid', 'list'] as const).map((layout) => (
-                    <button
-                      key={layout}
-                      onClick={() => save({ cardLayout: layout })}
-                      className="flex-1 py-2 rounded-lg text-sm capitalize"
-                      style={{
-                        backgroundColor:
-                          settings.cardLayout === layout
-                            ? 'var(--color-accent)'
-                            : 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
-                        color: settings.cardLayout === layout ? 'var(--color-bg)' : 'var(--color-text)',
-                      }}
-                    >
-                      {layout}
                     </button>
                   ))}
                 </div>

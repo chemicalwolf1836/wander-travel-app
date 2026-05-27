@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, Settings, ArrowLeft } from 'lucide-react'
+import { Sun, Moon, Menu, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
@@ -83,7 +83,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
             style={{ color: 'var(--color-text)' }}
             aria-label="Open settings"
           >
-            <Settings size={18} />
+            <Menu size={18} />
           </button>
         )}
       </div>
