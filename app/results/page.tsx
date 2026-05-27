@@ -7,7 +7,6 @@ import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
-import { applyTheme, resetTheme } from '@/lib/applyTheme'
 import type { Destination, AppSettings } from '@/types'
 
 const STORAGE_KEY = 'wander_settings'
@@ -17,6 +16,13 @@ function loadSettings(): Pick<AppSettings, 'mapStyle' | 'cardLayout'> {
     if (raw) return JSON.parse(raw) as AppSettings
   } catch { /* ignore */ }
   return { mapStyle: 'default', cardLayout: 'grid' }
+}
+
+function applyAccent(accent: string) {
+  document.documentElement.style.setProperty('--color-accent', accent)
+}
+function clearAccent() {
+  document.documentElement.style.removeProperty('--color-accent')
 }
 
 interface WikiSummary {
@@ -101,22 +107,16 @@ export default function ResultsPage() {
     return () => window.removeEventListener('wander-settings', handler)
   }, [])
 
-  // Full theme follows hovered card, then selected — never reset mid-page to avoid flash
+  // Accent follows hovered card, then selected — never clear mid-page to avoid flash
   useEffect(() => {
     const i = hoveredIndex ?? selectedIndex
     const dest = destinations[i]
-    if (!dest) return
-    applyTheme(dest.culturalTheme)
-    // Derive subtle from the destination's text color since CulturalTheme has no subtle field
-    document.documentElement.style.setProperty(
-      '--color-subtle',
-      `color-mix(in srgb, ${dest.culturalTheme.text} 50%, transparent)`
-    )
+    if (dest) applyAccent(dest.culturalTheme.accent)
   }, [hoveredIndex, selectedIndex, destinations])
 
-  // Only reset when leaving the page entirely
+  // Only clear accent when leaving the page entirely
   useEffect(() => {
-    return () => { resetTheme() }
+    return () => { clearAccent() }
   }, [])
 
   const handleCardClick = useCallback((index: number) => {
