@@ -3,10 +3,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Star, Calendar, X } from 'lucide-react'
+import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, X } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
+import { applyTheme, resetTheme } from '@/lib/applyTheme'
 import type { Destination, AppSettings } from '@/types'
 
 const STORAGE_KEY = 'wander_settings'
@@ -16,13 +17,6 @@ function loadSettings(): Pick<AppSettings, 'mapStyle' | 'cardLayout'> {
     if (raw) return JSON.parse(raw) as AppSettings
   } catch { /* ignore */ }
   return { mapStyle: 'default', cardLayout: 'grid' }
-}
-
-function applyAccent(accent: string) {
-  document.documentElement.style.setProperty('--color-accent', accent)
-}
-function clearAccent() {
-  document.documentElement.style.removeProperty('--color-accent')
 }
 
 interface WikiSummary {
@@ -107,16 +101,22 @@ export default function ResultsPage() {
     return () => window.removeEventListener('wander-settings', handler)
   }, [])
 
-  // Accent follows hovered card, then selected — never clear mid-page to avoid flash
+  // Full theme follows hovered card, then selected — never reset mid-page to avoid flash
   useEffect(() => {
     const i = hoveredIndex ?? selectedIndex
     const dest = destinations[i]
-    if (dest) applyAccent(dest.culturalTheme.accent)
+    if (!dest) return
+    applyTheme(dest.culturalTheme)
+    // Derive subtle from the destination's text color since CulturalTheme has no subtle field
+    document.documentElement.style.setProperty(
+      '--color-subtle',
+      `color-mix(in srgb, ${dest.culturalTheme.text} 50%, transparent)`
+    )
   }, [hoveredIndex, selectedIndex, destinations])
 
-  // Only clear accent when leaving the page entirely
+  // Only reset when leaving the page entirely
   useEffect(() => {
-    return () => { clearAccent() }
+    return () => { resetTheme() }
   }, [])
 
   const handleCardClick = useCallback((index: number) => {
@@ -396,7 +396,7 @@ function DestinationDetailCard({
 
         {/* Body */}
         <div className="overflow-y-auto flex-1 px-8 py-6">
-          <p className="text-base italic leading-relaxed mb-4 font-medium"
+          <p className="text-base italic leading-relaxed mb-3 font-medium"
             style={{ color: theme.accent, filter: 'brightness(1.15) saturate(1.2)' }}>
             {dest.tagline}
           </p>
@@ -404,7 +404,11 @@ function DestinationDetailCard({
             {dest.description}
           </p>
 
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          {/* Divider */}
+          <div className="mb-6" style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }} />
+
+          {/* See + Eat — two columns */}
+          <div className="grid grid-cols-2 gap-8 mb-6">
             {dest.attractions.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-3">
@@ -412,7 +416,7 @@ function DestinationDetailCard({
                   <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>See</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {dest.attractions.slice(0, 4).map((a) => (
+                  {dest.attractions.slice(0, 5).map((a) => (
                     <ItemChip key={a} label={a} accent={theme.accent} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
                   ))}
                 </div>
@@ -420,52 +424,60 @@ function DestinationDetailCard({
             )}
             {dest.food.dishes.length > 0 && (
               <div>
-                <div className="flex items-center gap-1.5 mb-3">
+                <div className="flex items-center gap-1.5 mb-2">
                   <Utensils size={12} style={{ color: theme.accent }} />
                   <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Eat</span>
                 </div>
+                {dest.food.summary && (
+                  <p className="text-xs italic leading-snug mb-3" style={{ color: 'var(--color-subtle)' }}>
+                    {dest.food.summary}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
-                  {dest.food.dishes.slice(0, 4).map((d) => (
+                  {dest.food.dishes.slice(0, 5).map((d) => (
                     <ItemChip key={d} label={d} accent={theme.accent} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
-                  ))}
-                </div>
-              </div>
-            )}
-            {dest.bestFor.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Star size={12} style={{ color: theme.accent }} />
-                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Best for</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {dest.bestFor.slice(0, 4).map((b) => (
-                    <ItemChip key={b} label={b} accent={theme.accent} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
                   ))}
                 </div>
               </div>
             )}
           </div>
 
+          {/* Best for — full-width experience row */}
+          {dest.bestFor.length > 0 && (
+            <div className="mb-5">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Compass size={12} style={{ color: 'var(--color-subtle)' }} />
+                <span className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>Best for</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {dest.bestFor.slice(0, 6).map((b) => (
+                  <ExperienceChip key={b} label={b} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Best time — grouped with best for as trip-planning context */}
+          {dest.bestSeasons && dest.bestSeasons.length > 0 && (
+            <div className="flex items-center gap-2 mb-6 flex-wrap">
+              <Calendar size={12} style={{ color: 'var(--color-subtle)' }} />
+              <span className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>Best time</span>
+              {dest.bestSeasons.map((s) => (
+                <span key={s} className="text-xs px-2.5 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',
+                    color: 'var(--color-subtle)',
+                    border: '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)',
+                  }}>{s}</span>
+              ))}
+            </div>
+          )}
+
           <AnimatePresence>
             {activeItem && (
               <ItemModal item={activeItem} city={dest.city} accent={theme.accent} onClose={() => setActiveItem(null)} />
             )}
           </AnimatePresence>
-
-          {dest.bestSeasons && dest.bestSeasons.length > 0 && (
-            <div className="flex items-center gap-2 mb-6 flex-wrap">
-              <Calendar size={12} style={{ color: theme.accent }} />
-              <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Best time</span>
-              {dest.bestSeasons.map((s) => (
-                <span key={s} className="text-xs px-2.5 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: `color-mix(in srgb, ${theme.accent} 15%, transparent)`,
-                    color: theme.accent,
-                    border: `1px solid color-mix(in srgb, ${theme.accent} 30%, transparent)`,
-                  }}>{s}</span>
-              ))}
-            </div>
-          )}
 
           <button onClick={onExplore}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.015] active:scale-[0.99]"
@@ -505,6 +517,31 @@ function ItemChip({ label, accent, onClick, onPrefetch }: { label: string; accen
       whileHover={{
         backgroundColor: accent,
         color: '#fff',
+        scale: 1.04,
+      }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+    >
+      {label}
+    </motion.button>
+  )
+}
+
+/* ── Experience vibe chip (Best for) — subtler than ItemChip ── */
+function ExperienceChip({ label, onClick, onPrefetch }: { label: string; onClick: () => void; onPrefetch?: () => void }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      onHoverStart={onPrefetch}
+      className="text-xs px-3 py-1.5 rounded-full"
+      style={{
+        color: 'var(--color-subtle)',
+        backgroundColor: 'color-mix(in srgb, var(--color-text) 5%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)',
+      }}
+      whileHover={{
+        backgroundColor: 'color-mix(in srgb, var(--color-text) 12%, transparent)',
+        color: 'var(--color-text)',
         scale: 1.04,
       }}
       whileTap={{ scale: 0.96 }}
