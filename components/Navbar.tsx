@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, Menu, ArrowLeft } from 'lucide-react'
+import { Sun, Moon, Menu, ArrowLeft, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
@@ -53,8 +53,17 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
         )}
       </div>
 
-      {/* Right: dark/light toggle + settings */}
+      {/* Right: saved link + dark/light toggle + settings */}
       <div className="flex items-center gap-3">
+        <Link
+          href="/saved"
+          className="p-2 rounded-full hover:opacity-70 transition-opacity"
+          style={{ color: 'var(--color-text)' }}
+          aria-label="Saved destinations"
+        >
+          <Heart size={18} />
+        </Link>
+
         {mounted && (
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
