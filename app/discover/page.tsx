@@ -10,8 +10,7 @@ import type { ChatMessage as ChatMessageType, Preferences } from '@/types'
 
 const OPENING_MESSAGE: ChatMessageType = {
   role: 'assistant',
-  content:
-    'Welcome to Wander. Tell me about your dream trip - the kind of climate you love, your budget, food preferences, travel style, anything at all. The more you share, the better I can guide you.',
+  content: "Where's your mind wandering?",
 }
 
 interface ChatResponse {
