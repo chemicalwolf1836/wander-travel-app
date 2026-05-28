@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, X } from 'lucide-react'
+import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, X, Heart, Share2, RotateCcw } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
-import type { Destination, AppSettings } from '@/types'
+import { toggleFavourite, isFavourite } from '@/lib/favourites'
+import type { Destination, AppSettings, WeatherData } from '@/types'
 
 const STORAGE_KEY = 'wander_settings'
 function loadSettings(): Pick<AppSettings, 'mapStyle' | 'cardLayout'> {
@@ -119,6 +120,22 @@ export default function ResultsPage() {
     return () => { clearAccent() }
   }, [])
 
+  // Keyboard navigation: ← → arrows cycle destinations in split view
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (view !== 'split' || destinations.length === 0) return
+      if (e.key === 'ArrowRight') setSelectedIndex(i => (i + 1) % destinations.length)
+      if (e.key === 'ArrowLeft') setSelectedIndex(i => (i - 1 + destinations.length) % destinations.length)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [view, destinations.length])
+
+  const handleTryAgain = useCallback(() => {
+    sessionStorage.removeItem('wander_destinations')
+    router.push('/discover')
+  }, [router])
+
   const handleCardClick = useCallback((index: number) => {
     setSelectedIndex(index)
     setView('detail')
@@ -185,6 +202,25 @@ export default function ResultsPage() {
             </div>
 
             {/* Cards — fixed-height strip at bottom */}
+            {!loading && (
+              <div
+                className="flex-shrink-0 flex flex-col"
+              >
+                {/* Keyboard hint + try again */}
+                <div className="flex items-center justify-between px-4 pt-2 pb-1">
+                  <p className="text-xs tracking-widest uppercase opacity-30 hidden md:block" style={{ color: 'var(--color-text)' }}>
+                    ← → to browse
+                  </p>
+                  <button
+                    onClick={handleTryAgain}
+                    className="flex items-center gap-1.5 text-xs opacity-40 hover:opacity-80 transition-opacity ml-auto"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <RotateCcw size={11} /> Try different preferences
+                  </button>
+                </div>
+              </div>
+            )}
             {!loading && (
               <div
                 className="flex-shrink-0 flex gap-4 p-4"
@@ -343,6 +379,11 @@ function BottomCard({
   )
 }
 
+const WEATHER_EMOJI: Record<string, string> = {
+  Clear: '☀️', Clouds: '⛅', Rain: '🌧️', Drizzle: '🌦️',
+  Snow: '❄️', Thunderstorm: '⛈️', Mist: '🌫️', Fog: '🌫️', Haze: '🌫️',
+}
+
 /* ── Full detail card (used in detail view) ── */
 function DestinationDetailCard({
   destination: dest,
@@ -356,6 +397,32 @@ function DestinationDetailCard({
   const imageUrl = useWikiImage(dest.city)
   const theme = dest.culturalTheme
   const [activeItem, setActiveItem] = useState<string | null>(null)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [fav, setFav] = useState(() => isFavourite(dest.city))
+  const [shared, setShared] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/weather?city=${encodeURIComponent(dest.city)}&country=${dest.countryCode}`)
+      .then(r => r.json())
+      .then((d: WeatherData | null) => { if (d) setWeather(d) })
+      .catch(() => null)
+  }, [dest.city, dest.countryCode])
+
+  function handleFav() {
+    const next = toggleFavourite(dest)
+    setFav(next)
+  }
+
+  async function handleShare() {
+    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
+    if (navigator.share) {
+      await navigator.share({ title: dest.city, text }).catch(() => null)
+    } else {
+      await navigator.clipboard.writeText(text).catch(() => null)
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
+    }
+  }
 
   return (
     <motion.div className="w-full flex flex-col"
@@ -383,14 +450,38 @@ function DestinationDetailCard({
           )}
           <div className="absolute inset-0"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)' }} />
+
+          {/* Top-right action buttons */}
+          <div className="absolute top-4 right-4 flex gap-2">
+            <motion.button onClick={handleShare} whileTap={{ scale: 0.9 }}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(0,0,0,0.45)', color: 'white' }}
+              title="Share destination">
+              {shared ? <span className="text-xs">✓</span> : <Share2 size={14} />}
+            </motion.button>
+            <motion.button onClick={handleFav} whileTap={{ scale: 0.9 }}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(0,0,0,0.45)', color: fav ? theme.accent : 'white' }}
+              title={fav ? 'Remove from saved' : 'Save destination'}>
+              <Heart size={14} fill={fav ? theme.accent : 'none'} />
+            </motion.button>
+          </div>
+
           <div className="absolute bottom-0 left-0 right-0 px-8 pb-6">
             <h2 className="text-5xl md:text-6xl leading-none text-white mb-1"
               style={{ fontFamily: 'var(--font-playfair)', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
               {dest.emoji} {dest.city}
             </h2>
-            <p className="text-sm flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>
-              <Flag code={dest.countryCode} size={20} /> {dest.country} · {dest.region}
-            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-sm flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>
+                <Flag code={dest.countryCode} size={20} /> {dest.country} · {dest.region}
+              </p>
+              {weather && (
+                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>
+                  {WEATHER_EMOJI[weather.condition] ?? '🌡️'} {weather.temp}°C · {weather.description}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -478,6 +569,15 @@ function DestinationDetailCard({
               <ItemModal item={activeItem} city={dest.city} accent={theme.accent} onClose={() => setActiveItem(null)} />
             )}
           </AnimatePresence>
+
+          {/* Practical info row */}
+          {(dest.currency || dest.language || dest.visaInfo) && (
+            <div className="flex flex-wrap gap-4 mb-6 text-xs" style={{ color: 'var(--color-subtle)' }}>
+              {dest.currency && <span>💱 {dest.currency}</span>}
+              {dest.language && <span>🗣️ {dest.language}</span>}
+              {dest.visaInfo && <span>🛂 {dest.visaInfo}</span>}
+            </div>
+          )}
 
           <button onClick={onExplore}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.015] active:scale-[0.99]"
@@ -635,7 +735,7 @@ function ItemModal({ item, city, accent, onClose }: { item: string; city: string
         </div>
 
         {/* Body */}
-        {(loading || data?.description) && (
+        {(loading || data !== null) && (
           <div className="overflow-y-auto px-6 py-5">
             {loading ? (
               <div className="flex gap-2 items-center" style={{ color: 'var(--color-subtle)' }}>
@@ -643,9 +743,13 @@ function ItemModal({ item, city, accent, onClose }: { item: string; city: string
                   style={{ borderColor: accent, borderTopColor: 'transparent' }} />
                 <span className="text-xs">Loading...</span>
               </div>
-            ) : (
+            ) : data?.description ? (
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>
-                {data?.description}
+                {data.description}
+              </p>
+            ) : (
+              <p className="text-sm italic" style={{ color: 'var(--color-subtle)' }}>
+                No information available.
               </p>
             )}
           </div>
