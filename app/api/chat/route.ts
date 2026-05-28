@@ -11,9 +11,10 @@ const chatSchema = z.object({
       content: z.string(),
     })
   ),
+  mode: z.enum(['free', 'guided']).optional().default('free'),
 })
 
-const SYSTEM_PROMPT = `You are Wander, a travel concierge. Be brief — one or two sentences maximum per reply. Never list questions or bullet points.
+const BASE_PROMPT = `You are Wander, a travel concierge. Be brief — one or two sentences maximum per reply. Never list questions or bullet points.
 
 If the user gives any meaningful signal (a vibe, a climate, a mood, a style — even just one thing), that is enough to search. Don't interrogate. If you need one thing more, ask only that one thing.
 
@@ -25,6 +26,11 @@ While still chatting:
 
 JSON only. No markdown. No extra text.`
 
+const GUIDED_SUFFIX = ` Also add "choices": an array of 3–4 short tappable options (max 4 words each) that answer your question. Example: {"ready":false,"message":"What kind of climate?","choices":["Warm and tropical","Cold and dramatic","Dry and sunny","Mild and green"]}`
+
+const SYSTEM_PROMPT = BASE_PROMPT
+const GUIDED_PROMPT = BASE_PROMPT + GUIDED_SUFFIX
+
 export async function POST(request: Request) {
   const body: unknown = await request.json()
   const parsed = chatSchema.safeParse(body)
@@ -33,12 +39,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const { messages } = parsed.data
+  const { messages, mode } = parsed.data
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 300,
-    system: SYSTEM_PROMPT,
+    system: mode === 'guided' ? GUIDED_PROMPT : SYSTEM_PROMPT,
     messages,
   })
 
