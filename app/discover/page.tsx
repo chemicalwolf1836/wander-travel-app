@@ -184,6 +184,14 @@ export default function DiscoverPage() {
     }
   }
 
+  function handleStartOver() {
+    setMode('selecting')
+    setMessages([OPENING_MESSAGE])
+    setGuidedStep(0)
+    setGuidedAnswers([])
+    setShowGuideChoices(false)
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -262,24 +270,35 @@ export default function DiscoverPage() {
             )}
           </AnimatePresence>
 
-          {/* Progress dots — guided mode only */}
+          {/* Progress dots + start over — guided mode only */}
           {mode === 'guided' && !searching && (
-            <div className="flex gap-1.5 ml-11 mt-1">
-              {GUIDED_STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    width: i < guidedAnswers.length ? 16 : 5,
-                    height: 5,
-                    backgroundColor: i < guidedAnswers.length
-                      ? 'var(--color-accent)'
-                      : i === guidedStep && showGuideChoices
-                      ? 'color-mix(in srgb, var(--color-accent) 40%, transparent)'
-                      : 'color-mix(in srgb, var(--color-text) 15%, transparent)',
-                  }}
-                />
-              ))}
+            <div className="flex items-center gap-3 ml-11 mt-1">
+              <div className="flex gap-1.5">
+                {GUIDED_STEPS.map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full transition-all duration-300"
+                    style={{
+                      width: i < guidedAnswers.length ? 16 : 5,
+                      height: 5,
+                      backgroundColor: i < guidedAnswers.length
+                        ? 'var(--color-accent)'
+                        : i === guidedStep && showGuideChoices
+                        ? 'color-mix(in srgb, var(--color-accent) 40%, transparent)'
+                        : 'color-mix(in srgb, var(--color-text) 15%, transparent)',
+                    }}
+                  />
+                ))}
+              </div>
+              {guidedAnswers.length > 0 && (
+                <button
+                  onClick={handleStartOver}
+                  className="text-xs opacity-50 hover:opacity-80 transition-opacity"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  Start over
+                </button>
+              )}
             </div>
           )}
 
