@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Navbar } from '@/components/Navbar'
+import type { Preferences } from '@/types'
 
 const FLOATING_DESTINATIONS = [
   'Paris', 'Kyoto', 'Marrakech', 'Santorini', 'Reykjavik',
@@ -20,8 +22,9 @@ interface FloatingName {
 }
 
 export default function HomePage() {
-  // Generate positions client-side only to avoid server/browser mismatch
+  const router = useRouter()
   const [floatingNames, setFloatingNames] = useState<FloatingName[]>([])
+  const [surpriseLoading, setSurpriseLoading] = useState(false)
 
   useEffect(() => {
     setFloatingNames(
@@ -34,6 +37,29 @@ export default function HomePage() {
       }))
     )
   }, [])
+
+  async function handleSurpriseMe(city?: string) {
+    setSurpriseLoading(true)
+    const preferences: Preferences = {
+      summary: city
+        ? `Surprise me with destinations similar to or near ${city}, open to anything`
+        : 'Surprise me — anywhere in the world, any vibe, any budget',
+      climate: 'any',
+      budget: 'any',
+      travelStyle: 'adventurous, open-minded',
+      foodPreferences: 'anything',
+      other: city ? `inspired by ${city}` : 'completely open',
+    }
+    const res = await fetch('/api/suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferences }),
+    })
+    if (!res.ok) { setSurpriseLoading(false); return }
+    const suggestions: unknown = await res.json()
+    sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+    router.push('/results')
+  }
 
   return (
     <div
@@ -53,7 +79,6 @@ export default function HomePage() {
             `,
           }}
         />
-        {/* Subtle grid overlay */}
         <div
           className="absolute inset-0 opacity-5"
           style={{
@@ -63,32 +88,26 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Floating destination names */}
+      {/* Floating destination names — vivid, hoverable, clickable */}
       {floatingNames.map((item) => (
-        <motion.span
+        <motion.button
           key={item.name}
-          className="absolute select-none pointer-events-none font-bold whitespace-nowrap"
+          onClick={() => handleSurpriseMe(item.name)}
+          className="absolute font-bold whitespace-nowrap cursor-pointer select-none"
           style={{
             fontFamily: 'var(--font-playfair)',
             left: `${item.x}%`,
             top: `${item.y}%`,
             color: 'var(--color-text)',
             fontSize: 'clamp(1rem, 3vw, 2.5rem)',
-            opacity: 0.04,
           }}
-          animate={{
-            y: [0, -18, 0],
-            x: [0, 10, 0],
-          }}
-          transition={{
-            duration: item.duration,
-            delay: item.delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          animate={{ y: [0, -18, 0], x: [0, 10, 0], opacity: [0.14, 0.18, 0.14] }}
+          transition={{ duration: item.duration, delay: item.delay, repeat: Infinity, ease: 'easeInOut' }}
+          whileHover={{ opacity: 0.7, scale: 1.08 }}
+          title={`Surprise me with ${item.name}`}
         >
           {item.name}
-        </motion.span>
+        </motion.button>
       ))}
 
       {/* Main content */}
@@ -110,7 +129,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-            className="text-lg md:text-xl mb-12 leading-relaxed max-w-lg mx-auto"
+            className="text-lg md:text-xl mb-10 leading-relaxed max-w-lg mx-auto"
             style={{ color: 'var(--color-subtle)' }}
           >
             Tell us what you are dreaming of. We will find your perfect destination.
@@ -120,10 +139,11 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <Link
               href="/discover"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105 hover:shadow-2xl"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105"
               style={{
                 backgroundColor: 'var(--color-accent)',
                 color: 'var(--color-bg)',
@@ -132,6 +152,25 @@ export default function HomePage() {
             >
               Start Your Journey
             </Link>
+
+            <button
+              onClick={() => handleSurpriseMe()}
+              disabled={surpriseLoading}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105 disabled:opacity-60"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
+                color: 'var(--color-text)',
+                border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
+              }}
+            >
+              {surpriseLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block"
+                    style={{ borderColor: 'var(--color-text)', borderTopColor: 'transparent' }} />
+                  Finding...
+                </span>
+              ) : '✦ Surprise me'}
+            </button>
           </motion.div>
         </motion.div>
       </main>
