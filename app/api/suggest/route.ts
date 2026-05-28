@@ -29,30 +29,30 @@ export async function POST(request: Request) {
   const { preferences } = parsed.data
   const supabase = createServerClient()
 
-  // Step 1: Fetch 20 candidate destinations from Supabase
-  const { data: countries } = await supabase
-    .from('countries')
-    .select(`
-      id, name, code, region, flag_emoji, cultural_summary,
-      best_seasons, visa_info, coordinates, currency,
-      cities (
-        id, name, latitude, longitude, description, travel_types, best_for,
-        attractions (name, type, description)
-      ),
-      cuisines (summary, signature_dishes, dietary_options)
-    `)
-    .limit(20)
-
-  // Step 2: Check suggestion cache (valid for 24 hours)
+  // Compute hash first (sync, instant) so both DB queries can fire in parallel
   const hash = createHash('sha256').update(preferences.summary).digest('hex')
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: cached } = await supabase
-    .from('suggestion_cache')
-    .select('suggestions')
-    .eq('preferences_hash', hash)
-    .gte('created_at', oneDayAgo)
-    .single()
+  const [{ data: countries }, { data: cached }] = await Promise.all([
+    supabase
+      .from('countries')
+      .select(`
+        id, name, code, region, flag_emoji, cultural_summary,
+        best_seasons, visa_info, coordinates, currency,
+        cities (
+          id, name, latitude, longitude, description, travel_types, best_for,
+          attractions (name, type, description)
+        ),
+        cuisines (summary, signature_dishes, dietary_options)
+      `)
+      .limit(20),
+    supabase
+      .from('suggestion_cache')
+      .select('suggestions')
+      .eq('preferences_hash', hash)
+      .gte('created_at', oneDayAgo)
+      .single(),
+  ])
 
   if (cached?.suggestions) {
     return NextResponse.json(cached.suggestions)

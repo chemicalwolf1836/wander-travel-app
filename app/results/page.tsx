@@ -83,19 +83,34 @@ export default function ResultsPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mapStyle, setMapStyle] = useState<AppSettings['mapStyle']>('default')
   const [cardsSettled, setCardsSettled] = useState(false)
+  const [weatherMap, setWeatherMap] = useState<Record<string, WeatherData>>({})
 
   useEffect(() => {
     const raw = sessionStorage.getItem('wander_destinations')
     if (!raw) { router.push('/discover'); return }
     try {
-      setDestinations(JSON.parse(raw) as Destination[])
+      const dests = JSON.parse(raw) as Destination[]
+      setDestinations(dests)
       setLoading(false)
-      setTimeout(() => setCardsSettled(true), 1800)
+      setTimeout(() => setCardsSettled(true), 900)
     } catch {
       setError(true)
       setLoading(false)
     }
   }, [router])
+
+  // Prefetch weather for all destinations as soon as they load
+  useEffect(() => {
+    if (destinations.length === 0) return
+    destinations.forEach(dest => {
+      fetch(`/api/weather?city=${encodeURIComponent(dest.city)}&country=${dest.countryCode}`)
+        .then(r => r.json())
+        .then((d: WeatherData | null) => {
+          if (d) setWeatherMap(prev => ({ ...prev, [dest.city]: d }))
+        })
+        .catch(() => null)
+    })
+  }, [destinations])
 
   useEffect(() => {
     const s = loadSettings()
@@ -257,6 +272,7 @@ export default function ResultsPage() {
             transition={{ duration: 0.4 }}>
             <DestinationDetailCard
               destination={destinations[selectedIndex]}
+              weather={weatherMap[destinations[selectedIndex].city] ?? null}
               onExplore={() => handleNavigate(destinations[selectedIndex])}
               onBack={() => setView('split')}
             />
@@ -387,26 +403,20 @@ const WEATHER_EMOJI: Record<string, string> = {
 /* ── Full detail card (used in detail view) ── */
 function DestinationDetailCard({
   destination: dest,
+  weather,
   onExplore,
   onBack,
 }: {
   destination: Destination
+  weather: WeatherData | null
   onExplore: () => void
   onBack: () => void
 }) {
   const imageUrl = useWikiImage(dest.city)
   const theme = dest.culturalTheme
   const [activeItem, setActiveItem] = useState<string | null>(null)
-  const [weather, setWeather] = useState<WeatherData | null>(null)
   const [fav, setFav] = useState(() => isFavourite(dest.city))
   const [shared, setShared] = useState(false)
-
-  useEffect(() => {
-    fetch(`/api/weather?city=${encodeURIComponent(dest.city)}&country=${dest.countryCode}`)
-      .then(r => r.json())
-      .then((d: WeatherData | null) => { if (d) setWeather(d) })
-      .catch(() => null)
-  }, [dest.city, dest.countryCode])
 
   function handleFav() {
     const next = toggleFavourite(dest)
