@@ -14,6 +14,9 @@ export interface Destination {
   emoji: string
   culturalTheme: CulturalTheme
   weather?: WeatherData
+  currency?: string
+  language?: string
+  visaInfo?: string
 }
 
 export interface CulturalTheme {

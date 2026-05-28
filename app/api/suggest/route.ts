@@ -81,6 +81,9 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
   "bestFor": string[],
   "bestSeasons": string[],
   "emoji": string,
+  "currency": string,
+  "language": string,
+  "visaInfo": string,
   "culturalTheme": {
     "primary": string,
     "accent": string,
