@@ -14,10 +14,36 @@ const OPENING_MESSAGE: ChatMessageType = {
   content: "Where's your mind wandering?",
 }
 
+const GUIDED_STEPS = [
+  {
+    question: 'What kind of escape?',
+    choices: ['Sun & beaches', 'Mountains & wild', 'City & culture', 'Ancient & historic'],
+  },
+  {
+    question: 'What kind of culture?',
+    choices: ['Traditional & ancient', 'Modern & cosmopolitan', 'Spiritual & sacred', 'Artistic & bohemian'],
+  },
+  {
+    question: 'Which part of the world?',
+    choices: ['Europe', 'Asia & Pacific', 'Americas', 'Africa & Middle East'],
+  },
+  {
+    question: "What's the vibe?",
+    choices: ['Slow & relaxed', 'Action-packed', 'Romantic', 'Off the beaten path'],
+  },
+  {
+    question: "What's the weather like?",
+    choices: ['Hot & tropical', 'Cool & dramatic', 'Warm & dry', 'Mild & fresh'],
+  },
+  {
+    question: "What's your budget?",
+    choices: ['Budget-friendly', 'Mid-range', 'Luxury', 'No limit'],
+  },
+]
+
 interface ChatResponse {
   ready: boolean
   message: string
-  choices?: string[]
   preferences?: Preferences
 }
 
@@ -30,61 +56,107 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false)
   const [searching, setSearching] = useState(false)
   const [mode, setMode] = useState<Mode>('selecting')
-  const [choices, setChoices] = useState<string[]>([])
+
+  // Guided mode state
+  const [guidedStep, setGuidedStep] = useState(0)
+  const [guidedAnswers, setGuidedAnswers] = useState<string[]>([])
+  const [showGuideChoices, setShowGuideChoices] = useState(false)
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading, choices])
+  }, [messages, loading, showGuideChoices])
 
-  async function callChat(msgs: ChatMessageType[], m: Mode) {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: msgs, mode: m }),
-    })
-    if (!res.ok) return null
-    return res.json() as Promise<ChatResponse>
-  }
-
-  async function handleModeSelect(selected: 'free' | 'guided') {
+  function handleModeSelect(selected: 'free' | 'guided') {
     setMode(selected)
     if (selected === 'free') {
       setTimeout(() => inputRef.current?.focus(), 100)
       return
     }
-    // Guided: kick off with a silent trigger so Claude asks the first question with choices
-    setLoading(true)
-    const kickoff: ChatMessageType[] = [...messages, { role: 'user', content: 'guide me' }]
-    const data = await callChat(kickoff, 'guided')
-    setLoading(false)
-    if (!data) return
-    setMessages((prev) => [...prev, { role: 'assistant', content: data.message }])
-    setChoices(data.choices ?? [])
+    // Guided: immediately show first question — no API call needed
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { role: 'assistant', content: GUIDED_STEPS[0].question }])
+      setGuidedStep(0)
+      setShowGuideChoices(true)
+    }, 150)
   }
 
-  async function sendMessage(overrideText?: string) {
-    const text = (overrideText ?? input).trim()
-    if (!text || loading) return
+  async function handleGuidedChoice(choice: string) {
+    setShowGuideChoices(false)
+    const newAnswers = [...guidedAnswers, choice]
+    setGuidedAnswers(newAnswers)
+    setMessages((prev) => [...prev, { role: 'user', content: choice }])
 
-    setChoices([])
-    const userMessage: ChatMessageType = { role: 'user', content: text }
+    const nextStep = guidedStep + 1
+
+    if (nextStep < GUIDED_STEPS.length) {
+      // Show next question after a brief pause
+      setTimeout(() => {
+        setMessages((prev) => [...prev, { role: 'assistant', content: GUIDED_STEPS[nextStep].question }])
+        setGuidedStep(nextStep)
+        setShowGuideChoices(true)
+      }, 280)
+    } else {
+      // All answered — build preferences and go straight to suggest
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Perfect, finding your destinations now...' }])
+      setSearching(true)
+
+      const [escape, culture, continent, vibe, weather, budget] = newAnswers
+      const preferences: Preferences = {
+        summary: `${escape}, ${culture} culture, ${continent}, ${vibe}, ${weather} weather, ${budget} budget`,
+        climate: weather,
+        budget,
+        travelStyle: `${escape}, ${vibe}`,
+        foodPreferences: '',
+        other: `${culture} culture, ${continent}`,
+      }
+
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences }),
+      })
+
+      if (!res.ok) {
+        setSearching(false)
+        setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations. Let's try again." }])
+        return
+      }
+
+      const suggestions: unknown = await res.json()
+      sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      router.push('/results')
+    }
+  }
+
+  // Free mode: full chat flow
+  async function sendMessage(text?: string) {
+    const content = (text ?? input).trim()
+    if (!content || loading) return
+
+    const userMessage: ChatMessageType = { role: 'user', content }
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
     setInput('')
     setLoading(true)
 
-    const data = await callChat(newMessages, mode === 'selecting' ? 'free' : mode)
-    setLoading(false)
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: newMessages }),
+    })
 
-    if (!data) {
+    if (!res.ok) {
+      setLoading(false)
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
       return
     }
 
+    const data: ChatResponse = await res.json()
+    setLoading(false)
     setMessages((prev) => [...prev, { role: 'assistant', content: data.message }])
-    if (data.choices?.length) setChoices(data.choices)
 
     if (data.ready && data.preferences) {
       setSearching(true)
@@ -111,13 +183,13 @@ export default function DiscoverPage() {
     }
   }
 
-  const showInput = mode !== 'selecting'
+  const showInput = mode === 'free'
+  const currentChoices = mode === 'guided' && showGuideChoices ? GUIDED_STEPS[guidedStep]?.choices ?? [] : []
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       <Navbar />
 
-      {/* Message list */}
       <div className={`flex-1 overflow-y-auto pt-20 px-4 max-w-2xl mx-auto w-full ${showInput ? 'pb-36' : 'pb-10'}`}>
         <div className="flex flex-col gap-4 py-6">
           {messages.map((msg, i) => (
@@ -125,7 +197,7 @@ export default function DiscoverPage() {
           ))}
           {loading && <TypingIndicator />}
 
-          {/* Mode selection — shown once, inline after opening message */}
+          {/* Mode selection */}
           <AnimatePresence>
             {mode === 'selecting' && !loading && (
               <motion.div
@@ -151,28 +223,28 @@ export default function DiscoverPage() {
             )}
           </AnimatePresence>
 
-          {/* Choice chips — shown after AI messages in guided mode */}
+          {/* Guided choice chips */}
           <AnimatePresence>
-            {choices.length > 0 && !loading && (
+            {currentChoices.length > 0 && (
               <motion.div
                 className="flex flex-wrap gap-2 ml-11"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.22 }}
               >
-                {choices.map((c) => (
+                {currentChoices.map((c) => (
                   <motion.button
                     key={c}
-                    onClick={() => sendMessage(c)}
+                    onClick={() => handleGuidedChoice(c)}
                     className="text-xs px-4 py-2 rounded-full"
                     style={{
                       color: 'var(--color-accent)',
                       backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
                       border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                     }}
-                    whileHover={{ scale: 1.04, backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
+                    whileTap={{ scale: 0.96 }}
                     transition={{ duration: 0.15 }}
                   >
                     {c}
@@ -181,6 +253,27 @@ export default function DiscoverPage() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Progress dots — guided mode only */}
+          {mode === 'guided' && !searching && (
+            <div className="flex gap-1.5 ml-11 mt-1">
+              {GUIDED_STEPS.map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-full transition-all duration-300"
+                  style={{
+                    width: i < guidedAnswers.length ? 16 : 5,
+                    height: 5,
+                    backgroundColor: i < guidedAnswers.length
+                      ? 'var(--color-accent)'
+                      : i === guidedStep && showGuideChoices
+                      ? 'color-mix(in srgb, var(--color-accent) 40%, transparent)'
+                      : 'color-mix(in srgb, var(--color-text) 15%, transparent)',
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {searching && (
             <p className="text-center text-sm animate-pulse mt-4" style={{ color: 'var(--color-subtle)' }}>
@@ -191,7 +284,7 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Fixed input — only shown once mode is selected */}
+      {/* Text input — free mode only */}
       <AnimatePresence>
         {showInput && (
           <motion.div
@@ -211,7 +304,7 @@ export default function DiscoverPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={mode === 'guided' ? 'or type freely...' : 'Tell me about your dream trip...'}
+                placeholder="Tell me about your dream trip..."
                 rows={1}
                 className="flex-1 resize-none rounded-2xl px-4 py-3 text-sm outline-none transition-all"
                 style={{
@@ -252,10 +345,7 @@ function ModeCard({ icon, label, sub, onClick }: { icon: React.ReactNode; label:
         border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
         color: 'var(--color-text)',
       }}
-      whileHover={{
-        borderColor: 'var(--color-accent)',
-        scale: 1.02,
-      }}
+      whileHover={{ borderColor: 'var(--color-accent)', scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.15 }}
     >
