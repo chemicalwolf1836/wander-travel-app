@@ -20,6 +20,14 @@ const GUIDED_STEPS = [
     choices: ['Sun & beaches', 'Mountains & wild', 'City & culture', 'Ancient & historic'],
   },
   {
+    question: 'Who are you traveling with?',
+    choices: ['Solo', 'Couple', 'Family with kids', 'Group of friends'],
+  },
+  {
+    question: 'How long is the trip?',
+    choices: ['A long weekend', 'One week', 'Two weeks', 'Open-ended'],
+  },
+  {
     question: 'What kind of culture?',
     choices: ['Traditional & ancient', 'Modern & cosmopolitan', 'Spiritual & sacred', 'Artistic & bohemian'],
   },
@@ -103,14 +111,14 @@ export default function DiscoverPage() {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Perfect, finding your destinations now...' }])
       setSearching(true)
 
-      const [escape, culture, continent, vibe, weather, budget] = newAnswers
+      const [escape, travelers, duration, culture, continent, vibe, weather, budget] = newAnswers
       const preferences: Preferences = {
-        summary: `${escape}, ${culture} culture, ${continent}, ${vibe}, ${weather} weather, ${budget} budget`,
+        summary: `${escape}, traveling ${travelers}, ${duration}, ${culture} culture, ${continent}, ${vibe}, ${weather} weather, ${budget} budget`,
         climate: weather,
         budget,
-        travelStyle: `${escape}, ${vibe}`,
+        travelStyle: `${escape}, ${vibe}, ${travelers}`,
         foodPreferences: '',
-        other: `${culture} culture, ${continent}`,
+        other: `${culture} culture, ${continent}, trip length: ${duration}`,
       }
 
       const res = await fetch('/api/suggest', {
