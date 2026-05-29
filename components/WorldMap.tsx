@@ -82,6 +82,7 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting, mapSt
       animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
       style={{ cursor: zoom > 1 ? 'zoom-out' : 'default' }}
+      onMouseLeave={() => setHoveredIndex(null)}
     >
       <div
         style={{
@@ -122,7 +123,7 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting, mapSt
           <Geographies geography={GEO_URL}>
             {({ geographies }: { geographies: Array<{ rsmKey: string; id?: string }> }) =>
               geographies.map((geo) => {
-                const isHighlighted = highlightedId !== '' && geo.id === highlightedId
+                const isHighlighted = highlightedId !== '' && String(geo.id) === highlightedId
 
                 const fill = isHighlighted
                   ? highlightAccent
