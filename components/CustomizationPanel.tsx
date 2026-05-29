@@ -1,28 +1,59 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Sun, Moon, X } from 'lucide-react'
 import type { AppSettings } from '@/types'
+import { THEME_PRESETS, applyPreset } from '@/lib/themePresets'
+import type { PresetName, AppThemePreset } from '@/lib/themePresets'
 
 const STORAGE_KEY = 'wander_settings'
-
-const ACCENT_SWATCHES = [
-  '#F59E0B', // amber — warm, travel-y default
-  '#0EA5E9', // sky blue — vivid on dark and light maps
-  '#10B981', // emerald — nature, readable
-  '#F97316', // orange — energetic, distinct from amber
-  '#8B5CF6', // violet — premium, rich
-  '#EC4899', // rose — bold, clearly distinct
-]
 
 const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 'default',
   cardLayout: 'grid',
   accentColor: '#F59E0B',
   mapStyle: 'default',
+  presetName: 'midnight',
 }
+
+const MAP_STYLE_OPTIONS = [
+  {
+    value: 'default' as const,
+    label: 'Default',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+        <rect x="2" y="2" width="28" height="28" rx="4" fill="currentColor" fillOpacity="0.12" />
+        <line x1="2" y1="11" x2="30" y2="11" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="2" y1="21" x2="30" y2="21" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="11" y1="2" x2="11" y2="30" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="21" y1="2" x2="21" y2="30" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    ),
+  },
+  {
+    value: 'satellite' as const,
+    label: 'Satellite',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+        <rect x="2" y="2" width="28" height="28" rx="4" fill="currentColor" fillOpacity="0.45" />
+        <rect x="2" y="2" width="13" height="13" rx="3" fill="currentColor" fillOpacity="0.25" />
+        <rect x="17" y="17" width="13" height="13" rx="3" fill="currentColor" fillOpacity="0.15" />
+      </svg>
+    ),
+  },
+  {
+    value: 'minimal' as const,
+    label: 'Minimal',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="7" stroke="currentColor" strokeWidth="2" />
+        <circle cx="16" cy="16" r="2.5" fill="currentColor" />
+      </svg>
+    ),
+  },
+]
 
 interface CustomizationPanelProps {
   open: boolean
@@ -33,24 +64,30 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
   const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [mounted, setMounted] = useState(false)
+  const colorInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setMounted(true)
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       try {
-        setSettings(JSON.parse(raw) as AppSettings)
-      } catch {
-        // ignore malformed storage
-      }
+        const parsed = JSON.parse(raw) as AppSettings
+        setSettings(parsed)
+        if (parsed.presetName) applyPreset(parsed.presetName as PresetName)
+        if (parsed.accentColor) document.documentElement.style.setProperty('--color-accent', parsed.accentColor)
+        if (parsed.fontSize === 'large') document.documentElement.style.fontSize = '18px'
+      } catch { /* ignore malformed storage */ }
     }
   }, [])
 
   function save(next: Partial<AppSettings>) {
-    const updated = { ...settings, ...next }
-    setSettings(updated)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-
+    if (next.presetName) {
+      applyPreset(next.presetName as PresetName)
+      // Reset accent override to the preset's default so custom color doesn't bleed across
+      if (!next.accentColor) {
+        next.accentColor = THEME_PRESETS[next.presetName as PresetName]?.accent ?? settings.accentColor
+      }
+    }
     if (next.accentColor) {
       document.documentElement.style.setProperty('--color-accent', next.accentColor)
     }
@@ -60,7 +97,9 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
       document.documentElement.style.fontSize = ''
     }
 
-    // Notify other components of the settings change
+    const updated = { ...settings, ...next }
+    setSettings(updated)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
     window.dispatchEvent(new CustomEvent('wander-settings', { detail: updated }))
   }
 
@@ -105,7 +144,7 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                 </button>
               </div>
 
-              {/* Dark/light toggle */}
+              {/* Appearance */}
               <Section label="Appearance">
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -130,6 +169,65 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                 </button>
               </Section>
 
+              {/* Theme presets */}
+              <Section label="Theme">
+                <div className="flex gap-2.5">
+                  {(Object.entries(THEME_PRESETS) as [PresetName, AppThemePreset][]).map(([name, preset]) => (
+                    <button
+                      key={name}
+                      onClick={() => save({ presetName: name })}
+                      className="flex flex-col items-center gap-1.5"
+                      title={preset.label}
+                    >
+                      <div
+                        style={{
+                          width: 44,
+                          height: 60,
+                          borderRadius: 10,
+                          background: `linear-gradient(160deg, ${preset.card} 0%, ${preset.accent} 130%)`,
+                          outline: settings.presetName === name
+                            ? `2px solid ${preset.accent}`
+                            : '2px solid transparent',
+                          outlineOffset: 2,
+                          transition: 'outline-color 0.2s ease',
+                        }}
+                      />
+                      <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>
+                        {preset.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </Section>
+
+              {/* Custom accent override */}
+              <Section label="Accent">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <button
+                      onClick={() => colorInputRef.current?.click()}
+                      className="w-9 h-9 rounded-full border-2 transition-transform hover:scale-110"
+                      style={{
+                        backgroundColor: settings.accentColor,
+                        borderColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)',
+                      }}
+                      title="Pick custom accent color"
+                    />
+                    <input
+                      ref={colorInputRef}
+                      type="color"
+                      value={settings.accentColor}
+                      onChange={(e) => save({ accentColor: e.target.value })}
+                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0, top: 0, left: 0 }}
+                      aria-hidden
+                    />
+                  </div>
+                  <span className="text-xs font-mono opacity-60" style={{ color: 'var(--color-text)' }}>
+                    {settings.accentColor}
+                  </span>
+                </div>
+              </Section>
+
               {/* Font size */}
               <Section label="Font Size">
                 <div className="flex gap-2">
@@ -139,10 +237,9 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       onClick={() => save({ fontSize: size })}
                       className="flex-1 py-2 rounded-lg text-sm capitalize"
                       style={{
-                        backgroundColor:
-                          settings.fontSize === size
-                            ? 'var(--color-accent)'
-                            : 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                        backgroundColor: settings.fontSize === size
+                          ? 'var(--color-accent)'
+                          : 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
                         color: settings.fontSize === size ? 'var(--color-bg)' : 'var(--color-text)',
                       }}
                     >
@@ -152,41 +249,26 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                 </div>
               </Section>
 
-              {/* Accent color */}
-              <Section label="Accent Color">
-                <div className="flex gap-3 flex-wrap">
-                  {ACCENT_SWATCHES.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => save({ accentColor: color })}
-                      className="w-9 h-9 rounded-full transition-transform hover:scale-110"
-                      style={{
-                        backgroundColor: color,
-                        outline: settings.accentColor === color ? `3px solid var(--color-text)` : 'none',
-                        outlineOffset: '2px',
-                      }}
-                    />
-                  ))}
-                </div>
-              </Section>
-
-              {/* Map style */}
+              {/* Map style — visual thumbnail cards */}
               <Section label="Map Style">
-                <div className="flex flex-col gap-2">
-                  {(['default', 'satellite', 'minimal'] as const).map((style) => (
+                <div className="flex gap-2">
+                  {MAP_STYLE_OPTIONS.map(({ value, label, icon }) => (
                     <button
-                      key={style}
-                      onClick={() => save({ mapStyle: style })}
-                      className="py-2 px-4 rounded-lg text-sm capitalize text-left"
+                      key={value}
+                      onClick={() => save({ mapStyle: value })}
+                      className="flex flex-col items-center gap-2 flex-1 py-3 rounded-xl"
                       style={{
-                        backgroundColor:
-                          settings.mapStyle === style
-                            ? 'var(--color-accent)'
-                            : 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
-                        color: settings.mapStyle === style ? 'var(--color-bg)' : 'var(--color-text)',
+                        backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                        border: `2px solid ${settings.mapStyle === value ? 'var(--color-accent)' : 'transparent'}`,
+                        transition: 'border-color 0.2s ease',
                       }}
                     >
-                      {style}
+                      <div style={{ color: settings.mapStyle === value ? 'var(--color-accent)' : 'var(--color-subtle)' }}>
+                        {icon}
+                      </div>
+                      <span className="text-xs capitalize" style={{ color: 'var(--color-text)' }}>
+                        {label}
+                      </span>
                     </button>
                   ))}
                 </div>

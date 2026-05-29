@@ -16,10 +16,23 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
+  const [savedCount, setSavedCount] = useState(0)
   const isDestinationPage = pathname.startsWith('/destination/')
 
-  // Avoid hydration mismatch - only show theme toggle after mount
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+    try {
+      const raw = localStorage.getItem('wander_favourites')
+      const favs = raw ? (JSON.parse(raw) as unknown[]) : []
+      setSavedCount(Array.isArray(favs) ? favs.length : 0)
+    } catch { /* ignore */ }
+
+    function onFavsChanged(e: Event) {
+      setSavedCount((e as CustomEvent<{ count: number }>).detail.count)
+    }
+    window.addEventListener('wander-favourites-changed', onFavsChanged)
+    return () => window.removeEventListener('wander-favourites-changed', onFavsChanged)
+  }, [])
 
   return (
     <nav
@@ -57,11 +70,23 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
       <div className="flex items-center gap-3">
         <Link
           href="/saved"
-          className="p-2 rounded-full hover:opacity-70 transition-opacity"
+          className="relative p-2 rounded-full hover:opacity-70 transition-opacity"
           style={{ color: 'var(--color-text)' }}
           aria-label="Saved destinations"
         >
           <Heart size={18} />
+          {savedCount > 0 && (
+            <span
+              className="absolute top-1.5 right-1.5 block rounded-full"
+              style={{
+                width: 6,
+                height: 6,
+                backgroundColor: 'var(--color-accent)',
+                boxShadow: '0 0 4px var(--color-accent)',
+              }}
+              aria-hidden="true"
+            />
+          )}
         </Link>
 
         {mounted && (
