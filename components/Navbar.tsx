@@ -53,7 +53,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
             style={{ color: 'var(--color-text)' }}
           >
             <ArrowLeft size={16} />
-            Back to destinations
+            Back to Destinations
           </button>
         ) : (
           <Link href="/" className="flex items-center gap-2">
