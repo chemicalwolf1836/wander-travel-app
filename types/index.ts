@@ -66,4 +66,5 @@ export interface AppSettings {
   cardLayout: 'grid' | 'list'
   accentColor: string
   mapStyle: 'default' | 'satellite' | 'minimal'
+  presetName?: string
 }

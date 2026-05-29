@@ -14,6 +14,7 @@ export function toggleFavourite(dest: Destination): boolean {
   const exists = favs.some(f => f.city === dest.city)
   const updated = exists ? favs.filter(f => f.city !== dest.city) : [...favs, dest]
   localStorage.setItem(KEY, JSON.stringify(updated))
+  window.dispatchEvent(new CustomEvent('wander-favourites-changed', { detail: { count: updated.length } }))
   return !exists
 }
 
