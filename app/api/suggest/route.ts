@@ -63,6 +63,8 @@ export async function POST(request: Request) {
 to suggest exactly 3 destinations. Do not invent places. Choose the
 3 best matches for the user preferences provided.
 
+IMPORTANT: All text fields (tagline, description, food summary, etc.) must use correct English spelling, grammar, and punctuation. Double-check proper nouns, place names, and cultural terms.
+
 Available destinations: ${JSON.stringify(countries ?? [])}
 User preferences: ${preferences.summary}
 

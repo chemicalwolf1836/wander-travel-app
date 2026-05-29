@@ -101,7 +101,7 @@ export async function GET(req: Request) {
       max_tokens: 220,
       messages: [{
         role: 'user',
-        content: `You are a luxury travel writer. Write 2-3 vivid, atmospheric sentences about "${name}"${context ? ` in the context of ${context}` : ''}. Be specific, sensory, and enticing. No intro phrase, just dive straight in.`,
+        content: `You are a luxury travel writer. Write 2-3 vivid, atmospheric sentences about "${name}"${context ? ` in the context of ${context}` : ''}. Be specific, sensory, and enticing. No intro phrase, just dive straight in. Use correct English spelling, grammar, and punctuation throughout.`,
       }],
     })
     description = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
