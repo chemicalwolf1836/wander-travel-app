@@ -169,7 +169,7 @@ export default function ResultsPage() {
         <button onClick={() => router.push('/discover')}
           className="flex items-center gap-2 px-6 py-3 rounded-full text-sm"
           style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
-          <RefreshCw size={14} /> Try Again
+          <RefreshCw size={14} /> Try again
         </button>
       </div>
     )
