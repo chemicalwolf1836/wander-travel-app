@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Sun, Moon, X } from 'lucide-react'
 import type { AppSettings } from '@/types'
-import { THEME_PRESETS, applyPreset } from '@/lib/themePresets'
+import { THEME_PRESETS, applyPreset, clearPresetStyles } from '@/lib/themePresets'
 import type { PresetName, AppThemePreset } from '@/lib/themePresets'
 
 const STORAGE_KEY = 'wander_settings'
@@ -65,6 +65,18 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [mounted, setMounted] = useState(false)
   const colorInputRef = useRef<HTMLInputElement>(null)
+  const isFirstRender = useRef(true)
+
+  // When the user toggles dark/light, wipe inline preset vars so the CSS class wins
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    clearPresetStyles()
+    setSettings(prev => {
+      const next = { ...prev, presetName: undefined }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [theme])
 
   useEffect(() => {
     setMounted(true)
@@ -238,7 +250,7 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       className="flex-1 py-2 rounded-lg text-sm capitalize"
                       style={{
                         backgroundColor: settings.fontSize === size
-                          ? 'var(--color-accent)'
+                          ? settings.accentColor
                           : 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
                         color: settings.fontSize === size ? 'var(--color-bg)' : 'var(--color-text)',
                       }}
@@ -259,11 +271,11 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       className="flex flex-col items-center gap-2 flex-1 py-3 rounded-xl"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
-                        border: `2px solid ${settings.mapStyle === value ? 'var(--color-accent)' : 'transparent'}`,
+                        border: `2px solid ${settings.mapStyle === value ? settings.accentColor : 'transparent'}`,
                         transition: 'border-color 0.2s ease',
                       }}
                     >
-                      <div style={{ color: settings.mapStyle === value ? 'var(--color-accent)' : 'var(--color-subtle)' }}>
+                      <div style={{ color: settings.mapStyle === value ? settings.accentColor : 'var(--color-subtle)' }}>
                         {icon}
                       </div>
                       <span className="text-xs capitalize" style={{ color: 'var(--color-text)' }}>

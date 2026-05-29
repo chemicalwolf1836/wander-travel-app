@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import type { Preferences } from '@/types'
 
@@ -25,6 +25,8 @@ export default function HomePage() {
   const router = useRouter()
   const [floatingNames, setFloatingNames] = useState<FloatingName[]>([])
   const [surpriseLoading, setSurpriseLoading] = useState(false)
+  const [loadingCity, setLoadingCity] = useState('')
+  const [exiting, setExiting] = useState(false)
 
   useEffect(() => {
     setFloatingNames(
@@ -38,31 +40,62 @@ export default function HomePage() {
     )
   }, [])
 
+  // Cycle through destination names while the Surprise Me call is in flight
+  useEffect(() => {
+    if (!surpriseLoading) { setLoadingCity(''); return }
+    let i = Math.floor(Math.random() * FLOATING_DESTINATIONS.length)
+    setLoadingCity(FLOATING_DESTINATIONS[i])
+    const id = setInterval(() => {
+      i = (i + 1) % FLOATING_DESTINATIONS.length
+      setLoadingCity(FLOATING_DESTINATIONS[i])
+    }, 900)
+    return () => clearInterval(id)
+  }, [surpriseLoading])
+
   async function handleSurpriseMe(city?: string) {
     setSurpriseLoading(true)
-    const preferences: Preferences = {
-      summary: city
-        ? `Surprise me with destinations similar to or near ${city}, open to anything`
-        : 'Surprise me — anywhere in the world, any vibe, any budget',
-      climate: 'any',
-      budget: 'any',
-      travelStyle: 'adventurous, open-minded',
-      foodPreferences: 'anything',
-      other: city ? `inspired by ${city}` : 'completely open',
+    try {
+      const preferences: Preferences = {
+        summary: city
+          ? `Surprise me with destinations similar to or near ${city}, open to anything`
+          : 'Surprise me — anywhere in the world, any vibe, any budget',
+        climate: 'any',
+        budget: 'any',
+        travelStyle: 'adventurous, open-minded',
+        foodPreferences: 'anything',
+        other: city ? `inspired by ${city}` : 'completely open',
+      }
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences }),
+      })
+      if (!res.ok) {
+        setSurpriseLoading(false)
+        toast.error("Couldn't find destinations right now — try again in a moment.")
+        return
+      }
+      const suggestions: unknown = await res.json()
+      sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      setExiting(true)
+      await new Promise(r => setTimeout(r, 350))
+      router.push('/results')
+    } catch {
+      setSurpriseLoading(false)
+      toast.error('Something went wrong. Please check your connection and try again.')
     }
-    const res = await fetch('/api/suggest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ preferences }),
-    })
-    if (!res.ok) { setSurpriseLoading(false); return }
-    const suggestions: unknown = await res.json()
-    sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
-    router.push('/results')
+  }
+
+  async function handleStartJourney() {
+    setExiting(true)
+    await new Promise(r => setTimeout(r, 350))
+    router.push('/discover')
   }
 
   return (
-    <div
+    <motion.div
+      animate={{ opacity: exiting ? 0 : 1 }}
+      transition={{ duration: 0.35, ease: 'easeInOut' }}
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: 'var(--color-bg)' }}
     >
@@ -88,7 +121,7 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Floating destination names — vivid, hoverable, clickable */}
+      {/* Floating destination names */}
       {floatingNames.map((item) => (
         <motion.button
           key={item.name}
@@ -141,8 +174,8 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <Link
-              href="/discover"
+            <button
+              onClick={handleStartJourney}
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105"
               style={{
                 backgroundColor: 'var(--color-accent)',
@@ -151,7 +184,7 @@ export default function HomePage() {
               }}
             >
               Start Your Journey
-            </Link>
+            </button>
 
             <button
               onClick={() => handleSurpriseMe()}
@@ -165,15 +198,36 @@ export default function HomePage() {
             >
               {surpriseLoading ? (
                 <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block"
-                    style={{ borderColor: 'var(--color-text)', borderTopColor: 'transparent' }} />
+                  <span
+                    className="w-4 h-4 rounded-full border-2 animate-spin inline-block"
+                    style={{ borderColor: 'var(--color-text)', borderTopColor: 'transparent' }}
+                  />
                   Finding...
                 </span>
               ) : '✦ Surprise me'}
             </button>
           </motion.div>
+
+          {/* Cycling city hint while Surprise Me is loading */}
+          <div className="mt-6 h-6">
+            <AnimatePresence mode="wait">
+              {surpriseLoading && loadingCity && (
+                <motion.p
+                  key={loadingCity}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.35 }}
+                  className="text-sm tracking-widest uppercase"
+                  style={{ color: 'var(--color-subtle)' }}
+                >
+                  Exploring {loadingCity}…
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
       </main>
-    </div>
+    </motion.div>
   )
 }

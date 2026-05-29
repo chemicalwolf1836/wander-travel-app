@@ -1,31 +1,78 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, MapPin, ArrowRight } from 'lucide-react'
+import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
-import type { Destination } from '@/types'
+import type { Destination, Preferences } from '@/types'
 
 export default function SavedPage() {
   const router = useRouter()
   const [favourites, setFavourites] = useState<Destination[]>([])
   const [mounted, setMounted] = useState(false)
+  const [exploringCity, setExploringCity] = useState<string | null>(null)
+  const [hasResults, setHasResults] = useState(false)
+  const [pendingRemoveCity, setPendingRemoveCity] = useState<string | null>(null)
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setFavourites(getFavourites())
+    setHasResults(!!sessionStorage.getItem('wander_destinations'))
     setMounted(true)
   }, [])
 
   function handleRemove(dest: Destination) {
-    toggleFavourite(dest)
-    setFavourites(getFavourites())
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    setPendingRemoveCity(dest.city)
+
+    undoTimerRef.current = setTimeout(() => {
+      toggleFavourite(dest)
+      setFavourites(getFavourites())
+      setPendingRemoveCity(null)
+    }, 3500)
+
+    toast(`${dest.city} removed`, {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          clearTimeout(undoTimerRef.current!)
+          setPendingRemoveCity(null)
+        },
+      },
+    })
   }
 
-  function handleExplore(dest: Destination) {
-    sessionStorage.setItem('wander_destinations', JSON.stringify([dest]))
-    router.push('/results')
+  async function handleExplore(dest: Destination) {
+    setExploringCity(dest.city)
+    try {
+      const preferences: Preferences = {
+        summary: `Surprise me with destinations similar to or near ${dest.city}, open to anything`,
+        climate: 'any',
+        budget: 'any',
+        travelStyle: 'adventurous, open-minded',
+        foodPreferences: 'anything',
+        other: `inspired by ${dest.city}`,
+      }
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences }),
+      })
+      if (!res.ok) {
+        toast.error("Couldn't load destinations — try again in a moment.")
+        setExploringCity(null)
+        return
+      }
+      const suggestions: unknown = await res.json()
+      sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      router.push('/results')
+    } catch {
+      toast.error('Something went wrong. Please check your connection.')
+      setExploringCity(null)
+    }
   }
 
   if (!mounted) return null
@@ -35,7 +82,7 @@ export default function SavedPage() {
       <Navbar />
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-4">
           <Heart size={22} style={{ color: 'var(--color-accent)' }} />
           <h1
             className="text-3xl"
@@ -52,6 +99,17 @@ export default function SavedPage() {
             </span>
           )}
         </div>
+
+        {hasResults && (
+          <button
+            onClick={() => router.push('/results')}
+            className="flex items-center gap-2 text-sm mb-8 hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--color-subtle)' }}
+          >
+            <ArrowRight size={13} className="rotate-180" />
+            Back to destinations
+          </button>
+        )}
 
         {favourites.length === 0 ? (
           <motion.div
@@ -84,7 +142,7 @@ export default function SavedPage() {
             transition={{ duration: 0.4 }}
           >
             <AnimatePresence>
-              {favourites.map((dest, i) => (
+              {favourites.filter(d => d.city !== pendingRemoveCity).map((dest, i) => (
                 <motion.div
                   key={dest.city}
                   initial={{ opacity: 0, y: 12 }}
@@ -130,15 +188,23 @@ export default function SavedPage() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleExplore(dest)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105"
+                      disabled={exploringCity !== null}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 disabled:opacity-60"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
                         color: 'var(--color-accent)',
                         border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       }}
                     >
-                      Explore
-                      <ArrowRight size={11} />
+                      {exploringCity === dest.city ? (
+                        <>
+                          <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin inline-block"
+                            style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+                          Finding…
+                        </>
+                      ) : (
+                        <>Explore <ArrowRight size={11} /></>
+                      )}
                     </button>
 
                     <button

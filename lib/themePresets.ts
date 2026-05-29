@@ -18,6 +18,8 @@ export const THEME_PRESETS: Record<PresetName, AppThemePreset> = {
   dusk:     { label: 'Dusk',     bg: '#110d1a', card: '#1c1528', text: '#f0ecff', subtle: '#8b7aaa', accent: '#8b5cf6', primary: '#2a1a4a' },
 }
 
+const PRESET_VARS = ['--color-bg', '--color-card-bg', '--color-text', '--color-subtle', '--color-accent', '--color-primary'] as const
+
 export function applyPreset(name: PresetName): void {
   const preset = THEME_PRESETS[name]
   if (!preset) return
@@ -28,4 +30,9 @@ export function applyPreset(name: PresetName): void {
   root.style.setProperty('--color-subtle', preset.subtle)
   root.style.setProperty('--color-accent', preset.accent)
   root.style.setProperty('--color-primary', preset.primary)
+}
+
+export function clearPresetStyles(): void {
+  const root = document.documentElement
+  PRESET_VARS.forEach(v => root.style.removeProperty(v))
 }

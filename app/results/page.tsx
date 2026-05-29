@@ -82,7 +82,6 @@ export default function ResultsPage() {
   const [navigating, setNavigating] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mapStyle, setMapStyle] = useState<AppSettings['mapStyle']>('default')
-  const [cardsSettled, setCardsSettled] = useState(false)
   const [weatherMap, setWeatherMap] = useState<Record<string, WeatherData>>({})
 
   useEffect(() => {
@@ -92,7 +91,6 @@ export default function ResultsPage() {
       const dests = JSON.parse(raw) as Destination[]
       setDestinations(dests)
       setLoading(false)
-      setTimeout(() => setCardsSettled(true), 900)
     } catch {
       setError(true)
       setLoading(false)
@@ -238,7 +236,7 @@ export default function ResultsPage() {
             )}
             {!loading && (
               <div
-                className="flex-shrink-0 flex gap-4 p-4"
+                className="relative flex-shrink-0 overflow-hidden"
                 style={{
                   backdropFilter: 'blur(20px) saturate(1.4)',
                   WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
@@ -246,19 +244,27 @@ export default function ResultsPage() {
                   borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)',
                 }}
               >
-                {destinations.map((dest, i) => (
-                  <BottomCard
-                    key={dest.city}
-                    destination={dest}
-                    isHovered={hoveredIndex === i}
-                    isSelected={selectedIndex === i}
-                    anyHovered={hoveredIndex !== null}
-                    settled={cardsSettled}
-                    onHover={() => setHoveredIndex(i)}
-                    onLeave={() => setHoveredIndex(null)}
-                    onClick={() => handleCardClick(i)}
-                  />
-                ))}
+                <div className="flex gap-4 p-4 overflow-x-auto">
+                  {destinations.map((dest, i) => (
+                    <BottomCard
+                      key={dest.city}
+                      destination={dest}
+                      isHovered={hoveredIndex === i}
+                      isSelected={selectedIndex === i}
+                      anyHovered={hoveredIndex !== null}
+                      onHover={() => setHoveredIndex(i)}
+                      onLeave={() => setHoveredIndex(null)}
+                      onClick={() => handleCardClick(i)}
+                    />
+                  ))}
+                </div>
+                {/* Right-edge fade — signals the strip is scrollable */}
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-16 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(to right, transparent, color-mix(in srgb, var(--color-bg) 90%, transparent))',
+                  }}
+                />
               </div>
             )}
           </motion.div>
@@ -309,7 +315,6 @@ function BottomCard({
   isHovered,
   isSelected,
   anyHovered,
-  settled,
   onHover,
   onLeave,
   onClick,
@@ -318,7 +323,6 @@ function BottomCard({
   isHovered: boolean
   isSelected: boolean
   anyHovered: boolean
-  settled: boolean
   onHover: () => void
   onLeave: () => void
   onClick: () => void
@@ -326,7 +330,6 @@ function BottomCard({
   const imageUrl = useWikiImage(dest.city)
   const theme = dest.culturalTheme
   const active = isHovered || isSelected
-  const imageVivid = !settled || isHovered || (isSelected && !anyHovered)
 
   return (
     <motion.div
@@ -341,14 +344,15 @@ function BottomCard({
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
       onClick={onClick}
+      animate={{ opacity: anyHovered && !isHovered ? 0.7 : 1 }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.25 }}
     >
       {/* Background image */}
       {imageUrl ? (
         <img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: imageVivid ? 'brightness(0.85) saturate(1.3) contrast(1.05)' : 'brightness(0.28) saturate(0.4)', transition: 'filter 0.4s ease' }} />
+          style={{ filter: 'brightness(1.05) saturate(2.4) contrast(1.15)' }} />
       ) : (
         <div className="absolute inset-0"
           style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
@@ -356,12 +360,12 @@ function BottomCard({
 
       {/* Gradient overlay */}
       <div className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.5) 40%, transparent 70%)' }} />
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 80%, transparent 100%)' }} />
 
 
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-end p-4"
-        style={{ textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
+        style={{ textShadow: '0 1px 4px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.9)' }}>
         <h3 className="text-xl leading-tight mb-0.5 font-semibold"
           style={{ fontFamily: 'var(--font-playfair)', color: '#ffffff' }}>
           {dest.city}
@@ -370,14 +374,12 @@ function BottomCard({
           <Flag code={dest.countryCode} size={16} /> {dest.country}
         </p>
 
-        <motion.p
+        <p
           className="text-xs italic line-clamp-1 mb-3 font-medium"
           style={{ color: theme.accent, filter: 'brightness(1.2) saturate(1.3)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
-          animate={{ opacity: active ? 1 : 0, y: active ? 0 : 4 }}
-          transition={{ duration: 0.2 }}
         >
           {dest.tagline}
-        </motion.p>
+        </p>
 
         <button
           className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
@@ -711,10 +713,10 @@ function ItemModal({ item, city, accent, onClose }: { item: string; city: string
           border: `1px solid color-mix(in srgb, ${accent} 30%, transparent)`,
           boxShadow: `0 0 60px color-mix(in srgb, ${accent} 25%, transparent), 0 24px 48px rgba(0,0,0,0.5)`,
         }}
-        initial={{ scale: 0.92, y: 20, opacity: 0 }}
+        initial={{ scale: 0.82, y: 24, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.92, y: 20, opacity: 0 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
+        exit={{ scale: 0.9, y: 16, opacity: 0 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Image */}

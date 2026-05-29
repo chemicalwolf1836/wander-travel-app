@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Send, PenLine, Sparkles } from 'lucide-react'
+import { Send, PenLine, Sparkles, RotateCcw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Navbar } from '@/components/Navbar'
 import { ChatMessage } from '@/components/ChatMessage'
@@ -69,6 +69,8 @@ export default function DiscoverPage() {
   const [guidedStep, setGuidedStep] = useState(0)
   const [guidedAnswers, setGuidedAnswers] = useState<string[]>([])
   const [showGuideChoices, setShowGuideChoices] = useState(false)
+  const [selectedChip, setSelectedChip] = useState<string | null>(null)
+  const [retryFn, setRetryFn] = useState<(() => void) | null>(null)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -91,8 +93,41 @@ export default function DiscoverPage() {
     }, 150)
   }
 
+  async function runSuggest(preferences: Preferences) {
+    setRetryFn(null)
+    setSearching(true)
+    try {
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences }),
+      })
+      if (!res.ok) {
+        setSearching(false)
+        setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations." }])
+        setRetryFn(() => () => runSuggest(preferences))
+        return
+      }
+      const suggestions: unknown = await res.json()
+      sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      router.push('/results')
+    } catch {
+      setSearching(false)
+      setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations." }])
+      setRetryFn(() => () => runSuggest(preferences))
+    }
+  }
+
+  async function handleChipClick(choice: string) {
+    setSelectedChip(choice)
+    await new Promise(r => setTimeout(r, 240))
+    setSelectedChip(null)
+    handleGuidedChoice(choice)
+  }
+
   async function handleGuidedChoice(choice: string) {
     setShowGuideChoices(false)
+    setRetryFn(null)
     const newAnswers = [...guidedAnswers, choice]
     setGuidedAnswers(newAnswers)
     setMessages((prev) => [...prev, { role: 'user', content: choice }])
@@ -100,17 +135,13 @@ export default function DiscoverPage() {
     const nextStep = guidedStep + 1
 
     if (nextStep < GUIDED_STEPS.length) {
-      // Show next question after a brief pause
       setTimeout(() => {
         setMessages((prev) => [...prev, { role: 'assistant', content: GUIDED_STEPS[nextStep].question }])
         setGuidedStep(nextStep)
         setShowGuideChoices(true)
       }, 280)
     } else {
-      // All answered — build preferences and go straight to suggest
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Perfect, finding your destinations now...' }])
-      setSearching(true)
-
       const [escape, travelers, duration, culture, continent, vibe, weather, budget] = newAnswers
       const preferences: Preferences = {
         summary: `${escape}, traveling ${travelers}, ${duration}, ${culture} culture, ${continent}, ${vibe}, ${weather} weather, ${budget} budget`,
@@ -120,22 +151,7 @@ export default function DiscoverPage() {
         foodPreferences: '',
         other: `${culture} culture, ${continent}, trip length: ${duration}`,
       }
-
-      const res = await fetch('/api/suggest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ preferences }),
-      })
-
-      if (!res.ok) {
-        setSearching(false)
-        setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations. Let's try again." }])
-        return
-      }
-
-      const suggestions: unknown = await res.json()
-      sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
-      router.push('/results')
+      await runSuggest(preferences)
     }
   }
 
@@ -144,43 +160,38 @@ export default function DiscoverPage() {
     const content = (text ?? input).trim()
     if (!content || loading) return
 
+    setRetryFn(null)
     const userMessage: ChatMessageType = { role: 'user', content }
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
     setInput('')
     setLoading(true)
 
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: newMessages }),
-    })
-
-    if (!res.ok) {
-      setLoading(false)
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
-      return
-    }
-
-    const data: ChatResponse = await res.json()
-    setLoading(false)
-    setMessages((prev) => [...prev, { role: 'assistant', content: data.message }])
-
-    if (data.ready && data.preferences) {
-      setSearching(true)
-      const suggestRes = await fetch('/api/suggest', {
+    try {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ preferences: data.preferences }),
+        body: JSON.stringify({ messages: newMessages }),
       })
-      if (!suggestRes.ok) {
-        setSearching(false)
-        setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations. Let's try again." }])
+
+      if (!res.ok) {
+        setLoading(false)
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong.' }])
+        setRetryFn(() => () => sendMessage(content))
         return
       }
-      const suggestions: unknown = await suggestRes.json()
-      sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
-      router.push('/results')
+
+      const data: ChatResponse = await res.json()
+      setLoading(false)
+      setMessages((prev) => [...prev, { role: 'assistant', content: data.message }])
+
+      if (data.ready && data.preferences) {
+        await runSuggest(data.preferences)
+      }
+    } catch {
+      setLoading(false)
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong.' }])
+      setRetryFn(() => () => sendMessage(content))
     }
   }
 
@@ -190,6 +201,7 @@ export default function DiscoverPage() {
     setGuidedStep(0)
     setGuidedAnswers([])
     setShowGuideChoices(false)
+    setRetryFn(null)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -252,11 +264,13 @@ export default function DiscoverPage() {
                 {currentChoices.map((c) => (
                   <motion.button
                     key={c}
-                    onClick={() => handleGuidedChoice(c)}
+                    onClick={() => handleChipClick(c)}
                     className="text-xs px-4 py-2 rounded-full"
                     style={{
-                      color: 'var(--color-accent)',
-                      backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+                      color: c === selectedChip ? 'var(--color-bg)' : 'var(--color-accent)',
+                      backgroundColor: c === selectedChip
+                        ? 'var(--color-accent)'
+                        : 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
                       border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                     }}
                     whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
@@ -301,6 +315,32 @@ export default function DiscoverPage() {
               )}
             </div>
           )}
+
+          {/* Try again button — appears after a failed API call */}
+          <AnimatePresence>
+            {retryFn && !searching && (
+              <motion.div
+                className="ml-11"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+              >
+                <button
+                  onClick={retryFn}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+                    color: 'var(--color-accent)',
+                    border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+                  }}
+                >
+                  <RotateCcw size={11} />
+                  Try again
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {searching && (
             <p className="text-center text-sm animate-pulse mt-4" style={{ color: 'var(--color-subtle)' }}>

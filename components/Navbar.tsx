@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Sun, Moon, Menu, ArrowLeft, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { clearPresetStyles } from '@/lib/themePresets'
 
 interface NavbarProps {
   onSettingsOpen?: () => void
@@ -91,7 +92,18 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
 
         {mounted && (
           <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={() => {
+              clearPresetStyles()
+              try {
+                const raw = localStorage.getItem('wander_settings')
+                if (raw) {
+                  const s = JSON.parse(raw)
+                  delete s.presetName
+                  localStorage.setItem('wander_settings', JSON.stringify(s))
+                }
+              } catch { /* ignore */ }
+              setTheme(theme === 'dark' ? 'light' : 'dark')
+            }}
             className="p-2 rounded-full hover:opacity-70 transition-opacity"
             style={{ color: 'var(--color-text)' }}
             aria-label="Toggle dark/light mode"
