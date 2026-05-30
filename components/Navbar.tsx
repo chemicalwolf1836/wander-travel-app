@@ -127,7 +127,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
             onClick={onSettingsOpen}
             className="p-2 rounded-full hover:opacity-70 transition-opacity"
             style={{ color: 'var(--color-text)' }}
-            aria-label="Open settings"
+            aria-label="Open customise panel"
           >
             <Menu size={18} />
           </button>
