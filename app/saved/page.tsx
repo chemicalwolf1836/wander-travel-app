@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
@@ -77,50 +77,83 @@ export default function SavedPage() {
 
   if (!mounted) return null
 
+  const displayed = favourites.filter(d => d.city !== pendingRemoveCity)
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
       <Navbar />
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-6 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-4">
-          <Heart size={22} style={{ color: 'var(--color-accent)' }} />
-          <h1
-            className="text-3xl"
-            style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
-          >
-            Saved
-          </h1>
-          {favourites.length > 0 && (
-            <span
-              className="text-sm ml-1"
-              style={{ color: 'var(--color-subtle)' }}
+      <main className="flex-1 max-w-2xl mx-auto w-full px-6 pt-24 pb-16">
+
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Heart size={20} style={{ color: 'var(--color-accent)' }} />
+            <h1
+              className="text-3xl"
+              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
             >
-              {favourites.length} destination{favourites.length !== 1 ? 's' : ''}
-            </span>
+              Saved
+            </h1>
+            {displayed.length > 0 && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                  color: 'var(--color-accent)',
+                  border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                {displayed.length}
+              </span>
+            )}
+          </div>
+
+          {hasResults && (
+            <motion.button
+              onClick={() => router.push('/results')}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+              style={{
+                color: 'var(--color-subtle)',
+                border: '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)',
+              }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <ArrowRight size={11} className="rotate-180" />
+              Back to destinations
+            </motion.button>
           )}
         </div>
 
-        {hasResults && (
-          <button
-            onClick={() => router.push('/results')}
-            className="flex items-center gap-2 text-sm mb-8 hover:opacity-70 transition-opacity"
-            style={{ color: 'var(--color-subtle)' }}
-          >
-            <ArrowRight size={13} className="rotate-180" />
-            Back to destinations
-          </button>
-        )}
+        {/* Divider */}
+        <div
+          className="mb-8"
+          style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}
+        />
 
-        {favourites.length === 0 ? (
+        {/* Empty state */}
+        {displayed.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="flex flex-col items-center justify-center py-24 text-center"
           >
-            <Heart size={40} className="mb-4 opacity-20" style={{ color: 'var(--color-text)' }} />
-            <p className="text-lg mb-2" style={{ color: 'var(--color-text)' }}>Nothing saved yet</p>
-            <p className="text-sm mb-6" style={{ color: 'var(--color-subtle)' }}>
+            <div className="relative mb-6">
+              <div
+                className="absolute inset-0 rounded-full blur-2xl opacity-20"
+                style={{ backgroundColor: 'var(--color-accent)', transform: 'scale(1.8)' }}
+              />
+              <Heart size={44} style={{ color: 'var(--color-accent)', opacity: 0.35, position: 'relative' }} />
+            </div>
+            <p
+              className="text-2xl mb-2"
+              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+            >
+              Nothing saved yet
+            </p>
+            <p className="text-sm mb-8 max-w-xs leading-relaxed" style={{ color: 'var(--color-subtle)' }}>
               Tap the heart on any destination to save it here.
             </p>
             <button
@@ -129,6 +162,7 @@ export default function SavedPage() {
               style={{
                 backgroundColor: 'var(--color-accent)',
                 color: 'var(--color-bg)',
+                boxShadow: '0 0 24px color-mix(in srgb, var(--color-accent) 35%, transparent)',
               }}
             >
               Start exploring
@@ -142,42 +176,40 @@ export default function SavedPage() {
             transition={{ duration: 0.4 }}
           >
             <AnimatePresence>
-              {favourites.filter(d => d.city !== pendingRemoveCity).map((dest, i) => (
+              {displayed.map((dest, i) => (
                 <motion.div
                   key={dest.city}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
-                  transition={{ duration: 0.25, delay: i * 0.06 }}
-                  className="flex items-center gap-4 rounded-2xl p-4"
+                  exit={{ opacity: 0, x: -30, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.25, delay: i * 0.05 }}
+                  className="flex items-center gap-4 rounded-2xl px-5 py-4"
                   style={{
                     backgroundColor: 'var(--color-card-bg)',
                     border: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)',
                   }}
                 >
-                  <span className="text-3xl leading-none">{dest.flagEmoji}</span>
+                  {/* Flag emoji */}
+                  <span className="text-2xl leading-none flex-shrink-0">{dest.flagEmoji}</span>
 
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="font-semibold text-base truncate"
-                        style={{ color: 'var(--color-text)' }}
-                      >
+                    <div className="flex items-baseline gap-1.5 mb-0.5">
+                      <span className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
                         {dest.city}
                       </span>
-                      <span style={{ color: 'var(--color-subtle)' }}>·</span>
-                      <span className="text-sm truncate" style={{ color: 'var(--color-subtle)' }}>
-                        {dest.country}
+                      <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>
+                        · {dest.country}
                       </span>
                     </div>
                     {dest.tagline && (
-                      <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--color-subtle)' }}>
+                      <p className="text-xs truncate mb-1" style={{ color: 'var(--color-accent)', opacity: 0.85 }}>
                         {dest.tagline}
                       </p>
                     )}
                     {dest.region && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <MapPin size={10} style={{ color: 'var(--color-subtle)' }} />
+                      <div className="flex items-center gap-1">
+                        <MapPin size={9} style={{ color: 'var(--color-subtle)' }} />
                         <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>
                           {dest.region}
                         </span>
@@ -185,36 +217,46 @@ export default function SavedPage() {
                     )}
                   </div>
 
+                  {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
+                    <motion.button
                       onClick={() => handleExplore(dest)}
                       disabled={exploringCity !== null}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 disabled:opacity-60"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
                         color: 'var(--color-accent)',
                         border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.97 }}
                     >
                       {exploringCity === dest.city ? (
                         <>
-                          <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin inline-block"
-                            style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+                          <span
+                            className="w-3 h-3 rounded-full border border-t-transparent animate-spin inline-block"
+                            style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }}
+                          />
                           Finding…
                         </>
                       ) : (
-                        <>Explore <ArrowRight size={11} /></>
+                        <>
+                          <Compass size={11} />
+                          Explore
+                        </>
                       )}
-                    </button>
+                    </motion.button>
 
-                    <button
+                    <motion.button
                       onClick={() => handleRemove(dest)}
-                      className="p-2 rounded-full transition-all hover:scale-110"
+                      className="p-2 rounded-full"
                       style={{ color: 'var(--color-accent)' }}
                       aria-label={`Remove ${dest.city} from saved`}
+                      whileHover={{ scale: 1.15 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Heart size={16} fill="currentColor" />
-                    </button>
+                      <Heart size={15} fill="currentColor" />
+                    </motion.button>
                   </div>
                 </motion.div>
               ))}
