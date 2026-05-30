@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Sun, Moon, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { AppSettings } from '@/types'
 import { THEME_PRESETS, applyPreset, clearPresetStyles } from '@/lib/themePresets'
 import type { PresetName, AppThemePreset } from '@/lib/themePresets'
@@ -23,12 +23,12 @@ const MAP_STYLE_OPTIONS = [
     value: 'default' as const,
     label: 'Default',
     icon: (
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
         <rect x="2" y="2" width="28" height="28" rx="4" fill="currentColor" fillOpacity="0.12" />
-        <line x1="2" y1="11" x2="30" y2="11" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="2" y1="21" x2="30" y2="21" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="11" y1="2" x2="11" y2="30" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="21" y1="2" x2="21" y2="30" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="2" y1="11" x2="30" y2="11" stroke="currentColor" strokeWidth="1.8" />
+        <line x1="2" y1="21" x2="30" y2="21" stroke="currentColor" strokeWidth="1.8" />
+        <line x1="11" y1="2" x2="11" y2="30" stroke="currentColor" strokeWidth="1.8" />
+        <line x1="21" y1="2" x2="21" y2="30" stroke="currentColor" strokeWidth="1.8" />
       </svg>
     ),
   },
@@ -36,7 +36,7 @@ const MAP_STYLE_OPTIONS = [
     value: 'satellite' as const,
     label: 'Satellite',
     icon: (
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
         <rect x="2" y="2" width="28" height="28" rx="4" fill="currentColor" fillOpacity="0.45" />
         <rect x="2" y="2" width="13" height="13" rx="3" fill="currentColor" fillOpacity="0.25" />
         <rect x="17" y="17" width="13" height="13" rx="3" fill="currentColor" fillOpacity="0.15" />
@@ -47,7 +47,7 @@ const MAP_STYLE_OPTIONS = [
     value: 'minimal' as const,
     label: 'Minimal',
     icon: (
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="7" stroke="currentColor" strokeWidth="2" />
         <circle cx="16" cy="16" r="2.5" fill="currentColor" />
       </svg>
@@ -67,7 +67,6 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
   const colorInputRef = useRef<HTMLInputElement>(null)
   const isFirstRender = useRef(true)
 
-  // When the user toggles dark/light, wipe inline preset vars so the CSS class wins
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return }
     clearPresetStyles()
@@ -95,7 +94,6 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
   function save(next: Partial<AppSettings>) {
     if (next.presetName) {
       applyPreset(next.presetName as PresetName)
-      // Reset accent override to the preset's default so custom color doesn't bleed across
       if (!next.accentColor) {
         next.accentColor = THEME_PRESETS[next.presetName as PresetName]?.accent ?? settings.accentColor
       }
@@ -117,6 +115,8 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
 
   if (!mounted) return null
 
+  const isDark = theme === 'dark'
+
   return (
     <AnimatePresence>
       {open && (
@@ -128,62 +128,83 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           />
 
           {/* Panel */}
           <motion.div
-            className="fixed right-0 top-0 bottom-0 z-50 w-80 overflow-y-auto"
+            className="fixed right-0 top-0 bottom-0 z-50 w-72 overflow-y-auto"
             style={{
               backgroundColor: 'var(--color-card-bg)',
-              borderLeft: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
+              borderLeft: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
             }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-8">
-                <h2
-                  className="text-xl"
-                  style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
-                >
-                  Settings
-                </h2>
-                <button onClick={onClose} style={{ color: 'var(--color-subtle)' }}>
-                  <X size={18} />
-                </button>
-              </div>
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-5 py-4 sticky top-0 z-10"
+              style={{
+                backgroundColor: 'var(--color-card-bg)',
+                borderBottom: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)',
+              }}
+            >
+              <h2
+                className="text-lg"
+                style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              >
+                Settings
+              </h2>
+              <button
+                onClick={onClose}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-opacity hover:opacity-70"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
+                  color: 'var(--color-subtle)',
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="px-5 py-5 flex flex-col gap-7">
 
               {/* Appearance */}
               <Section label="Appearance">
-                <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
-                      key={theme}
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                    </motion.span>
-                  </AnimatePresence>
-                  {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                </button>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm" style={{ color: 'var(--color-text)' }}>
+                    {isDark ? 'Dark mode' : 'Light mode'}
+                  </span>
+                  {/* Toggle switch */}
+                  <button
+                    onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                    className="relative flex-shrink-0"
+                    style={{ width: 44, height: 24 }}
+                    aria-label="Toggle dark/light mode"
+                  >
+                    <div
+                      className="absolute inset-0 rounded-full transition-colors duration-300"
+                      style={{
+                        backgroundColor: isDark
+                          ? settings.accentColor
+                          : 'color-mix(in srgb, var(--color-text) 20%, transparent)',
+                      }}
+                    />
+                    <motion.div
+                      className="absolute top-0.5 w-5 h-5 rounded-full"
+                      style={{ backgroundColor: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
+                      animate={{ left: isDark ? 22 : 2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  </button>
+                </div>
               </Section>
 
               {/* Theme presets */}
               <Section label="Theme">
-                <div className="flex gap-2.5">
+                <div className="flex gap-3 flex-wrap">
                   {(Object.entries(THEME_PRESETS) as [PresetName, AppThemePreset][]).map(([name, preset]) => (
                     <button
                       key={name}
@@ -193,15 +214,18 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                     >
                       <div
                         style={{
-                          width: 44,
-                          height: 60,
-                          borderRadius: 10,
-                          background: `linear-gradient(160deg, ${preset.card} 0%, ${preset.accent} 130%)`,
+                          width: 40,
+                          height: 40,
+                          borderRadius: 12,
+                          background: `linear-gradient(145deg, ${preset.card} 0%, ${preset.accent} 130%)`,
                           outline: settings.presetName === name
                             ? `2px solid ${preset.accent}`
                             : '2px solid transparent',
-                          outlineOffset: 2,
+                          outlineOffset: 3,
                           transition: 'outline-color 0.2s ease',
+                          boxShadow: settings.presetName === name
+                            ? `0 0 10px color-mix(in srgb, ${preset.accent} 40%, transparent)`
+                            : 'none',
                         }}
                       />
                       <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>
@@ -212,19 +236,21 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                 </div>
               </Section>
 
-              {/* Custom accent override */}
-              <Section label="Accent">
+              {/* Accent color */}
+              <Section label="Accent colour">
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <button
-                      onClick={() => colorInputRef.current?.click()}
-                      className="w-9 h-9 rounded-full border-2 transition-transform hover:scale-110"
-                      style={{
-                        backgroundColor: settings.accentColor,
-                        borderColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)',
-                      }}
-                      title="Pick custom accent color"
-                    />
+                  <button
+                    onClick={() => colorInputRef.current?.click()}
+                    className="relative flex-shrink-0 transition-transform hover:scale-110"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      backgroundColor: settings.accentColor,
+                      boxShadow: `0 0 0 2px var(--color-card-bg), 0 0 0 4px color-mix(in srgb, ${settings.accentColor} 50%, transparent)`,
+                    }}
+                    title="Pick custom accent colour"
+                  >
                     <input
                       ref={colorInputRef}
                       type="color"
@@ -233,58 +259,75 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       style={{ position: 'absolute', opacity: 0, width: 0, height: 0, top: 0, left: 0 }}
                       aria-hidden
                     />
-                  </div>
-                  <span className="text-xs font-mono opacity-60" style={{ color: 'var(--color-text)' }}>
-                    {settings.accentColor}
+                  </button>
+                  <span className="text-xs font-mono" style={{ color: 'var(--color-subtle)' }}>
+                    {settings.accentColor.toUpperCase()}
                   </span>
                 </div>
               </Section>
 
-              {/* Font size */}
-              <Section label="Font Size">
-                <div className="flex gap-2">
+              {/* Font size — segmented control */}
+              <Section label="Font size">
+                <div
+                  className="flex gap-1 p-1 rounded-xl"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
+                >
                   {(['default', 'large'] as const).map((size) => (
                     <button
                       key={size}
                       onClick={() => save({ fontSize: size })}
-                      className="flex-1 py-2 rounded-lg text-sm capitalize"
+                      className="flex-1 py-1.5 rounded-lg text-sm capitalize transition-all"
                       style={{
                         backgroundColor: settings.fontSize === size
                           ? settings.accentColor
-                          : 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
-                        color: settings.fontSize === size ? 'var(--color-bg)' : 'var(--color-text)',
+                          : 'transparent',
+                        color: settings.fontSize === size
+                          ? '#fff'
+                          : 'var(--color-subtle)',
+                        fontWeight: settings.fontSize === size ? 500 : 400,
                       }}
                     >
-                      {size}
+                      {size === 'default' ? 'Default' : 'Large'}
                     </button>
                   ))}
                 </div>
               </Section>
 
-              {/* Map style — visual thumbnail cards */}
-              <Section label="Map Style">
-                <div className="flex gap-2">
-                  {MAP_STYLE_OPTIONS.map(({ value, label, icon }) => (
-                    <button
-                      key={value}
-                      onClick={() => save({ mapStyle: value })}
-                      className="flex flex-col items-center gap-2 flex-1 py-3 rounded-xl"
-                      style={{
-                        backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
-                        border: `2px solid ${settings.mapStyle === value ? settings.accentColor : 'transparent'}`,
-                        transition: 'border-color 0.2s ease',
-                      }}
-                    >
-                      <div style={{ color: settings.mapStyle === value ? settings.accentColor : 'var(--color-subtle)' }}>
-                        {icon}
-                      </div>
-                      <span className="text-xs capitalize" style={{ color: 'var(--color-text)' }}>
-                        {label}
-                      </span>
-                    </button>
-                  ))}
+              {/* Map style */}
+              <Section label="Map style">
+                <div className="grid grid-cols-3 gap-2">
+                  {MAP_STYLE_OPTIONS.map(({ value, label, icon }) => {
+                    const active = settings.mapStyle === value
+                    return (
+                      <button
+                        key={value}
+                        onClick={() => save({ mapStyle: value })}
+                        className="flex flex-col items-center gap-2 py-3 rounded-xl transition-all"
+                        style={{
+                          backgroundColor: active
+                            ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)'
+                            : 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+                          border: `1.5px solid ${active ? settings.accentColor : 'transparent'}`,
+                          boxShadow: active
+                            ? `0 0 12px color-mix(in srgb, ${settings.accentColor} 20%, transparent)`
+                            : 'none',
+                        }}
+                      >
+                        <div style={{ color: active ? settings.accentColor : 'var(--color-subtle)' }}>
+                          {icon}
+                        </div>
+                        <span
+                          className="text-xs"
+                          style={{ color: active ? 'var(--color-text)' : 'var(--color-subtle)', fontWeight: active ? 500 : 400 }}
+                        >
+                          {label}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </Section>
+
             </div>
           </motion.div>
         </>
@@ -295,10 +338,13 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="mb-6">
-      <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--color-subtle)' }}>
-        {label}
-      </p>
+    <div>
+      <div className="flex items-center gap-3 mb-3">
+        <p className="text-xs font-medium uppercase tracking-widest flex-shrink-0" style={{ color: 'var(--color-subtle)' }}>
+          {label}
+        </p>
+        <div className="flex-1" style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }} />
+      </div>
       {children}
     </div>
   )
