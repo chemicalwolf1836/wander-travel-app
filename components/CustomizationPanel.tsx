@@ -204,52 +204,74 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
 
               {/* Theme presets */}
               <Section label="Theme">
-                <div className="flex gap-3 flex-wrap">
-                  {(Object.entries(THEME_PRESETS) as [PresetName, AppThemePreset][]).map(([name, preset]) => (
-                    <button
-                      key={name}
-                      onClick={() => save({ presetName: name })}
-                      className="flex flex-col items-center gap-1.5"
-                      title={preset.label}
-                    >
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 12,
-                          background: `linear-gradient(145deg, ${preset.card} 0%, ${preset.accent} 130%)`,
-                          outline: settings.presetName === name
-                            ? `2px solid ${preset.accent}`
-                            : '2px solid transparent',
-                          outlineOffset: 3,
-                          transition: 'outline-color 0.2s ease',
-                          boxShadow: settings.presetName === name
-                            ? `0 0 10px color-mix(in srgb, ${preset.accent} 40%, transparent)`
-                            : 'none',
-                        }}
-                      />
-                      <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>
-                        {preset.label}
-                      </span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-5 gap-2">
+                  {(Object.entries(THEME_PRESETS) as [PresetName, AppThemePreset][]).map(([name, preset]) => {
+                    const active = settings.presetName === name
+                    return (
+                      <button
+                        key={name}
+                        onClick={() => save({ presetName: name })}
+                        className="flex flex-col items-center gap-1.5"
+                        title={preset.label}
+                      >
+                        <div
+                          style={{
+                            width: '100%',
+                            aspectRatio: '1',
+                            borderRadius: 12,
+                            background: `linear-gradient(145deg, ${preset.card} 0%, ${preset.accent} 130%)`,
+                            outline: active ? `2px solid ${preset.accent}` : '2px solid transparent',
+                            outlineOffset: 3,
+                            transition: 'outline-color 0.2s ease, box-shadow 0.2s ease',
+                            boxShadow: active ? `0 0 10px color-mix(in srgb, ${preset.accent} 45%, transparent)` : 'none',
+                          }}
+                        />
+                        <span className="text-xs truncate w-full text-center" style={{ color: active ? 'var(--color-text)' : 'var(--color-subtle)', fontSize: 10 }}>
+                          {preset.label}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </Section>
 
-              {/* Accent color */}
+              {/* Accent colour */}
               <Section label="Accent colour">
+                {/* Quick-pick presets */}
+                <div className="flex gap-2 mb-3">
+                  {['#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#06B6D4', '#10B981', '#F97316'].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => save({ accentColor: color })}
+                      className="transition-transform hover:scale-110"
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        backgroundColor: color,
+                        outline: settings.accentColor.toLowerCase() === color.toLowerCase()
+                          ? `2px solid ${color}`
+                          : '2px solid transparent',
+                        outlineOffset: 2,
+                        flexShrink: 0,
+                      }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                {/* Custom picker row */}
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => colorInputRef.current?.click()}
                     className="relative flex-shrink-0 transition-transform hover:scale-110"
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       borderRadius: '50%',
                       backgroundColor: settings.accentColor,
-                      boxShadow: `0 0 0 2px var(--color-card-bg), 0 0 0 4px color-mix(in srgb, ${settings.accentColor} 50%, transparent)`,
+                      boxShadow: `0 0 0 2px var(--color-card-bg), 0 0 0 3.5px color-mix(in srgb, ${settings.accentColor} 60%, transparent)`,
                     }}
-                    title="Pick custom accent colour"
+                    title="Custom colour"
                   >
                     <input
                       ref={colorInputRef}
@@ -263,33 +285,36 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                   <span className="text-xs font-mono" style={{ color: 'var(--color-subtle)' }}>
                     {settings.accentColor.toUpperCase()}
                   </span>
+                  <span className="text-xs" style={{ color: 'var(--color-subtle)', opacity: 0.6 }}>Custom</span>
                 </div>
               </Section>
 
-              {/* Font size — segmented control */}
+              {/* Font size — segmented control with Aa preview */}
               <Section label="Font size">
                 <div
                   className="flex gap-1 p-1 rounded-xl"
                   style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
                 >
-                  {(['default', 'large'] as const).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => save({ fontSize: size })}
-                      className="flex-1 py-1.5 rounded-lg text-sm capitalize transition-all"
-                      style={{
-                        backgroundColor: settings.fontSize === size
-                          ? settings.accentColor
-                          : 'transparent',
-                        color: settings.fontSize === size
-                          ? '#fff'
-                          : 'var(--color-subtle)',
-                        fontWeight: settings.fontSize === size ? 500 : 400,
-                      }}
-                    >
-                      {size === 'default' ? 'Default' : 'Large'}
-                    </button>
-                  ))}
+                  {([
+                    { key: 'default', label: 'Normal', size: 13 },
+                    { key: 'large', label: 'Large', size: 17 },
+                  ] as const).map(({ key, label, size }) => {
+                    const active = settings.fontSize === key
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => save({ fontSize: key })}
+                        className="flex-1 flex flex-col items-center py-2 rounded-lg transition-all gap-0.5"
+                        style={{
+                          backgroundColor: active ? settings.accentColor : 'transparent',
+                          color: active ? '#fff' : 'var(--color-subtle)',
+                        }}
+                      >
+                        <span style={{ fontSize: size, fontFamily: 'var(--font-playfair)', lineHeight: 1 }}>Aa</span>
+                        <span style={{ fontSize: 10 }}>{label}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </Section>
 
