@@ -155,7 +155,7 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                 className="text-lg"
                 style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
               >
-                Customize
+                Personalize
               </h2>
               <button
                 onClick={onClose}
