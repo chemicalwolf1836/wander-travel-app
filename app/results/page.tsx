@@ -874,7 +874,7 @@ function CompareCard({ destination: dest, weather, onExplore }: { destination: D
   const imageUrl = useWikiImage(dest.city)
   const theme = dest.culturalTheme
   return (
-    <div className="rounded-3xl overflow-hidden flex flex-col"
+    <div className="rounded-3xl overflow-hidden flex flex-col h-full"
       style={{
         backgroundColor: 'var(--color-card-bg)',
         border: `1px solid color-mix(in srgb, ${theme.accent} 22%, transparent)`,
