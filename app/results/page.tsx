@@ -890,7 +890,7 @@ function CompareCard({ destination: dest, weather, onExplore }: { destination: D
           <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.8)' }}>{dest.country} · {dest.region}</p>
         </div>
       </div>
-      <div className="px-5 py-4 flex flex-col gap-3">
+      <div className="px-5 py-4 flex flex-col gap-3 flex-1">
         <p className="text-sm italic" style={{ color: theme.accent }}>{dest.tagline}</p>
         {weather && <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>🌡️ {weather.temp}°C · {weather.description}</p>}
         <div>
@@ -915,7 +915,7 @@ function CompareCard({ destination: dest, weather, onExplore }: { destination: D
           </div>
         )}
         <button onClick={onExplore}
-          className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-semibold mt-1"
+          className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-semibold mt-auto"
           style={{ backgroundColor: theme.accent, color: theme.background }}>
           Explore <ArrowRight size={13} />
         </button>
