@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, X, Heart, Share2, RotateCcw } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
@@ -83,6 +83,7 @@ export default function ResultsPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mapStyle, setMapStyle] = useState<AppSettings['mapStyle']>('default')
   const [weatherMap, setWeatherMap] = useState<Record<string, WeatherData>>({})
+  const [cardsRevealed, setCardsRevealed] = useState(false)
 
   useEffect(() => {
     const raw = sessionStorage.getItem('wander_destinations')
@@ -96,6 +97,13 @@ export default function ResultsPage() {
       setLoading(false)
     }
   }, [router])
+
+  // Trigger cinematic reveal shortly after destinations load
+  useEffect(() => {
+    if (destinations.length === 0) return
+    const t = setTimeout(() => setCardsRevealed(true), 120)
+    return () => clearTimeout(t)
+  }, [destinations.length])
 
   // Prefetch weather for all destinations as soon as they load
   useEffect(() => {
@@ -249,6 +257,8 @@ export default function ResultsPage() {
                     <BottomCard
                       key={dest.city}
                       destination={dest}
+                      index={i}
+                      isRevealed={cardsRevealed}
                       isHovered={hoveredIndex === i}
                       isSelected={selectedIndex === i}
                       anyHovered={hoveredIndex !== null}
@@ -312,6 +322,8 @@ function Flag({ code, size = 24 }: { code: string; size?: number }) {
 /* ── Bottom strip card ── */
 function BottomCard({
   destination: dest,
+  index,
+  isRevealed,
   isHovered,
   isSelected,
   anyHovered,
@@ -320,6 +332,8 @@ function BottomCard({
   onClick,
 }: {
   destination: Destination
+  index: number
+  isRevealed: boolean
   isHovered: boolean
   isSelected: boolean
   anyHovered: boolean
@@ -331,18 +345,59 @@ function BottomCard({
   const theme = dest.culturalTheme
   const active = isHovered || isSelected
 
+  // 3D tilt
+  const cardRef = useRef<HTMLDivElement>(null)
+  const rawRotX = useMotionValue(0)
+  const rawRotY = useMotionValue(0)
+  const rotX = useSpring(rawRotX, { stiffness: 280, damping: 22 })
+  const rotY = useSpring(rawRotY, { stiffness: 280, damping: 22 })
+  const imgX = useTransform(rotY, [-12, 12], ['10px', '-10px'])
+  const imgY = useTransform(rotX, [-10, 10], ['8px', '-8px'])
+
+  function handleTiltMove(e: React.MouseEvent<HTMLDivElement>) {
+    const el = cardRef.current
+    if (!el) return
+    const { left, top, width, height } = el.getBoundingClientRect()
+    rawRotY.set(((e.clientX - left) / width - 0.5) * 22)
+    rawRotX.set(-((e.clientY - top) / height - 0.5) * 16)
+  }
+  function handleTiltLeave() { rawRotX.set(0); rawRotY.set(0) }
+
   return (
+    // Outer: cinematic reveal + perspective
     <motion.div
-      className="flex-1 relative rounded-2xl overflow-hidden cursor-pointer"
+      style={{ flex: 1, minWidth: 200, perspective: 800 }}
+      initial={{ opacity: 0, scale: 0.88, y: 16, filter: 'blur(8px)' }}
+      animate={{
+        opacity: isRevealed ? 1 : 0,
+        scale: isRevealed ? 1 : 0.88,
+        y: isRevealed ? 0 : 16,
+        filter: isRevealed ? 'blur(0px)' : 'blur(8px)',
+      }}
+      transition={{
+        opacity: { type: 'spring', damping: 24, stiffness: 180, delay: isRevealed ? index * 0.18 : 0 },
+        scale: { type: 'spring', damping: 24, stiffness: 180, delay: isRevealed ? index * 0.18 : 0 },
+        y: { type: 'spring', damping: 24, stiffness: 180, delay: isRevealed ? index * 0.18 : 0 },
+        filter: { duration: 0.5, ease: 'easeOut', delay: isRevealed ? index * 0.18 : 0 },
+      }}
+    >
+    {/* Inner: tilt + hover scale + dim */}
+    <motion.div
+      ref={cardRef}
+      className="relative rounded-2xl overflow-hidden cursor-pointer"
       style={{
         height: 180,
+        width: '100%',
+        rotateX: rotX,
+        rotateY: rotY,
         border: `1px solid ${active
           ? `color-mix(in srgb, ${theme.accent} 60%, transparent)`
           : 'color-mix(in srgb, var(--color-text) 10%, transparent)'}`,
         transition: 'border-color 0.3s ease',
       }}
+      onMouseMove={handleTiltMove}
       onMouseEnter={onHover}
-      onMouseLeave={onLeave}
+      onMouseLeave={() => { handleTiltLeave(); onLeave() }}
       onClick={onClick}
       animate={{ opacity: anyHovered && !isHovered ? 0.7 : 1 }}
       whileHover={{ scale: 1.02 }}
@@ -351,8 +406,8 @@ function BottomCard({
     >
       {/* Background image */}
       {imageUrl ? (
-        <img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: 'brightness(1.05) saturate(2.4) contrast(1.15)' }} />
+        <motion.img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'brightness(1.05) saturate(2.4) contrast(1.15)', x: imgX, y: imgY, scale: 1.12 }} />
       ) : (
         <div className="absolute inset-0"
           style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
@@ -393,6 +448,7 @@ function BottomCard({
           View details <ArrowRight size={11} />
         </button>
       </div>
+    </motion.div>
     </motion.div>
   )
 }

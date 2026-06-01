@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import type { Preferences } from '@/types'
@@ -27,6 +27,19 @@ export default function HomePage() {
   const [surpriseLoading, setSurpriseLoading] = useState(false)
   const [loadingCity, setLoadingCity] = useState('')
   const [exiting, setExiting] = useState(false)
+
+  // Aurora mouse parallax
+  const rawMouseX = useMotionValue(0.5)
+  const rawMouseY = useMotionValue(0.5)
+  const mouseX = useSpring(rawMouseX, { stiffness: 40, damping: 25 })
+  const mouseY = useSpring(rawMouseY, { stiffness: 40, damping: 25 })
+  const auroraX = useTransform(mouseX, [0, 1], ['-2%', '2%'])
+  const auroraY = useTransform(mouseY, [0, 1], ['-1.5%', '1.5%'])
+
+  function handleMouseMove(e: React.MouseEvent) {
+    rawMouseX.set(e.clientX / window.innerWidth)
+    rawMouseY.set(e.clientY / window.innerHeight)
+  }
 
   useEffect(() => {
     setFloatingNames(
@@ -98,20 +111,46 @@ export default function HomePage() {
       transition={{ duration: 0.35, ease: 'easeInOut' }}
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: 'var(--color-bg)' }}
+      onMouseMove={handleMouseMove}
     >
       <Navbar />
 
-      {/* Animated gradient mesh background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0 opacity-30"
+      {/* Aurora background */}
+      <motion.div className="absolute inset-0 pointer-events-none" style={{ x: auroraX, y: auroraY }}>
+        {/* Orb 1 — accent, top-left drift */}
+        <motion.div
+          className="absolute"
           style={{
-            background: `
-              radial-gradient(ellipse 80% 60% at 20% 30%, color-mix(in srgb, var(--color-primary) 40%, transparent), transparent),
-              radial-gradient(ellipse 60% 80% at 80% 70%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent)
-            `,
+            width: 600, height: 600, borderRadius: '50%', top: '-10%', left: '-5%',
+            background: 'radial-gradient(circle, var(--color-accent) 0%, transparent 70%)',
+            filter: 'blur(80px)', opacity: 0.18,
           }}
+          animate={{ x: [0, '13%', 0], y: [0, '12%', 0] }}
+          transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
         />
+        {/* Orb 2 — primary, bottom-right drift */}
+        <motion.div
+          className="absolute"
+          style={{
+            width: 500, height: 500, borderRadius: '50%', bottom: '-5%', right: '-5%',
+            background: 'radial-gradient(circle, var(--color-primary) 0%, transparent 70%)',
+            filter: 'blur(100px)', opacity: 0.28,
+          }}
+          animate={{ x: [0, '-12%', 0], y: [0, '-10%', 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
+        />
+        {/* Orb 3 — accent tint, center */}
+        <motion.div
+          className="absolute"
+          style={{
+            width: 400, height: 400, borderRadius: '50%', top: '40%', left: '35%',
+            background: 'radial-gradient(circle, var(--color-accent) 0%, transparent 70%)',
+            filter: 'blur(90px)', opacity: 0.10,
+          }}
+          animate={{ x: [0, '10%', 0], y: [0, '15%', 0] }}
+          transition={{ duration: 35, repeat: Infinity, ease: 'easeInOut', delay: 10 }}
+        />
+        {/* Grid texture */}
         <div
           className="absolute inset-0 opacity-5"
           style={{
@@ -119,7 +158,7 @@ export default function HomePage() {
             backgroundSize: '60px 60px',
           }}
         />
-      </div>
+      </motion.div>
 
       {/* Floating destination names */}
       {floatingNames.map((item) => (
