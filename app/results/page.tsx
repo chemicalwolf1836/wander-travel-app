@@ -181,12 +181,13 @@ export default function ResultsPage() {
       const prefs = raw ? JSON.parse(raw) as { summary: string; climate: string; budget: string; travelStyle: string; foodPreferences: string; other: string } : null
       const existingCities = destinations.map(d => d.city).join(', ')
       const preferences = {
-        summary: prefs?.summary ?? 'Show me more great destinations',
+        // Include existing cities in summary so the cache key is unique from the first search
+        summary: `${prefs?.summary ?? 'Show me more great destinations'} — not ${existingCities}`,
         climate: prefs?.climate ?? 'any',
         budget: prefs?.budget ?? 'any',
         travelStyle: prefs?.travelStyle ?? 'open',
         foodPreferences: prefs?.foodPreferences ?? 'anything',
-        other: `Different from these cities: ${existingCities}. Show 3 new destinations.`,
+        other: `Do NOT suggest any of these cities: ${existingCities}. Return 3 completely different destinations.`,
       }
       const res = await fetch('/api/suggest', {
         method: 'POST',
