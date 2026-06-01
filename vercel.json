@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "app/api/suggest/route.ts": { "maxDuration": 60 },
+    "app/api/itinerary/route.ts": { "maxDuration": 30 },
+    "app/api/packing/route.ts": { "maxDuration": 30 },
+    "app/api/item-info/route.ts": { "maxDuration": 30 },
+    "app/api/chat/route.ts": { "maxDuration": 30 }
+  }
+}

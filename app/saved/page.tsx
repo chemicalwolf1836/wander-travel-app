@@ -48,7 +48,10 @@ export default function SavedPage() {
 
   async function handleExplore(dest: Destination) {
     setExploringCity(dest.city)
+    toast(`Finding destinations similar to ${dest.city}…`)
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 55000)
       const preferences: Preferences = {
         summary: `Surprise me with destinations similar to or near ${dest.city}, open to anything`,
         climate: 'any',
@@ -61,7 +64,9 @@ export default function SavedPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ preferences }),
+        signal: controller.signal,
       })
+      clearTimeout(timeout)
       if (!res.ok) {
         toast.error("Couldn't load destinations — try again in a moment.")
         setExploringCity(null)
