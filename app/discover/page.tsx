@@ -110,6 +110,7 @@ export default function DiscoverPage() {
       }
       const suggestions: unknown = await res.json()
       sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      sessionStorage.setItem('wander_preferences', JSON.stringify(preferences))
       router.push('/results')
     } catch {
       setSearching(false)

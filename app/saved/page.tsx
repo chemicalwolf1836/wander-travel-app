@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight, Compass } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
+import { getNote, saveNote } from '@/lib/tripNotes'
 import type { Destination, Preferences } from '@/types'
 
 export default function SavedPage() {
@@ -247,6 +248,8 @@ export default function SavedPage() {
                       )}
                     </motion.button>
 
+                    <NoteButton city={dest.city} />
+
                     <motion.button
                       onClick={() => handleRemove(dest)}
                       className="p-2 rounded-full"
@@ -264,6 +267,68 @@ export default function SavedPage() {
           </motion.div>
         )}
       </main>
+    </div>
+  )
+}
+
+function NoteButton({ city }: { city: string }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState(() => getNote(city))
+  const hasNote = text.trim().length > 0
+
+  function handleBlur() {
+    saveNote(city, text)
+  }
+
+  return (
+    <div className="relative">
+      <motion.button
+        onClick={() => setOpen(o => !o)}
+        className="p-2 rounded-full"
+        style={{ color: hasNote ? 'var(--color-accent)' : 'var(--color-subtle)' }}
+        aria-label="Trip notes"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        title="Add trip note"
+      >
+        <StickyNote size={14} fill={hasNote ? 'currentColor' : 'none'} />
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="absolute right-0 bottom-10 z-20 rounded-2xl overflow-hidden shadow-2xl"
+            style={{
+              width: 240,
+              backgroundColor: 'var(--color-card-bg)',
+              border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            }}
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 8 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 320 }}
+          >
+            <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+              <span className="text-xs font-medium tracking-wide" style={{ color: 'var(--color-subtle)' }}>
+                Trip notes
+              </span>
+              <button onClick={() => setOpen(false)} style={{ color: 'var(--color-subtle)' }}>
+                <ChevronDown size={12} />
+              </button>
+            </div>
+            <textarea
+              className="w-full resize-none text-xs leading-relaxed px-3 pb-3 bg-transparent outline-none"
+              style={{ color: 'var(--color-text)', minHeight: 80 }}
+              placeholder="Dates, budget, ideas…"
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onBlur={handleBlur}
+              autoFocus
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

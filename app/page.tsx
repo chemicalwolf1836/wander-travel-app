@@ -90,6 +90,7 @@ export default function HomePage() {
       }
       const suggestions: unknown = await res.json()
       sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      sessionStorage.setItem('wander_preferences', JSON.stringify(preferences))
       setExiting(true)
       await new Promise(r => setTimeout(r, 350))
       router.push('/results')

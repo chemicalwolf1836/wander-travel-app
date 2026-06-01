@@ -3,12 +3,16 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, X, Heart, Share2, RotateCcw } from 'lucide-react'
+import { RefreshCw, ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, X, Heart, Share2, RotateCcw, Luggage, Map as MapIcon, Sparkles, GitCompare, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
 import { toggleFavourite, isFavourite } from '@/lib/favourites'
 import type { Destination, AppSettings, WeatherData } from '@/types'
+
+type PackingCategory = { name: string; items: string[] }
+type ItineraryDay = { day: number; title: string; morning: string; afternoon: string; evening: string; tip: string }
 
 const STORAGE_KEY = 'wander_settings'
 function loadSettings(): Pick<AppSettings, 'mapStyle' | 'cardLayout'> {
@@ -69,7 +73,7 @@ function useWikiImage(city: string) {
   return src
 }
 
-type View = 'split' | 'detail'
+type View = 'split' | 'detail' | 'compare'
 
 export default function ResultsPage() {
   const router = useRouter()
@@ -84,6 +88,8 @@ export default function ResultsPage() {
   const [mapStyle, setMapStyle] = useState<AppSettings['mapStyle']>('default')
   const [weatherMap, setWeatherMap] = useState<Record<string, WeatherData>>({})
   const [cardsRevealed, setCardsRevealed] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [compareIndex, setCompareIndex] = useState<number | null>(null)
 
   useEffect(() => {
     const raw = sessionStorage.getItem('wander_destinations')
@@ -168,6 +174,38 @@ export default function ResultsPage() {
     setTimeout(() => router.push(`/destination/${encodeURIComponent(destination.city)}`), 400)
   }, [router])
 
+  async function handleLoadMore() {
+    setLoadingMore(true)
+    try {
+      const raw = sessionStorage.getItem('wander_preferences')
+      const prefs = raw ? JSON.parse(raw) as { summary: string; climate: string; budget: string; travelStyle: string; foodPreferences: string; other: string } : null
+      const existingCities = destinations.map(d => d.city).join(', ')
+      const preferences = {
+        summary: prefs?.summary ?? 'Show me more great destinations',
+        climate: prefs?.climate ?? 'any',
+        budget: prefs?.budget ?? 'any',
+        travelStyle: prefs?.travelStyle ?? 'open',
+        foodPreferences: prefs?.foodPreferences ?? 'anything',
+        other: `Different from these cities: ${existingCities}. Show 3 new destinations.`,
+      }
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences }),
+      })
+      if (!res.ok) { toast.error("Couldn't load more destinations."); setLoadingMore(false); return }
+      const more = await res.json() as Destination[]
+      const combined = [...destinations, ...more.filter(m => !destinations.some(d => d.city === m.city))]
+      setDestinations(combined)
+      sessionStorage.setItem('wander_destinations', JSON.stringify(combined))
+      setCardsRevealed(false)
+      setTimeout(() => setCardsRevealed(true), 80)
+    } catch {
+      toast.error('Something went wrong.')
+    }
+    setLoadingMore(false)
+  }
+
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4"
@@ -227,18 +265,26 @@ export default function ResultsPage() {
               <div
                 className="flex-shrink-0 flex flex-col"
               >
-                {/* Keyboard hint + try again */}
+                {/* Keyboard hint + controls */}
                 <div className="flex items-center justify-between px-4 pt-2 pb-1">
                   <p className="text-xs tracking-widest uppercase opacity-30 hidden md:block" style={{ color: 'var(--color-text)' }}>
                     ← → to browse
                   </p>
-                  <button
-                    onClick={handleTryAgain}
-                    className="flex items-center gap-1.5 text-xs opacity-40 hover:opacity-80 transition-opacity ml-auto"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    <RotateCcw size={11} /> Try different preferences
-                  </button>
+                  <div className="flex items-center gap-3 ml-auto">
+                    {compareIndex !== null && (
+                      <span className="text-xs px-2 py-0.5 rounded-full animate-pulse"
+                        style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 15%, transparent)', color: 'var(--color-accent)' }}>
+                        Pick second destination to compare
+                      </span>
+                    )}
+                    <button
+                      onClick={handleTryAgain}
+                      className="flex items-center gap-1.5 text-xs opacity-40 hover:opacity-80 transition-opacity"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <RotateCcw size={11} /> Try different preferences
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -262,11 +308,40 @@ export default function ResultsPage() {
                       isHovered={hoveredIndex === i}
                       isSelected={selectedIndex === i}
                       anyHovered={hoveredIndex !== null}
+                      isComparing={compareIndex === i}
                       onHover={() => setHoveredIndex(i)}
                       onLeave={() => setHoveredIndex(null)}
-                      onClick={() => handleCardClick(i)}
+                      onClick={() => {
+                        if (compareIndex !== null && compareIndex !== i) {
+                          // Second card selected — show compare view
+                          setView('compare' as View)
+                          setSelectedIndex(i)
+                        } else {
+                          handleCardClick(i)
+                        }
+                      }}
+                      onCompare={() => setCompareIndex(prev => prev === i ? null : i)}
                     />
                   ))}
+                  {/* Load more */}
+                  <motion.div
+                    style={{ flex: '0 0 auto', perspective: 800 }}
+                    initial={{ opacity: 0, scale: 0.88, y: 16 }}
+                    animate={{ opacity: cardsRevealed ? 1 : 0, scale: cardsRevealed ? 1 : 0.88, y: cardsRevealed ? 0 : 16 }}
+                    transition={{ type: 'spring', damping: 24, stiffness: 180, delay: cardsRevealed ? destinations.length * 0.18 : 0 }}
+                  >
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-opacity hover:opacity-80"
+                      style={{ height: 180, width: 120, border: '1.5px dashed color-mix(in srgb, var(--color-text) 20%, transparent)', color: 'var(--color-subtle)' }}
+                    >
+                      {loadingMore
+                        ? <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+                        : <Plus size={20} />}
+                      <span className="text-xs">Show more</span>
+                    </button>
+                  </motion.div>
                 </div>
                 {/* Right-edge fade — signals the strip is scrollable */}
                 <div
@@ -292,6 +367,33 @@ export default function ResultsPage() {
               onExplore={() => handleNavigate(destinations[selectedIndex])}
               onBack={() => setView('split')}
             />
+          </motion.div>
+        )}
+
+        {/* ── COMPARE VIEW: two cards side by side ── */}
+        {view === 'compare' && destinations[compareIndex!] && destinations[selectedIndex] && (
+          <motion.div key="compare"
+            className="absolute inset-0 top-16 overflow-y-auto py-6 px-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}>
+            <div className="max-w-5xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>
+                  Comparing destinations
+                </h2>
+                <button
+                  onClick={() => { setView('split'); setCompareIndex(null) }}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full opacity-60 hover:opacity-100 transition-opacity"
+                  style={{ color: 'var(--color-text)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)' }}
+                >
+                  <ArrowLeft size={11} /> Back
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CompareCard destination={destinations[compareIndex!]} weather={weatherMap[destinations[compareIndex!].city] ?? null} onExplore={() => handleNavigate(destinations[compareIndex!])} />
+                <CompareCard destination={destinations[selectedIndex]} weather={weatherMap[destinations[selectedIndex].city] ?? null} onExplore={() => handleNavigate(destinations[selectedIndex])} />
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -327,9 +429,11 @@ function BottomCard({
   isHovered,
   isSelected,
   anyHovered,
+  isComparing,
   onHover,
   onLeave,
   onClick,
+  onCompare,
 }: {
   destination: Destination
   index: number
@@ -337,9 +441,11 @@ function BottomCard({
   isHovered: boolean
   isSelected: boolean
   anyHovered: boolean
+  isComparing: boolean
   onHover: () => void
   onLeave: () => void
   onClick: () => void
+  onCompare: () => void
 }) {
   const imageUrl = useWikiImage(dest.city)
   const theme = dest.culturalTheme
@@ -436,17 +542,31 @@ function BottomCard({
           {dest.tagline}
         </p>
 
-        <button
-          className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
-          style={{
-            backgroundColor: active ? theme.accent : 'rgba(255,255,255,0.18)',
-            color: active ? theme.background : '#ffffff',
-            transition: 'background-color 0.3s ease, color 0.3s ease',
-          }}
-          onClick={(e) => { e.stopPropagation(); onClick() }}
-        >
-          View details <ArrowRight size={11} />
-        </button>
+        <div className="flex gap-1.5">
+          <button
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+            style={{
+              backgroundColor: active ? theme.accent : 'rgba(255,255,255,0.18)',
+              color: active ? theme.background : '#ffffff',
+              transition: 'background-color 0.3s ease, color 0.3s ease',
+            }}
+            onClick={(e) => { e.stopPropagation(); onClick() }}
+          >
+            View details <ArrowRight size={11} />
+          </button>
+          <button
+            className="flex items-center justify-center rounded-lg px-2"
+            style={{
+              backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.18)',
+              color: isComparing ? theme.background : '#ffffff',
+              transition: 'background-color 0.3s ease',
+            }}
+            onClick={(e) => { e.stopPropagation(); onCompare() }}
+            title="Compare"
+          >
+            <GitCompare size={11} />
+          </button>
+        </div>
       </div>
     </motion.div>
     </motion.div>
@@ -475,6 +595,10 @@ function DestinationDetailCard({
   const [activeItem, setActiveItem] = useState<string | null>(null)
   const [fav, setFav] = useState(() => isFavourite(dest.city))
   const [shared, setShared] = useState(false)
+  const [showPacking, setShowPacking] = useState(false)
+  const [showItinerary, setShowItinerary] = useState(false)
+  const [showSimilar, setShowSimilar] = useState(false)
+  const [showShareCard, setShowShareCard] = useState(false)
 
   function handleFav() {
     const next = toggleFavourite(dest)
@@ -482,14 +606,7 @@ function DestinationDetailCard({
   }
 
   async function handleShare() {
-    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
-    if (navigator.share) {
-      await navigator.share({ title: dest.city, text }).catch(() => null)
-    } else {
-      await navigator.clipboard.writeText(text).catch(() => null)
-      setShared(true)
-      setTimeout(() => setShared(false), 2000)
-    }
+    setShowShareCard(true)
   }
 
   return (
@@ -636,6 +753,18 @@ function DestinationDetailCard({
             {activeItem && (
               <ItemModal item={activeItem} city={dest.city} accent={theme.accent} onClose={() => setActiveItem(null)} />
             )}
+            {showPacking && (
+              <PackingModal destination={dest} accent={theme.accent} onClose={() => setShowPacking(false)} />
+            )}
+            {showItinerary && (
+              <ItineraryModal destination={dest} accent={theme.accent} onClose={() => setShowItinerary(false)} />
+            )}
+            {showSimilar && (
+              <SimilarModal destination={dest} accent={theme.accent} onClose={() => setShowSimilar(false)} />
+            )}
+            {showShareCard && (
+              <ShareCardModal destination={dest} imageUrl={imageUrl} onClose={() => setShowShareCard(false)} />
+            )}
           </AnimatePresence>
 
           {/* Practical info row */}
@@ -646,6 +775,25 @@ function DestinationDetailCard({
               {dest.visaInfo && <span>🛂 {dest.visaInfo}</span>}
             </div>
           )}
+
+          {/* Quick action buttons */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {[
+              { icon: <Luggage size={13} />, label: 'Packing list', action: () => setShowPacking(true) },
+              { icon: <MapIcon size={13} />, label: 'Itinerary', action: () => setShowItinerary(true) },
+              { icon: <Sparkles size={13} />, label: 'Similar', action: () => setShowSimilar(true) },
+            ].map(({ icon, label, action }) => (
+              <button key={label} onClick={action}
+                className="flex flex-col items-center gap-1 py-3 rounded-xl text-xs font-medium transition-all hover:scale-[1.03]"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
+                  color: 'var(--color-accent)',
+                  border: '1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)',
+                }}>
+                {icon}{label}
+              </button>
+            ))}
+          </div>
 
           <button onClick={onExplore}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.015] active:scale-[0.99]"
@@ -717,6 +865,351 @@ function ExperienceChip({ label, onClick, onPrefetch }: { label: string; onClick
     >
       {label}
     </motion.button>
+  )
+}
+
+/* ── Compare card ── */
+function CompareCard({ destination: dest, weather, onExplore }: { destination: Destination; weather: WeatherData | null; onExplore: () => void }) {
+  const imageUrl = useWikiImage(dest.city)
+  const theme = dest.culturalTheme
+  return (
+    <div className="rounded-3xl overflow-hidden flex flex-col"
+      style={{
+        backgroundColor: 'var(--color-card-bg)',
+        border: `1px solid color-mix(in srgb, ${theme.accent} 22%, transparent)`,
+        boxShadow: `0 0 40px color-mix(in srgb, ${theme.accent} 12%, transparent)`,
+      }}>
+      <div className="relative flex-shrink-0 overflow-hidden" style={{ height: 180 }}>
+        {imageUrl
+          ? <img src={imageUrl} alt={dest.city} className="w-full h-full object-cover" style={{ filter: 'brightness(0.85) saturate(1.2)' }} />
+          : <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }} />}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
+          <h3 className="text-3xl text-white leading-none" style={{ fontFamily: 'var(--font-playfair)' }}>{dest.emoji} {dest.city}</h3>
+          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.8)' }}>{dest.country} · {dest.region}</p>
+        </div>
+      </div>
+      <div className="px-5 py-4 flex flex-col gap-3">
+        <p className="text-sm italic" style={{ color: theme.accent }}>{dest.tagline}</p>
+        {weather && <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>🌡️ {weather.temp}°C · {weather.description}</p>}
+        <div>
+          <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-subtle)' }}>Highlights</p>
+          <div className="flex flex-wrap gap-1.5">
+            {dest.attractions.slice(0, 3).map(a => (
+              <span key={a} className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${theme.accent} 10%, transparent)`, color: theme.accent, border: `1px solid color-mix(in srgb, ${theme.accent} 20%, transparent)` }}>{a}</span>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-subtle)' }}>Must eat</p>
+          <p className="text-xs" style={{ color: 'var(--color-text)' }}>{dest.food.dishes.slice(0, 3).join(' · ')}</p>
+        </div>
+        {dest.bestSeasons && dest.bestSeasons.length > 0 && (
+          <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>📅 Best: {dest.bestSeasons.join(', ')}</p>
+        )}
+        {(dest.currency || dest.language) && (
+          <div className="flex gap-3 text-xs" style={{ color: 'var(--color-subtle)' }}>
+            {dest.currency && <span>💱 {dest.currency}</span>}
+            {dest.language && <span>🗣️ {dest.language}</span>}
+          </div>
+        )}
+        <button onClick={onExplore}
+          className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-semibold mt-1"
+          style={{ backgroundColor: theme.accent, color: theme.background }}>
+          Explore <ArrowRight size={13} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ── Shared modal shell ── */
+function ModalShell({ accent, onClose, children }: { accent: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }} />
+      <motion.div
+        className="relative rounded-3xl overflow-hidden flex flex-col z-10 w-full"
+        style={{
+          maxWidth: 560, maxHeight: '85vh',
+          backgroundColor: 'var(--color-card-bg)',
+          border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
+          boxShadow: `0 0 60px color-mix(in srgb, ${accent} 22%, transparent), 0 24px 48px rgba(0,0,0,0.5)`,
+        }}
+        initial={{ scale: 0.88, y: 20, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.9, y: 12, opacity: 0 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+/* ── Packing list modal ── */
+function PackingModal({ destination: dest, accent, onClose }: { destination: Destination; accent: string; onClose: () => void }) {
+  const [categories, setCategories] = useState<PackingCategory[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [tripDays, setTripDays] = useState(7)
+
+  async function fetchPacking(days: number) {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/packing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ city: dest.city, country: dest.country, bestSeasons: dest.bestSeasons, tripDays: days }),
+      })
+      if (res.ok) setCategories(await res.json() as PackingCategory[])
+    } catch { /* ignore */ }
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchPacking(tripDays) }, [])
+
+  return (
+    <ModalShell accent={accent} onClose={onClose}>
+      <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+        <div className="flex items-center gap-2">
+          <Luggage size={16} style={{ color: accent }} />
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Packing list for {dest.city}</h3>
+        </div>
+        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
+      </div>
+      <div className="flex items-center gap-2 px-6 py-3 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }}>
+        <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Trip length:</span>
+        {[3, 5, 7, 10, 14].map(d => (
+          <button key={d} onClick={() => { setTripDays(d); fetchPacking(d) }}
+            className="text-xs px-2.5 py-1 rounded-full transition-colors"
+            style={{
+              backgroundColor: tripDays === d ? accent : 'color-mix(in srgb, var(--color-text) 8%, transparent)',
+              color: tripDays === d ? '#fff' : 'var(--color-subtle)',
+            }}>{d}d</button>
+        ))}
+      </div>
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
+          </div>
+        ) : categories ? (
+          <div className="grid grid-cols-2 gap-4">
+            {categories.map(cat => (
+              <div key={cat.name}>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>{cat.name}</p>
+                <ul className="space-y-1">
+                  {cat.items.map(item => (
+                    <li key={item} className="flex items-start gap-2 text-xs" style={{ color: 'var(--color-text)' }}>
+                      <span style={{ color: accent, marginTop: 2 }}>·</span>{item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-sm text-center py-8" style={{ color: 'var(--color-subtle)' }}>Failed to load. Try again.</p>}
+      </div>
+    </ModalShell>
+  )
+}
+
+/* ── Itinerary modal ── */
+function ItineraryModal({ destination: dest, accent, onClose }: { destination: Destination; accent: string; onClose: () => void }) {
+  const [days, setDays] = useState<ItineraryDay[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [tripDays, setTripDays] = useState(5)
+
+  async function fetchItinerary(n: number) {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/itinerary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ city: dest.city, country: dest.country, attractions: dest.attractions, dishes: dest.food.dishes, bestFor: dest.bestFor, tripDays: n }),
+      })
+      if (res.ok) setDays(await res.json() as ItineraryDay[])
+    } catch { /* ignore */ }
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchItinerary(tripDays) }, [])
+
+  return (
+    <ModalShell accent={accent} onClose={onClose}>
+      <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+        <div className="flex items-center gap-2">
+          <MapIcon size={16} style={{ color: accent }} />
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>{dest.city} itinerary</h3>
+        </div>
+        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
+      </div>
+      <div className="flex items-center gap-2 px-6 py-3 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }}>
+        <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Days:</span>
+        {[3, 5, 7, 10].map(d => (
+          <button key={d} onClick={() => { setTripDays(d); fetchItinerary(d) }}
+            className="text-xs px-2.5 py-1 rounded-full transition-colors"
+            style={{ backgroundColor: tripDays === d ? accent : 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: tripDays === d ? '#fff' : 'var(--color-subtle)' }}>{d}</button>
+        ))}
+      </div>
+      <div className="overflow-y-auto flex-1 px-6 py-4 space-y-5">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
+          </div>
+        ) : days ? days.map(d => (
+          <div key={d.day}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `color-mix(in srgb, ${accent} 15%, transparent)`, color: accent }}>Day {d.day}</span>
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{d.title}</p>
+            </div>
+            {[['Morning', d.morning], ['Afternoon', d.afternoon], ['Evening', d.evening]].map(([label, text]) => (
+              <div key={label} className="flex gap-3 mb-1.5">
+                <span className="text-xs w-16 flex-shrink-0 pt-0.5" style={{ color: 'var(--color-subtle)' }}>{label}</span>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>{text}</p>
+              </div>
+            ))}
+            {d.tip && <p className="text-xs italic mt-1.5 pl-1 border-l-2" style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
+          </div>
+        )) : <p className="text-sm text-center py-8" style={{ color: 'var(--color-subtle)' }}>Failed to load. Try again.</p>}
+      </div>
+    </ModalShell>
+  )
+}
+
+/* ── Similar destinations modal ── */
+function SimilarModal({ destination: dest, accent, onClose }: { destination: Destination; accent: string; onClose: () => void }) {
+  const [similar, setSimilar] = useState<Destination[] | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        preferences: {
+          summary: `Destinations with a similar vibe and feel to ${dest.city} — ${dest.tagline}`,
+          climate: 'similar climate',
+          budget: 'any',
+          travelStyle: dest.bestFor.slice(0, 3).join(', ') || 'open',
+          foodPreferences: 'similar cuisine culture',
+          other: `Must not include ${dest.city}. Similar cultural atmosphere.`,
+        },
+      }),
+    })
+      .then(r => r.json())
+      .then((d: Destination[]) => setSimilar(d.filter(s => s.city !== dest.city)))
+      .catch(() => null)
+      .finally(() => setLoading(false))
+  }, [])
+
+  return (
+    <ModalShell accent={accent} onClose={onClose}>
+      <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} style={{ color: accent }} />
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Similar to {dest.city}</h3>
+        </div>
+        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
+      </div>
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
+          </div>
+        ) : similar && similar.length > 0 ? (
+          <div className="space-y-3">
+            {similar.map(s => (
+              <div key={s.city} className="flex items-start gap-3 p-3 rounded-2xl"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
+                <span className="text-2xl">{s.flagEmoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{s.city}</p>
+                  <p className="text-xs mb-1" style={{ color: 'var(--color-subtle)' }}>{s.country} · {s.region}</p>
+                  <p className="text-xs italic line-clamp-2" style={{ color: s.culturalTheme.accent }}>{s.tagline}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-sm text-center py-8" style={{ color: 'var(--color-subtle)' }}>No similar destinations found.</p>}
+      </div>
+    </ModalShell>
+  )
+}
+
+/* ── Share card modal ── */
+function ShareCardModal({ destination: dest, imageUrl, onClose }: { destination: Destination; imageUrl: string | null; onClose: () => void }) {
+  const theme = dest.culturalTheme
+
+  async function handleCopy() {
+    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
+    await navigator.clipboard.writeText(text).catch(() => null)
+    toast('Copied to clipboard')
+  }
+
+  async function handleNativeShare() {
+    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
+    await navigator.share({ title: dest.city, text }).catch(() => null)
+  }
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }} />
+      <motion.div
+        className="relative z-10 flex flex-col items-center gap-4"
+        initial={{ scale: 0.88, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* The poster card */}
+        <div className="rounded-3xl overflow-hidden relative"
+          style={{ width: 320, height: 480, background: `linear-gradient(160deg, ${theme.primary}, ${theme.accent} 120%)` }}>
+          {imageUrl && (
+            <img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'brightness(0.6) saturate(1.3)', mixBlendMode: 'luminosity' }} />
+          )}
+          <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${theme.primary}ee 0%, ${theme.primary}88 40%, transparent 100%)` }} />
+          <div className="absolute top-5 right-5 text-4xl">{dest.emoji}</div>
+          <div className="absolute bottom-0 left-0 right-0 p-8">
+            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Discovered on Wander</p>
+            <h2 className="text-5xl text-white leading-none mb-1" style={{ fontFamily: 'var(--font-playfair)' }}>{dest.city}</h2>
+            <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.75)' }}>{dest.country} · {dest.region}</p>
+            <p className="text-sm italic leading-snug" style={{ color: 'rgba(255,255,255,0.85)' }}>{dest.tagline}</p>
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {dest.bestFor.slice(0, 3).map(b => (
+                <span key={b} className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>{b}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button onClick={handleCopy}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            Copy text
+          </button>
+          {'share' in navigator && (
+            <button onClick={handleNativeShare}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
+              style={{ backgroundColor: theme.accent, color: theme.background }}>
+              Share <Share2 size={13} />
+            </button>
+          )}
+        </div>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Screenshot the card to save it</p>
+      </motion.div>
+    </motion.div>
   )
 }
 
