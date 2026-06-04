@@ -236,7 +236,7 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
               </Section>
 
               {/* Accent colour */}
-              <Section label="Accent color">
+              <Section label="Accent colour">
                 {/* Quick-pick presets */}
                 <div className="flex gap-2 mb-3">
                   {['#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#06B6D4', '#10B981', '#F97316'].map(color => (

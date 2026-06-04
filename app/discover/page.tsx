@@ -143,7 +143,7 @@ export default function DiscoverPage() {
         setShowGuideChoices(true)
       }, 280)
     } else {
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Perfect, finding your destinations now...' }])
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Perfect — finding your destinations now…' }])
       const [escape, travelers, duration, culture, continent, vibe, weather, budget] = newAnswers
       const preferences: Preferences = {
         summary: `${escape}, traveling ${travelers}, ${duration}, ${culture} culture, ${continent}, ${vibe}, ${weather} weather, ${budget} budget`,
@@ -346,7 +346,7 @@ export default function DiscoverPage() {
 
           {searching && (
             <p className="text-center text-sm animate-pulse mt-4" style={{ color: 'var(--color-subtle)' }}>
-              Finding your perfect destinations...
+              Finding your perfect destinations…
             </p>
           )}
           <div ref={bottomRef} />
@@ -375,7 +375,7 @@ export default function DiscoverPage() {
                 onKeyDown={handleKeyDown}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
-                placeholder="Tell me about your dream trip..."
+                placeholder="Tell me about your dream trip…"
                 rows={1}
                 className="flex-1 resize-none rounded-2xl px-4 py-3 text-sm outline-none transition-all"
                 style={{

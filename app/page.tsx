@@ -242,7 +242,7 @@ export default function HomePage() {
                     className="w-4 h-4 rounded-full border-2 animate-spin inline-block"
                     style={{ borderColor: 'var(--color-text)', borderTopColor: 'transparent' }}
                   />
-                  Finding...
+                  Finding…
                 </span>
               ) : '✦ Surprise me'}
             </button>
