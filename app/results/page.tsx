@@ -10,6 +10,7 @@ import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
 import { toggleFavourite, isFavourite } from '@/lib/favourites'
 import { useDestinationImage } from '@/lib/useDestinationImage'
+import { DestImage } from '@/components/DestImage'
 import type { Destination, AppSettings, WeatherData } from '@/types'
 
 type PackingCategory = { name: string; items: string[] }
@@ -223,7 +224,7 @@ export default function ResultsPage() {
                     style={{ borderColor: 'var(--color-accent)' }} />
                   <p className="text-xs tracking-widest uppercase animate-pulse"
                     style={{ color: 'var(--color-subtle)' }}>
-                    Finding your perfect destinations...
+                    Finding your perfect destinations…
                   </p>
                 </div>
               ) : (
@@ -425,7 +426,7 @@ function BottomCard({
   onCompare: () => void
 }) {
   const image = useDestinationImage(dest.city, dest.country)
-  const imageUrl = image?.src ?? null
+  const [imgLoaded, setImgLoaded] = useState(false)
   const theme = dest.culturalTheme
   const active = isHovered || isSelected
 
@@ -488,13 +489,14 @@ function BottomCard({
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.25 }}
     >
-      {/* Background image */}
-      {imageUrl ? (
-        <motion.img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: 'brightness(1.02) saturate(1.25) contrast(1.08)', x: imgX, y: imgY, scale: 1.12 }} />
-      ) : (
-        <div className="absolute inset-0"
-          style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
+      {/* Background image — gradient base shows instantly, photo (thumb) fades in over it */}
+      <div className="absolute inset-0"
+        style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
+      {image?.src && (
+        <motion.img src={image.thumb} alt={dest.city} loading="lazy" decoding="async"
+          onLoad={() => setImgLoaded(true)}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'brightness(1.02) saturate(1.25) contrast(1.08)', x: imgX, y: imgY, scale: 1.12, opacity: imgLoaded ? 1 : 0, transition: 'opacity 500ms ease' }} />
       )}
 
       {/* Gradient overlay */}
@@ -620,9 +622,9 @@ function DestinationDetailCard({
 
         {/* Hero */}
         <div className="relative flex-shrink-0 overflow-hidden" style={{ height: 260 }}>
-          {imageUrl ? (
-            <img src={imageUrl} alt={dest.city} className="w-full h-full object-cover"
-              style={{ filter: 'brightness(0.9) saturate(1.2) contrast(1.05)' }} />
+          {image?.src ? (
+            <DestImage src={image.src} thumb={image.thumb} alt={dest.city}
+              filter="brightness(0.9) saturate(1.2) contrast(1.05)" eager />
           ) : (
             <div className="w-full h-full"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }} />
@@ -879,7 +881,6 @@ function ExperienceChip({ label, onClick, onPrefetch }: { label: string; onClick
 /* ── Compare card ── */
 function CompareCard({ destination: dest, weather, onExplore }: { destination: Destination; weather: WeatherData | null; onExplore: () => void }) {
   const image = useDestinationImage(dest.city, dest.country)
-  const imageUrl = image?.src ?? null
   const theme = dest.culturalTheme
   return (
     <div className="rounded-3xl overflow-hidden flex flex-col h-full"
@@ -889,8 +890,8 @@ function CompareCard({ destination: dest, weather, onExplore }: { destination: D
         boxShadow: `0 0 40px color-mix(in srgb, ${theme.accent} 12%, transparent)`,
       }}>
       <div className="relative flex-shrink-0 overflow-hidden" style={{ height: 180 }}>
-        {imageUrl
-          ? <img src={imageUrl} alt={dest.city} className="w-full h-full object-cover" style={{ filter: 'brightness(0.85) saturate(1.2)' }} />
+        {image?.src
+          ? <DestImage src={image.src} thumb={image.thumb} alt={dest.city} filter="brightness(0.85) saturate(1.2)" />
           : <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }} />}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%)' }} />
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
@@ -1311,7 +1312,7 @@ function ItemModal({ item, city, accent, onClose }: { item: string; city: string
               <div className="flex gap-2 items-center" style={{ color: 'var(--color-subtle)' }}>
                 <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
                   style={{ borderColor: accent, borderTopColor: 'transparent' }} />
-                <span className="text-xs">Loading...</span>
+                <span className="text-xs">Loading…</span>
               </div>
             ) : data?.description ? (
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>

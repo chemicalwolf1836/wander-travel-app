@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 
 export interface DestinationImage {
   src: string
+  /** Smaller variant for thumbnails/fast first paint (falls back to src). */
+  thumb: string
   /** Present only for Unsplash photos (required attribution). */
   credit?: { name: string; link: string }
 }
@@ -21,8 +23,10 @@ async function fetchImage(city: string, country: string): Promise<DestinationIma
       `/api/photo?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`
     )
     if (res.ok) {
-      const data: { url?: string; credit?: { name: string; link: string } } | null = await res.json()
-      if (data?.url) return { src: data.url, credit: data.credit }
+      const data:
+        | { url?: string; thumb?: string; credit?: { name: string; link: string } }
+        | null = await res.json()
+      if (data?.url) return { src: data.url, thumb: data.thumb ?? data.url, credit: data.credit }
     }
   } catch {
     /* fall through to Wikipedia */
@@ -35,8 +39,9 @@ async function fetchImage(city: string, country: string): Promise<DestinationIma
     )
     if (res.ok) {
       const d: { originalimage?: { source: string }; thumbnail?: { source: string } } = await res.json()
-      const url = d.originalimage?.source ?? d.thumbnail?.source ?? null
-      if (url) return { src: url }
+      const full = d.originalimage?.source ?? d.thumbnail?.source ?? null
+      const small = d.thumbnail?.source ?? d.originalimage?.source ?? null
+      if (full) return { src: full, thumb: small ?? full }
     }
   } catch {
     /* ignore */

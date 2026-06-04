@@ -8,6 +8,7 @@ import { DishChip } from './DishChip'
 import { TagChip } from './TagChip'
 import { AttractionBadge } from './AttractionBadge'
 import { useDestinationImage } from '@/lib/useDestinationImage'
+import { DestImage } from './DestImage'
 import type { Destination, WeatherData } from '@/types'
 
 interface DetailPanelProps {
@@ -49,11 +50,12 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
         style={{ height: 208, borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' }}
       >
         {image?.src ? (
-          <img
+          <DestImage
             src={image.src}
+            thumb={image.thumb}
             alt={destination.city}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: 'brightness(0.9) saturate(1.15)' }}
+            filter="brightness(0.9) saturate(1.15)"
+            eager
           />
         ) : (
           <div
@@ -102,7 +104,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
               {destination.emoji} {destination.city}
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.9)' }}>
-              {destination.flagEmoji} {destination.country} - {destination.region}
+              {destination.flagEmoji} {destination.country} · {destination.region}
             </p>
           </div>
         </div>

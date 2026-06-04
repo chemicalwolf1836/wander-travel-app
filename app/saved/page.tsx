@@ -9,6 +9,7 @@ import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
 import { getNote, saveNote } from '@/lib/tripNotes'
 import { useDestinationImage } from '@/lib/useDestinationImage'
+import { DestImage } from '@/components/DestImage'
 import type { Destination, Preferences } from '@/types'
 
 export default function SavedPage() {
@@ -286,11 +287,11 @@ function SavedThumb({ dest }: { dest: Destination }) {
       style={{ border: `1px solid color-mix(in srgb, ${theme.accent} 25%, transparent)` }}
     >
       {image?.src ? (
-        <img
-          src={image.src}
+        <DestImage
+          src={image.thumb}
+          thumb={image.thumb}
           alt={dest.city}
-          className="w-full h-full object-cover"
-          style={{ filter: 'brightness(0.95) saturate(1.15)' }}
+          filter="brightness(0.95) saturate(1.15)"
         />
       ) : (
         <div
