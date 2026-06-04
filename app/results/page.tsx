@@ -9,6 +9,7 @@ import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
 import { CustomizationPanel } from '@/components/CustomizationPanel'
 import { toggleFavourite, isFavourite } from '@/lib/favourites'
+import { useDestinationImage } from '@/lib/useDestinationImage'
 import type { Destination, AppSettings, WeatherData } from '@/types'
 
 type PackingCategory = { name: string; items: string[] }
@@ -30,12 +31,6 @@ function clearAccent() {
   document.documentElement.style.removeProperty('--color-accent')
 }
 
-interface WikiSummary {
-  thumbnail?: { source: string }
-  originalimage?: { source: string }
-}
-
-const wikiImageCache = new Map<string, string>()
 
 // Cache item-info results client-side so re-clicks and pre-hovers are instant
 const itemInfoCache = new Map<string, { description?: string; image?: string }>()
@@ -52,25 +47,6 @@ function prefetchItem(name: string, city: string) {
       itemInfoFetching.delete(key)
     })
     .catch(() => itemInfoFetching.delete(key))
-}
-
-function useWikiImage(city: string) {
-  const [src, setSrc] = useState<string | null>(wikiImageCache.get(city) ?? null)
-  useEffect(() => {
-    if (wikiImageCache.has(city)) {
-      setSrc(wikiImageCache.get(city)!)
-      return
-    }
-    fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(city)}`)
-      .then((r) => r.json())
-      .then((d: WikiSummary) => {
-        const url = d.originalimage?.source ?? d.thumbnail?.source ?? null
-        if (url) wikiImageCache.set(city, url)
-        setSrc(url)
-      })
-      .catch(() => null)
-  }, [city])
-  return src
 }
 
 type View = 'split' | 'detail' | 'compare'
@@ -448,7 +424,8 @@ function BottomCard({
   onClick: () => void
   onCompare: () => void
 }) {
-  const imageUrl = useWikiImage(dest.city)
+  const image = useDestinationImage(dest.city, dest.country)
+  const imageUrl = image?.src ?? null
   const theme = dest.culturalTheme
   const active = isHovered || isSelected
 
@@ -514,7 +491,7 @@ function BottomCard({
       {/* Background image */}
       {imageUrl ? (
         <motion.img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: 'brightness(1.05) saturate(2.4) contrast(1.15)', x: imgX, y: imgY, scale: 1.12 }} />
+          style={{ filter: 'brightness(1.02) saturate(1.25) contrast(1.08)', x: imgX, y: imgY, scale: 1.12 }} />
       ) : (
         <div className="absolute inset-0"
           style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
@@ -523,6 +500,21 @@ function BottomCard({
       {/* Gradient overlay */}
       <div className="absolute inset-0"
         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 80%, transparent 100%)' }} />
+
+      {/* Unsplash attribution (required when a photo is used) */}
+      {image?.credit && (
+        <a
+          href={`${image.credit.link}?utm_source=wander&utm_medium=referral`}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-full opacity-50 hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff' }}
+          title={`Photo by ${image.credit.name} on Unsplash`}
+        >
+          📷 {image.credit.name}
+        </a>
+      )}
 
 
       {/* Content */}
@@ -591,7 +583,8 @@ function DestinationDetailCard({
   onExplore: () => void
   onBack: () => void
 }) {
-  const imageUrl = useWikiImage(dest.city)
+  const image = useDestinationImage(dest.city, dest.country)
+  const imageUrl = image?.src ?? null
   const theme = dest.culturalTheme
   const [activeItem, setActiveItem] = useState<string | null>(null)
   const [fav, setFav] = useState(() => isFavourite(dest.city))
@@ -636,6 +629,20 @@ function DestinationDetailCard({
           )}
           <div className="absolute inset-0"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)' }} />
+
+          {/* Unsplash attribution */}
+          {image?.credit && (
+            <a
+              href={`${image.credit.link}?utm_source=wander&utm_medium=referral`}
+              target="_blank"
+              rel="noreferrer"
+              className="absolute top-4 left-4 text-[10px] px-2 py-0.5 rounded-full opacity-60 hover:opacity-100 transition-opacity"
+              style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff' }}
+              title={`Photo by ${image.credit.name} on Unsplash`}
+            >
+              📷 {image.credit.name}
+            </a>
+          )}
 
           {/* Top-right action buttons */}
           <div className="absolute top-4 right-4 flex gap-2">
@@ -871,7 +878,8 @@ function ExperienceChip({ label, onClick, onPrefetch }: { label: string; onClick
 
 /* ── Compare card ── */
 function CompareCard({ destination: dest, weather, onExplore }: { destination: Destination; weather: WeatherData | null; onExplore: () => void }) {
-  const imageUrl = useWikiImage(dest.city)
+  const image = useDestinationImage(dest.city, dest.country)
+  const imageUrl = image?.src ?? null
   const theme = dest.culturalTheme
   return (
     <div className="rounded-3xl overflow-hidden flex flex-col h-full"
