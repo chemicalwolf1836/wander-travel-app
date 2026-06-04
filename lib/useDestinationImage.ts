@@ -4,10 +4,8 @@ import { useEffect, useState } from 'react'
 
 export interface DestinationImage {
   src: string
-  /** Smaller variant for thumbnails/fast first paint (falls back to src). */
+  /** Smaller variant for thumbnails / fast first paint (falls back to src). */
   thumb: string
-  /** Present only for Unsplash photos (required attribution). */
-  credit?: { name: string; link: string }
 }
 
 // Module-level caches so a city is fetched once per session and re-used
@@ -15,24 +13,7 @@ export interface DestinationImage {
 const cache = new Map<string, DestinationImage | null>()
 const inflight = new Map<string, Promise<DestinationImage | null>>()
 
-async function fetchImage(city: string, country: string): Promise<DestinationImage | null> {
-  // 1) Unsplash via our server route (key stays server-side; returns null if
-  //    no key is configured or no match — so we transparently fall back).
-  try {
-    const res = await fetch(
-      `/api/photo?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`
-    )
-    if (res.ok) {
-      const data:
-        | { url?: string; thumb?: string; credit?: { name: string; link: string } }
-        | null = await res.json()
-      if (data?.url) return { src: data.url, thumb: data.thumb ?? data.url, credit: data.credit }
-    }
-  } catch {
-    /* fall through to Wikipedia */
-  }
-
-  // 2) Wikipedia fallback (free, no key) — same source Results used before.
+async function fetchImage(city: string): Promise<DestinationImage | null> {
   try {
     const res = await fetch(
       `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(city)}`
@@ -44,13 +25,13 @@ async function fetchImage(city: string, country: string): Promise<DestinationIma
       if (full) return { src: full, thumb: small ?? full }
     }
   } catch {
-    /* ignore */
+    /* ignore — no image is fine */
   }
-
   return null
 }
 
 export function useDestinationImage(city: string, country = ''): DestinationImage | null {
+  // country kept in the cache key so callers can pass it without churn
   const key = `${city}|${country}`.toLowerCase()
   const [image, setImage] = useState<DestinationImage | null>(() => cache.get(key) ?? null)
 
@@ -60,7 +41,7 @@ export function useDestinationImage(city: string, country = ''): DestinationImag
       return
     }
     let active = true
-    const promise = inflight.get(key) ?? fetchImage(city, country)
+    const promise = inflight.get(key) ?? fetchImage(city)
     inflight.set(key, promise)
     promise.then((result) => {
       cache.set(key, result)
@@ -70,7 +51,7 @@ export function useDestinationImage(city: string, country = ''): DestinationImag
     return () => {
       active = false
     }
-  }, [key, city, country])
+  }, [key, city])
 
   return image
 }

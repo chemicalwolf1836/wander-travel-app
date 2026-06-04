@@ -83,20 +83,6 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
           <X size={18} />
         </button>
 
-        {/* Unsplash attribution */}
-        {image?.credit && (
-          <a
-            href={`${image.credit.link}?utm_source=wander&utm_medium=referral`}
-            target="_blank"
-            rel="noreferrer"
-            className="absolute top-3 left-3 text-[10px] px-2 py-0.5 rounded-full opacity-70 hover:opacity-100 transition-opacity"
-            style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff' }}
-            title={`Photo by ${image.credit.name} on Unsplash`}
-          >
-            📷 {image.credit.name}
-          </a>
-        )}
-
         {/* Title overlay */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
           <div className="max-w-2xl mx-auto" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>

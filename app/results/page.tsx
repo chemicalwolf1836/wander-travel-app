@@ -503,21 +503,6 @@ function BottomCard({
       <div className="absolute inset-0"
         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 80%, transparent 100%)' }} />
 
-      {/* Unsplash attribution (required when a photo is used) */}
-      {image?.credit && (
-        <a
-          href={`${image.credit.link}?utm_source=wander&utm_medium=referral`}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-full opacity-50 hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff' }}
-          title={`Photo by ${image.credit.name} on Unsplash`}
-        >
-          📷 {image.credit.name}
-        </a>
-      )}
-
 
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-end p-4"
@@ -631,20 +616,6 @@ function DestinationDetailCard({
           )}
           <div className="absolute inset-0"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)' }} />
-
-          {/* Unsplash attribution */}
-          {image?.credit && (
-            <a
-              href={`${image.credit.link}?utm_source=wander&utm_medium=referral`}
-              target="_blank"
-              rel="noreferrer"
-              className="absolute top-4 left-4 text-[10px] px-2 py-0.5 rounded-full opacity-60 hover:opacity-100 transition-opacity"
-              style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff' }}
-              title={`Photo by ${image.credit.name} on Unsplash`}
-            >
-              📷 {image.credit.name}
-            </a>
-          )}
 
           {/* Top-right action buttons */}
           <div className="absolute top-4 right-4 flex gap-2">
