@@ -20,6 +20,56 @@ function isPhoto(url: string): boolean {
   return !/coat_of_arms|coats?_of_arms|\bflag\b|flag_of|locator|location_map|_map[_.]|\bmap\b|\bseal\b|emblem|\blogo\b|wappen|escudo|bandera/i.test(url)
 }
 
+// Titles that are clearly NOT a scenic photo of the place.
+const JUNK = /locator|location.?map|\bmap\b|licen[sc]e.?plate|number.?plate|\bplate\b|satellite|copernicus|sentinel|landsat|aerial.?view.?map|diagram|\bflag\b|coat.?of.?arms|\bseal\b|\blogo\b|emblem|engraving|lithograph|\bdrawing\b|\bicon\b|stamp|banknote|\b1[5-8]\d\d\b/i
+// Titles that suggest a recognisable view of the city/country.
+const SCENIC = /\b(view|views|skyline|cityscape|panorama|panoramic|aerial|old.?town|historic|downtown|sunset|sunrise|night|harbou?r|waterfront|plaza|square|street|centre|center|cathedral|temple|castle|bridge|old.?city|seen.?from|from.?above)\b/i
+
+// Search Wikimedia Commons (the photo library) for a real, scenic landscape
+// photo of "<city> <country>". Keeps only JPEG landscape photos, drops junk
+// (maps/plates/satellite/old prints), and prefers scenic-looking titles.
+async function fetchFromCommons(city: string, country: string): Promise<DestinationImage | null> {
+  const q = `${city} ${country}`.trim()
+  const url =
+    `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*` +
+    `&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=20` +
+    `&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=1080`
+  const res = await fetch(url)
+  if (!res.ok) return null
+  const data: {
+    query?: {
+      pages?: Record<string, {
+        title?: string
+        index?: number
+        imageinfo?: Array<{ thumburl?: string; mime?: string; width?: number; height?: number }>
+      }>
+    }
+  } = await res.json()
+  const pages = data.query?.pages ? Object.values(data.query.pages) : []
+
+  const candidates = pages
+    .map((p) => {
+      const ii = p.imageinfo?.[0]
+      return { title: p.title ?? '', index: p.index ?? 99, ii }
+    })
+    .filter(({ title, ii }) =>
+      ii?.thumburl &&
+      ii.mime === 'image/jpeg' &&
+      (ii.width ?? 0) >= (ii.height ?? 1) * 1.15 && // landscape
+      isPhoto(title) &&
+      !JUNK.test(title)
+    )
+    .sort((a, b) => {
+      const score = (t: string) => (SCENIC.test(t) ? 1 : 0)
+      const d = score(b.title) - score(a.title)
+      return d !== 0 ? d : a.index - b.index // scenic first, then search rank
+    })
+
+  const best = candidates[0]?.ii?.thumburl
+  if (best) return { src: best, thumb: best.replace(/\/\d+px-/, '/400px-') }
+  return null
+}
+
 // 1) Search Wikipedia for "<city> <country>" so we land on the RIGHT article
 //    (avoids name collisions), and take that article's representative lead
 //    image — which for places is almost always a real photo.
@@ -54,7 +104,12 @@ async function fetchFromSummary(city: string): Promise<DestinationImage | null> 
 
 async function fetchImage(city: string, country: string): Promise<DestinationImage | null> {
   try {
-    return (await fetchFromSearch(city, country)) ?? (await fetchFromSummary(city))
+    // 1) Scenic Commons photo → 2) curated article lead image → 3) summary.
+    return (
+      (await fetchFromCommons(city, country)) ??
+      (await fetchFromSearch(city, country)) ??
+      (await fetchFromSummary(city))
+    )
   } catch {
     return null // no image is fine — the card falls back to a gradient
   }
