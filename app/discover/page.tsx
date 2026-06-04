@@ -64,6 +64,7 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false)
   const [searching, setSearching] = useState(false)
   const [mode, setMode] = useState<Mode>('selecting')
+  const [inputFocused, setInputFocused] = useState(false)
 
   // Guided mode state
   const [guidedStep, setGuidedStep] = useState(0)
@@ -372,13 +373,20 @@ export default function DiscoverPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
                 placeholder="Tell me about your dream trip..."
                 rows={1}
                 className="flex-1 resize-none rounded-2xl px-4 py-3 text-sm outline-none transition-all"
                 style={{
                   backgroundColor: 'var(--color-card-bg)',
                   color: 'var(--color-text)',
-                  border: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
+                  border: `1px solid ${inputFocused
+                    ? 'var(--color-accent)'
+                    : 'color-mix(in srgb, var(--color-primary) 30%, transparent)'}`,
+                  boxShadow: inputFocused
+                    ? '0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent)'
+                    : 'none',
                   maxHeight: '120px',
                 }}
                 disabled={loading || searching}
