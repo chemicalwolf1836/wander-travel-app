@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
 import { getNote, saveNote } from '@/lib/tripNotes'
+import { useDestinationImage } from '@/lib/useDestinationImage'
 import type { Destination, Preferences } from '@/types'
 
 export default function SavedPage() {
@@ -195,8 +196,8 @@ export default function SavedPage() {
                     border: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)',
                   }}
                 >
-                  {/* Flag emoji */}
-                  <span className="text-2xl leading-none flex-shrink-0">{dest.flagEmoji}</span>
+                  {/* Photo thumbnail (Unsplash/Wikipedia, flag fallback) */}
+                  <SavedThumb dest={dest} />
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
@@ -272,6 +273,33 @@ export default function SavedPage() {
           </motion.div>
         )}
       </main>
+    </div>
+  )
+}
+
+function SavedThumb({ dest }: { dest: Destination }) {
+  const image = useDestinationImage(dest.city, dest.country)
+  const theme = dest.culturalTheme
+  return (
+    <div
+      className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0"
+      style={{ border: `1px solid color-mix(in srgb, ${theme.accent} 25%, transparent)` }}
+    >
+      {image?.src ? (
+        <img
+          src={image.src}
+          alt={dest.city}
+          className="w-full h-full object-cover"
+          style={{ filter: 'brightness(0.95) saturate(1.15)' }}
+        />
+      ) : (
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }}
+        >
+          <span className="text-2xl leading-none">{dest.flagEmoji}</span>
+        </div>
+      )}
     </div>
   )
 }

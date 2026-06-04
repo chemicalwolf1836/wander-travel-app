@@ -7,6 +7,7 @@ import { WeatherBadge } from './WeatherBadge'
 import { DishChip } from './DishChip'
 import { TagChip } from './TagChip'
 import { AttractionBadge } from './AttractionBadge'
+import { useDestinationImage } from '@/lib/useDestinationImage'
 import type { Destination, WeatherData } from '@/types'
 
 interface DetailPanelProps {
@@ -16,6 +17,7 @@ interface DetailPanelProps {
 
 export function DetailPanel({ destination, onBack }: DetailPanelProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
+  const image = useDestinationImage(destination.city, destination.country)
 
   useEffect(() => {
     fetch(`/api/weather?city=${encodeURIComponent(destination.city)}&country=${destination.countryCode}`)
@@ -41,34 +43,72 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={{ top: 0, bottom: 0.3 }}
     >
-      {/* Drag handle */}
-      <div className="flex justify-center pt-3 pb-1">
-        <GripHorizontal size={20} style={{ color: 'var(--color-subtle)' }} />
-      </div>
+      {/* Hero image band — city title overlaid */}
+      <div
+        className="relative w-full"
+        style={{ height: 208, borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' }}
+      >
+        {image?.src ? (
+          <img
+            src={image.src}
+            alt={destination.city}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: 'brightness(0.9) saturate(1.15)' }}
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
+          />
+        )}
+        {/* Dark scrim — keeps the white title legible in both themes */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.25) 100%)' }}
+        />
 
-      <div className="px-6 pb-12 max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1
-              className="text-4xl mb-1"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
-            >
+        {/* Drag handle (over image) */}
+        <div className="absolute top-2 left-0 right-0 flex justify-center">
+          <GripHorizontal size={20} style={{ color: 'rgba(255,255,255,0.85)' }} />
+        </div>
+
+        {/* Close */}
+        <button
+          onClick={onBack}
+          className="absolute top-3 right-3 p-2 rounded-full hover:opacity-100 transition-opacity"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff', opacity: 0.85 }}
+        >
+          <X size={18} />
+        </button>
+
+        {/* Unsplash attribution */}
+        {image?.credit && (
+          <a
+            href={`${image.credit.link}?utm_source=wander&utm_medium=referral`}
+            target="_blank"
+            rel="noreferrer"
+            className="absolute top-3 left-3 text-[10px] px-2 py-0.5 rounded-full opacity-70 hover:opacity-100 transition-opacity"
+            style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff' }}
+            title={`Photo by ${image.credit.name} on Unsplash`}
+          >
+            📷 {image.credit.name}
+          </a>
+        )}
+
+        {/* Title overlay */}
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
+          <div className="max-w-2xl mx-auto" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
+            <h1 className="text-4xl mb-0.5" style={{ fontFamily: 'var(--font-playfair)', color: '#fff' }}>
               {destination.emoji} {destination.city}
             </h1>
-            <p style={{ color: 'var(--color-subtle)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.9)' }}>
               {destination.flagEmoji} {destination.country} - {destination.region}
             </p>
           </div>
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full hover:opacity-70 transition-opacity"
-            style={{ color: 'var(--color-subtle)' }}
-          >
-            <X size={20} />
-          </button>
         </div>
+      </div>
 
+      <div className="px-6 pb-12 max-w-2xl mx-auto pt-6">
         {/* Weather */}
         {weather && (
           <div className="mb-6">
