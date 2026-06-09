@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
@@ -20,6 +20,8 @@ export default function SavedPage() {
   const [exploringCity, setExploringCity] = useState<string | null>(null)
   const [hasResults, setHasResults] = useState(false)
   const [pendingRemoveCity, setPendingRemoveCity] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [regionFilter, setRegionFilter] = useState<string>('all')
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -86,7 +88,18 @@ export default function SavedPage() {
 
   if (!mounted) return null
 
-  const displayed = favourites.filter(d => d.city !== pendingRemoveCity)
+  const saved = favourites.filter(d => d.city !== pendingRemoveCity)
+  const regions = [...new Set(saved.map(d => d.region).filter(Boolean))] as string[]
+  const showFilters = saved.length > 3
+  const q = query.trim().toLowerCase()
+  const displayed = saved.filter(d => {
+    const matchesQuery = !q
+      || d.city.toLowerCase().includes(q)
+      || d.country.toLowerCase().includes(q)
+      || (d.region ?? '').toLowerCase().includes(q)
+    const matchesRegion = regionFilter === 'all' || d.region === regionFilter
+    return matchesQuery && matchesRegion
+  })
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -104,7 +117,7 @@ export default function SavedPage() {
             >
               Saved
             </h1>
-            {displayed.length > 0 && (
+            {saved.length > 0 && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
                 style={{
@@ -113,7 +126,7 @@ export default function SavedPage() {
                   border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                 }}
               >
-                {displayed.length}
+                {saved.length}
               </span>
             )}
           </div>
@@ -142,7 +155,7 @@ export default function SavedPage() {
         />
 
         {/* Empty state */}
-        {displayed.length === 0 ? (
+        {saved.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,6 +191,47 @@ export default function SavedPage() {
             </button>
           </motion.div>
         ) : (
+          <>
+            {/* Search + region filter (shown once the list is worth filtering) */}
+            {showFilters && (
+              <div className="flex flex-col sm:flex-row gap-3 mb-5">
+                <div className="relative flex-1">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-subtle)' }} />
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Search saved…"
+                    aria-label="Search saved destinations"
+                    className="w-full text-sm pl-9 pr-3 py-2 rounded-full bg-transparent outline-none"
+                    style={{ color: 'var(--color-text)', border: '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)' }}
+                  />
+                </div>
+                {regions.length > 1 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto">
+                    {['all', ...regions].map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setRegionFilter(r)}
+                        className="text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
+                        style={{
+                          backgroundColor: regionFilter === r ? 'var(--color-accent)' : 'color-mix(in srgb, var(--color-text) 6%, transparent)',
+                          color: regionFilter === r ? 'var(--color-bg)' : 'var(--color-subtle)',
+                        }}
+                      >
+                        {r === 'all' ? 'All' : r}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {displayed.length === 0 ? (
+              <p className="text-sm text-center py-16" style={{ color: 'var(--color-subtle)' }}>
+                No saved destinations match your search.
+              </p>
+            ) : (
           <motion.div
             className="flex flex-col gap-3"
             initial={{ opacity: 0 }}
@@ -275,6 +329,8 @@ export default function SavedPage() {
               ))}
             </AnimatePresence>
           </motion.div>
+            )}
+          </>
         )}
       </main>
     </div>
