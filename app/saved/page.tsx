@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
 import { getNote, saveNote } from '@/lib/tripNotes'
+import { getTripDate, saveTripDate, countdownLabel } from '@/lib/tripDates'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { DestImage } from '@/components/DestImage'
 import type { Destination, Preferences } from '@/types'
@@ -255,6 +256,8 @@ export default function SavedPage() {
                       )}
                     </motion.button>
 
+                    <DateButton city={dest.city} />
+
                     <NoteButton city={dest.city} />
 
                     <motion.button
@@ -301,6 +304,80 @@ function SavedThumb({ dest }: { dest: Destination }) {
           <span className="text-2xl leading-none">{dest.flagEmoji}</span>
         </div>
       )}
+    </div>
+  )
+}
+
+function DateButton({ city }: { city: string }) {
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState(() => getTripDate(city))
+  const label = countdownLabel(date)
+
+  function handleChange(value: string) {
+    setDate(value)
+    saveTripDate(city, value)
+  }
+
+  return (
+    <div className="relative flex items-center gap-1.5">
+      {label && (
+        <span className="text-xs whitespace-nowrap" style={{ color: label === 'Trip passed' ? 'var(--color-subtle)' : 'var(--color-accent)' }}>
+          {label}
+        </span>
+      )}
+      <motion.button
+        onClick={() => setOpen(o => !o)}
+        className="p-2 rounded-full"
+        style={{ color: date ? 'var(--color-accent)' : 'var(--color-subtle)' }}
+        aria-label={date ? `Trip date set: ${date}` : 'Set trip date'}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        title="Set trip date"
+      >
+        <CalendarDays size={14} />
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="absolute right-0 bottom-10 z-20 rounded-2xl overflow-hidden shadow-2xl"
+            style={{
+              width: 220,
+              backgroundColor: 'var(--color-card-bg)',
+              border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            }}
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 8 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 320 }}
+          >
+            <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+              <span className="text-xs font-medium tracking-wide" style={{ color: 'var(--color-subtle)' }}>
+                Trip date
+              </span>
+              <button onClick={() => setOpen(false)} style={{ color: 'var(--color-subtle)' }}>
+                <ChevronDown size={12} />
+              </button>
+            </div>
+            <div className="px-3 pb-3 flex items-center gap-2">
+              <input
+                type="date"
+                className="flex-1 text-xs px-2 py-1.5 rounded-lg bg-transparent outline-none"
+                style={{ color: 'var(--color-text)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)' }}
+                value={date}
+                onChange={e => handleChange(e.target.value)}
+                autoFocus
+              />
+              {date && (
+                <button onClick={() => handleChange('')} className="text-xs px-2 py-1" style={{ color: 'var(--color-subtle)' }}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
