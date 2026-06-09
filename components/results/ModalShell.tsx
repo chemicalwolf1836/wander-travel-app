@@ -1,9 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useDismissable } from '@/lib/useDismissable'
 
 /* ── Shared modal shell ── */
 export function ModalShell({ accent, onClose, children }: { accent: string; onClose: () => void; children: React.ReactNode }) {
+  const dialogRef = useDismissable<HTMLDivElement>(onClose)
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center p-6"
@@ -12,7 +14,11 @@ export function ModalShell({ accent, onClose, children }: { accent: string; onCl
     >
       <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }} />
       <motion.div
-        className="relative rounded-3xl overflow-hidden flex flex-col z-10 w-full"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="relative rounded-3xl overflow-hidden flex flex-col z-10 w-full outline-none"
         style={{
           maxWidth: 560, maxHeight: '85vh',
           backgroundColor: 'var(--color-card-bg)',

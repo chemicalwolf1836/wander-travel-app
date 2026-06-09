@@ -3,11 +3,13 @@
 import { motion } from 'framer-motion'
 import { Share2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useDismissable } from '@/lib/useDismissable'
 import type { Destination } from '@/types'
 
 /* ── Share card modal ── */
 export function ShareCardModal({ destination: dest, imageUrl, onClose }: { destination: Destination; imageUrl: string | null; onClose: () => void }) {
   const theme = dest.culturalTheme
+  const dialogRef = useDismissable<HTMLDivElement>(onClose)
 
   async function handleCopy() {
     const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
@@ -28,7 +30,11 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
     >
       <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }} />
       <motion.div
-        className="relative z-10 flex flex-col items-center gap-4"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="relative z-10 flex flex-col items-center gap-4 outline-none"
         initial={{ scale: 0.88, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: 'spring', damping: 22, stiffness: 300 }}
         onClick={e => e.stopPropagation()}

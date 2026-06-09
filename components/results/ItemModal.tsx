@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { itemInfoCache } from '@/lib/itemInfoCache'
+import { useDismissable } from '@/lib/useDismissable'
 
 /* ── Item detail modal ── */
 export function ItemModal({ item, city, accent, onClose }: { item: string; city: string; accent: string; onClose: () => void }) {
+  const dialogRef = useDismissable<HTMLDivElement>(onClose)
   const key = `${item}::${city}`
   const [data, setData] = useState<{ image?: string; description?: string } | null>(
     itemInfoCache.get(key) ?? null
@@ -45,7 +47,11 @@ export function ItemModal({ item, city, accent, onClose }: { item: string; city:
 
       {/* Card */}
       <motion.div
-        className="relative rounded-3xl overflow-hidden flex flex-col z-10"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="relative rounded-3xl overflow-hidden flex flex-col z-10 outline-none"
         style={{
           width: '100%',
           maxWidth: 520,
