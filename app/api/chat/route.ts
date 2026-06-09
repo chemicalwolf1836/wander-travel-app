@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
+import { rateLimit, clientIp } from '@/lib/rateLimit'
 
 const client = new Anthropic()
 
@@ -26,6 +27,14 @@ While still chatting:
 JSON only. No markdown. No extra text.`
 
 export async function POST(request: Request) {
+  const limit = rateLimit(`chat:${clientIp(request)}`, 20, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } },
+    )
+  }
+
   const body: unknown = await request.json()
   const parsed = chatSchema.safeParse(body)
 

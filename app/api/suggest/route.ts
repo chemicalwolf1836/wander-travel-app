@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { rateLimit, clientIp } from '@/lib/rateLimit'
 import type { Destination, Preferences } from '@/types'
 
 const client = new Anthropic()
@@ -19,6 +20,14 @@ const suggestSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  const limit = rateLimit(`suggest:${clientIp(request)}`, 10, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } },
+    )
+  }
+
   const body: unknown = await request.json()
   const parsed = suggestSchema.safeParse(body)
 
