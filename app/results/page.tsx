@@ -950,7 +950,10 @@ function PackingModal({ destination: dest, accent, onClose }: { destination: Des
         body: JSON.stringify({ city: dest.city, country: dest.country, bestSeasons: dest.bestSeasons, tripDays: days }),
       })
       if (res.ok) setCategories(await res.json() as PackingCategory[])
-    } catch { /* ignore */ }
+      else toast.error("Couldn't generate a packing list. Please try again.")
+    } catch {
+      toast.error("Couldn't generate a packing list. Please try again.")
+    }
     setLoading(false)
   }
 
@@ -1017,7 +1020,10 @@ function ItineraryModal({ destination: dest, accent, onClose }: { destination: D
         body: JSON.stringify({ city: dest.city, country: dest.country, attractions: dest.attractions, dishes: dest.food.dishes, bestFor: dest.bestFor, tripDays: n }),
       })
       if (res.ok) setDays(await res.json() as ItineraryDay[])
-    } catch { /* ignore */ }
+      else toast.error("Couldn't build an itinerary. Please try again.")
+    } catch {
+      toast.error("Couldn't build an itinerary. Please try again.")
+    }
     setLoading(false)
   }
 
