@@ -8,6 +8,7 @@ import { Navbar } from '@/components/Navbar'
 import { MapTransport } from '@/components/MapTransport'
 import { DetailPanel } from '@/components/DetailPanel'
 import { applyTheme, resetTheme } from '@/lib/applyTheme'
+import { recordView } from '@/lib/recentlyViewed'
 import type { Destination } from '@/types'
 
 type FlowState = 'loading' | 'map-enter' | 'fly-to' | 'panel-open'
@@ -29,6 +30,7 @@ export function DestinationView() {
     }
     const dest: Destination = JSON.parse(raw)
     setDestination(dest)
+    recordView(dest)
     applyTheme(dest.culturalTheme, dest.weather?.condition)
     setFlowState('map-enter')
   }, [cityParam, router])

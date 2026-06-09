@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
-import type { Preferences } from '@/types'
+import { getRecentlyViewed } from '@/lib/recentlyViewed'
+import type { Preferences, Destination } from '@/types'
 
 const FLOATING_DESTINATIONS = [
   'Paris', 'Kyoto', 'Marrakech', 'Santorini', 'Reykjavik',
@@ -27,6 +28,7 @@ export default function HomePage() {
   const [surpriseLoading, setSurpriseLoading] = useState(false)
   const [loadingCity, setLoadingCity] = useState('')
   const [exiting, setExiting] = useState(false)
+  const [recent, setRecent] = useState<Destination[]>([])
 
   // Aurora mouse parallax
   const rawMouseX = useMotionValue(0.5)
@@ -40,6 +42,10 @@ export default function HomePage() {
     rawMouseX.set(e.clientX / window.innerWidth)
     rawMouseY.set(e.clientY / window.innerHeight)
   }
+
+  useEffect(() => {
+    setRecent(getRecentlyViewed())
+  }, [])
 
   useEffect(() => {
     setFloatingNames(
@@ -104,6 +110,14 @@ export default function HomePage() {
     setExiting(true)
     await new Promise(r => setTimeout(r, 350))
     router.push('/discover')
+  }
+
+  async function openRecent(dest: Destination) {
+    // Re-seed the detail page's expected sessionStorage entry, then navigate.
+    sessionStorage.setItem(`wander_dest_${dest.city}`, JSON.stringify(dest))
+    setExiting(true)
+    await new Promise(r => setTimeout(r, 350))
+    router.push(`/destination/${encodeURIComponent(dest.city)}`)
   }
 
   return (
@@ -266,6 +280,38 @@ export default function HomePage() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Recently viewed — quick return to destinations you've opened */}
+          {recent.length > 0 && !surpriseLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
+              className="mt-10"
+            >
+              <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--color-subtle)' }}>
+                Recently viewed
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {recent.map((d) => (
+                  <motion.button
+                    key={d.city}
+                    onClick={() => openRecent(d)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm"
+                    style={{
+                      color: 'var(--color-text)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)',
+                    }}
+                    whileHover={{ scale: 1.06, backgroundColor: 'color-mix(in srgb, var(--color-accent) 14%, transparent)' }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <span>{d.flagEmoji}</span> {d.city}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </main>
     </motion.div>
