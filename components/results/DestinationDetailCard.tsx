@@ -98,8 +98,8 @@ export function DestinationDetailCard({
             </motion.button>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 px-8 pb-6">
-            <h2 className="text-5xl md:text-6xl leading-none text-white mb-1"
+          <div className="absolute bottom-0 left-0 right-0 px-5 sm:px-8 pb-6">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl leading-none text-white mb-1"
               style={{ fontFamily: 'var(--font-playfair)', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
               {dest.emoji} {dest.city}
             </h2>
@@ -117,7 +117,7 @@ export function DestinationDetailCard({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 px-8 py-6">
+        <div className="overflow-y-auto flex-1 px-5 sm:px-8 py-6">
           <p className="text-base italic leading-relaxed mb-3 font-medium"
             style={{ color: theme.accent, filter: 'brightness(1.15) saturate(1.2)' }}>
             {dest.tagline}
@@ -129,8 +129,8 @@ export function DestinationDetailCard({
           {/* Divider */}
           <div className="mb-6" style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }} />
 
-          {/* See + Eat — two columns */}
-          <div className="grid grid-cols-2 gap-8 mb-6">
+          {/* See + Eat — stack on mobile, two columns from sm up */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-6">
             {dest.attractions.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-3">

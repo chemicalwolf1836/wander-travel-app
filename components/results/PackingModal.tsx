@@ -58,7 +58,7 @@ export function PackingModal({ destination: dest, accent, onClose }: { destinati
             <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
           </div>
         ) : categories ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {categories.map(cat => (
               <div key={cat.name}>
                 <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>{cat.name}</p>
