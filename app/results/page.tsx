@@ -542,6 +542,8 @@ function BottomCard({
               transition: 'background-color 0.3s ease',
             }}
             onClick={(e) => { e.stopPropagation(); onCompare() }}
+            aria-label="Compare destination"
+            aria-pressed={isComparing}
             title="Compare"
           >
             <GitCompare size={11} />
@@ -961,7 +963,7 @@ function PackingModal({ destination: dest, accent, onClose }: { destination: Des
           <Luggage size={16} style={{ color: accent }} />
           <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Packing list for {dest.city}</h3>
         </div>
-        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
+        <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
       <div className="flex items-center gap-2 px-6 py-3 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }}>
         <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Trip length:</span>
@@ -1028,7 +1030,7 @@ function ItineraryModal({ destination: dest, accent, onClose }: { destination: D
           <MapIcon size={16} style={{ color: accent }} />
           <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>{dest.city} itinerary</h3>
         </div>
-        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
+        <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
       <div className="flex items-center gap-2 px-6 py-3 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }}>
         <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Days:</span>
@@ -1096,7 +1098,7 @@ function SimilarModal({ destination: dest, accent, onClose }: { destination: Des
           <Sparkles size={16} style={{ color: accent }} />
           <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Similar to {dest.city}</h3>
         </div>
-        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
+        <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
       <div className="overflow-y-auto flex-1 px-6 py-4">
         {loading ? (
@@ -1269,7 +1271,7 @@ function ItemModal({ item, city, accent, onClose }: { item: string; city: string
               {item}
             </h3>
           </div>
-          <button onClick={onClose}
+          <button onClick={onClose} aria-label="Close"
             className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: 'white' }}>
             <X size={14} />
