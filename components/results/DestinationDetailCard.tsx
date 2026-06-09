@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, Heart, Share2, Luggage, Map as MapIcon, Sparkles } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, Heart, Share2, Luggage, Map as MapIcon, Sparkles, Wallet } from 'lucide-react'
 import { isFavourite, toggleFavourite } from '@/lib/favourites'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { prefetchItem } from '@/lib/itemInfoCache'
@@ -12,6 +12,7 @@ import { ItemChip, ExperienceChip } from './Chips'
 import { ItemModal } from './ItemModal'
 import { PackingModal } from './PackingModal'
 import { ItineraryModal } from './ItineraryModal'
+import { BudgetModal } from './BudgetModal'
 import { SimilarModal } from './SimilarModal'
 import { ShareCardModal } from './ShareCardModal'
 import type { Destination, WeatherData } from '@/types'
@@ -41,6 +42,7 @@ export function DestinationDetailCard({
   const [shared, setShared] = useState(false)
   const [showPacking, setShowPacking] = useState(false)
   const [showItinerary, setShowItinerary] = useState(false)
+  const [showBudget, setShowBudget] = useState(false)
   const [showSimilar, setShowSimilar] = useState(false)
   const [showShareCard, setShowShareCard] = useState(false)
 
@@ -203,6 +205,9 @@ export function DestinationDetailCard({
             {showItinerary && (
               <ItineraryModal destination={dest} accent={theme.accent} onClose={() => setShowItinerary(false)} />
             )}
+            {showBudget && (
+              <BudgetModal destination={dest} accent={theme.accent} onClose={() => setShowBudget(false)} />
+            )}
             {showSimilar && (
               <SimilarModal destination={dest} accent={theme.accent} onClose={() => setShowSimilar(false)} />
             )}
@@ -221,10 +226,11 @@ export function DestinationDetailCard({
           )}
 
           {/* Quick action buttons */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
             {[
               { icon: <Luggage size={13} />, label: 'Packing list', action: () => setShowPacking(true) },
               { icon: <MapIcon size={13} />, label: 'Itinerary', action: () => setShowItinerary(true) },
+              { icon: <Wallet size={13} />, label: 'Budget', action: () => setShowBudget(true) },
               { icon: <Sparkles size={13} />, label: 'Similar', action: () => setShowSimilar(true) },
             ].map(({ icon, label, action }) => (
               <button key={label} onClick={action}
