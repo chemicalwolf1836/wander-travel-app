@@ -36,8 +36,17 @@ for (const key of requiredEnvVars) {
 }
 
 export const metadata: Metadata = {
-  title: 'Wander - AI Travel Concierge',
+  metadataBase: new URL('https://wander-travel-app-jade.vercel.app'),
+  title: 'Wander — AI Travel Concierge',
   description: 'Tell us what you are dreaming of. We will find your perfect destination.',
+  openGraph: {
+    title: 'Wander — AI Travel Concierge',
+    description: 'Tell us what you are dreaming of. We will find your perfect destination.',
+    url: '/',
+    siteName: 'Wander',
+    type: 'website',
+    locale: 'en_GB',
+  },
 }
 
 export default function RootLayout({
