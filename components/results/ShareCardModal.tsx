@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Share2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -43,7 +44,7 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
         <div className="rounded-3xl overflow-hidden relative"
           style={{ width: 320, height: 480, background: `linear-gradient(160deg, ${theme.primary}, ${theme.accent} 120%)` }}>
           {imageUrl && (
-            <img src={imageUrl} alt={dest.city} className="absolute inset-0 w-full h-full object-cover"
+            <Image src={imageUrl} alt={dest.city} fill sizes="320px" className="object-cover"
               style={{ filter: 'brightness(0.6) saturate(1.3)', mixBlendMode: 'luminosity' }} />
           )}
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${theme.primary}ee 0%, ${theme.primary}88 40%, transparent 100%)` }} />

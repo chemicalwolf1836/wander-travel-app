@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { itemInfoCache } from '@/lib/itemInfoCache'
@@ -69,8 +70,8 @@ export function ItemModal({ item, city, accent, onClose }: { item: string; city:
         {/* Image */}
         <div className="relative flex-shrink-0 overflow-hidden" style={{ height: 220 }}>
           {data?.image && !loading ? (
-            <img src={data.image} alt={item} className="w-full h-full object-cover"
-              style={{ filter: 'brightness(0.88) saturate(1.15)' }} />
+            <Image src={data.image} alt={item} fill sizes="520px" className="object-cover"
+              style={{ filter: 'brightness(0.88) saturate(1.15)' }} unoptimized={false} />
           ) : (
             <div className="w-full h-full flex items-center justify-center"
               style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 30%, #000), color-mix(in srgb, ${accent} 60%, #000))` }}>
