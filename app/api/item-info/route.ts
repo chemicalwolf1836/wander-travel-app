@@ -96,15 +96,20 @@ export async function GET(req: Request) {
 
   // ── Step 4: Claude for text (only when Wikipedia wasn't relevant) ────────────
   if (!description) {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 220,
-      messages: [{
-        role: 'user',
-        content: `You are a luxury travel writer. Write 2-3 vivid, atmospheric sentences about "${name}"${context ? ` in the context of ${context}` : ''}. Be specific, sensory, and enticing. No intro phrase, just dive straight in. Use correct English spelling, grammar, and punctuation throughout.`,
-      }],
-    })
-    description = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 220,
+        messages: [{
+          role: 'user',
+          content: `You are a luxury travel writer. Write 2-3 vivid, atmospheric sentences about "${name}"${context ? ` in the context of ${context}` : ''}. Be specific, sensory, and enticing. No intro phrase, just dive straight in. Use correct English spelling, grammar, and punctuation throughout.`,
+        }],
+      })
+      description = response.content[0]?.type === 'text' ? response.content[0].text.trim() : ''
+    } catch (err) {
+      // Enrichment is optional — keep any image we already found and return without a description.
+      console.error('[item-info] Claude error:', err)
+    }
   }
 
   const data = makePayload(name, description, image)

@@ -35,14 +35,23 @@ export async function POST(request: Request) {
 
   const { messages } = parsed.data
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 300,
-    system: SYSTEM_PROMPT,
-    messages,
-  })
+  let response
+  try {
+    response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 300,
+      system: SYSTEM_PROMPT,
+      messages,
+    })
+  } catch (err) {
+    console.error('[chat] Claude error:', err)
+    return NextResponse.json(
+      { error: 'The chat service is busy. Please try again in a moment.' },
+      { status: 503 },
+    )
+  }
 
-  const raw = response.content[0].type === 'text' ? response.content[0].text : ''
+  const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
 
   // Strip markdown code fences Claude sometimes wraps around JSON
   const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()

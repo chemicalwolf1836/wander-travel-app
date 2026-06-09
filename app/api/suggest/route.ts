@@ -98,13 +98,22 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
 
 No markdown. No extra text. Only the JSON array.`
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    messages: [{ role: 'user', content: systemPrompt }],
-  })
+  let response
+  try {
+    response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: systemPrompt }],
+    })
+  } catch (err) {
+    console.error('[suggest] Claude error:', err)
+    return NextResponse.json(
+      { error: 'The suggestion service is busy. Please try again in a moment.' },
+      { status: 503 },
+    )
+  }
 
-  const raw = response.content[0].type === 'text' ? response.content[0].text : '[]'
+  const raw = response.content[0]?.type === 'text' ? response.content[0].text : '[]'
   const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
 
   let suggestions: Destination[]
@@ -112,6 +121,12 @@ No markdown. No extra text. Only the JSON array.`
     suggestions = JSON.parse(text)
   } catch {
     return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
+  }
+
+  // Guard against valid-JSON-but-wrong-shape replies (e.g. an object or empty array):
+  // serving or caching those would break the results page for 24h.
+  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+    return NextResponse.json({ error: 'No suggestions returned' }, { status: 502 })
   }
 
   // Step 4: Cache result
