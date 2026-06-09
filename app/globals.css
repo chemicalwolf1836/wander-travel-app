@@ -156,4 +156,10 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-playfair), Georgia, serif;
   }
+  /* Keyboard-only focus ring (never shows on mouse click), tinted with the active accent */
+  :focus-visible {
+    outline: 2px solid var(--color-accent, #888);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
