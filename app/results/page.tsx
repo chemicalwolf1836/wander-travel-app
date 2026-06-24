@@ -224,9 +224,14 @@ export default function ResultsPage() {
               >
                 {/* Keyboard hint + controls */}
                 <div className="flex items-center justify-between px-4 pt-2 pb-1">
-                  <p className="text-xs tracking-widest uppercase opacity-30 hidden md:block" style={{ color: 'var(--color-text)' }}>
-                    ← → to browse
-                  </p>
+                  <div className="hidden md:flex items-center gap-4">
+                    <p className="text-xs tracking-widest uppercase opacity-30" style={{ color: 'var(--color-text)' }}>
+                      ← → to browse
+                    </p>
+                    <p className="text-xs tracking-widest uppercase opacity-50" style={{ color: 'var(--color-subtle)' }}>
+                      {destinations.length} destination{destinations.length !== 1 ? 's' : ''} found
+                    </p>
+                  </div>
                   <div className="flex items-center gap-3 ml-auto">
                     {compareIndex !== null && (
                       <span className="text-xs px-2 py-0.5 rounded-full animate-pulse"
@@ -236,7 +241,7 @@ export default function ResultsPage() {
                     )}
                     <button
                       onClick={handleTryAgain}
-                      className="flex items-center gap-1.5 text-xs opacity-40 hover:opacity-80 transition-opacity"
+                      className="flex items-center gap-1.5 text-xs opacity-50 hover:opacity-80 transition-opacity"
                       style={{ color: 'var(--color-text)' }}
                     >
                       <RotateCcw size={11} /> Try different preferences
@@ -255,7 +260,7 @@ export default function ResultsPage() {
                   borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)',
                 }}
               >
-                <div className="flex gap-4 p-4 overflow-x-auto">
+                <div className="wander-card-strip flex gap-4 p-4 overflow-x-auto">
                   {destinations.map((dest, i) => (
                     <BottomCard
                       key={dest.city}

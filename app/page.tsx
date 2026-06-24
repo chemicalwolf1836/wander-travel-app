@@ -188,7 +188,7 @@ export default function HomePage() {
             color: 'var(--color-text)',
             fontSize: 'clamp(1rem, 3vw, 2.5rem)',
           }}
-          animate={{ y: [0, -18, 0], x: [0, 10, 0], opacity: [0.14, 0.18, 0.14] }}
+          animate={{ y: [0, -18, 0], x: [0, 10, 0], opacity: [0.22, 0.32, 0.22] }}
           transition={{ duration: item.duration, delay: item.delay, repeat: Infinity, ease: 'easeInOut' }}
           whileHover={{ opacity: 0.7, scale: 1.08 }}
           title={`Surprise me with ${item.name}`}
@@ -216,11 +216,23 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-            className="text-lg md:text-xl mb-10 leading-relaxed max-w-lg mx-auto"
+            className="text-lg md:text-xl mb-8 leading-relaxed max-w-lg mx-auto"
             style={{ color: 'var(--color-subtle)' }}
           >
-            Tell us what you are dreaming of. We will find your perfect destination.
+            Tell us what you're dreaming of — we'll find your perfect destination.
           </motion.p>
+
+          {/* Decorative rule */}
+          <motion.div
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ duration: 0.6, delay: 0.35, ease: 'easeOut' }}
+            className="flex items-center justify-center gap-4 mb-8 max-w-xs mx-auto"
+          >
+            <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
+            <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>✦</span>
+            <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -237,7 +249,7 @@ export default function HomePage() {
                 boxShadow: `0 0 40px color-mix(in srgb, var(--color-accent) 40%, transparent)`,
               }}
             >
-              Start Your Journey
+              Start Your Journey →
             </button>
 
             <button
@@ -261,6 +273,17 @@ export default function HomePage() {
               ) : '✦ Surprise me'}
             </button>
           </motion.div>
+
+          {/* Stat line */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.55, ease: 'easeOut' }}
+            className="mt-5 text-xs tracking-widest uppercase"
+            style={{ color: 'var(--color-subtle)', opacity: 0.5 }}
+          >
+            250+ destinations · 12 regions · AI-powered
+          </motion.p>
 
           {/* Cycling city hint while Surprise Me is loading */}
           <div className="mt-6 h-6">

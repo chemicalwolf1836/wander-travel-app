@@ -56,7 +56,7 @@ export function DestinationCard({
     >
       {/* Subtle accent glow at top */}
       <div
-        className="absolute top-0 left-0 right-0 h-px"
+        className="absolute top-0 left-0 right-0 h-0.5"
         style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)` }}
       />
 
@@ -67,8 +67,9 @@ export function DestinationCard({
             className="text-3xl leading-tight"
             style={{ fontFamily: 'var(--font-playfair)', color: theme.text }}
           >
-            {destination.emoji} {destination.city}
+            {destination.city}
           </h2>
+          <span className="text-xl mt-1 flex-shrink-0">{destination.emoji}</span>
         </div>
 
         {/* Country badge */}
@@ -106,7 +107,7 @@ export function DestinationCard({
 
       {/* Food */}
       {destination.food.dishes.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-4 pt-4" style={{ borderTop: `1px solid color-mix(in srgb, ${theme.primary} 12%, transparent)` }}>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: theme.accent }}>
             Food
           </p>
@@ -123,7 +124,7 @@ export function DestinationCard({
 
       {/* Attractions */}
       {destination.attractions.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-4 pt-4" style={{ borderTop: `1px solid color-mix(in srgb, ${theme.primary} 12%, transparent)` }}>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: theme.accent }}>
             Top Attractions
           </p>
@@ -137,12 +138,20 @@ export function DestinationCard({
 
       {/* Best For tags */}
       {destination.bestFor.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 pt-4" style={{ borderTop: `1px solid color-mix(in srgb, ${theme.primary} 12%, transparent)` }}>
           {destination.bestFor.slice(0, 4).map((tag) => (
             <TagChip key={tag} label={tag} />
           ))}
         </div>
       )}
+
+      {/* Clickable hint */}
+      <p
+        className="mt-4 text-xs tracking-wide text-right transition-opacity duration-300"
+        style={{ color: theme.accent, opacity: isActive ? 0.9 : 0 }}
+      >
+        Explore →
+      </p>
     </motion.div>
   )
 }

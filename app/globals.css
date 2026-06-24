@@ -139,6 +139,14 @@
   --weather-filter: '';
 }
 
+/* Card strip thin scrollbar */
+.wander-card-strip::-webkit-scrollbar { height: 4px; }
+.wander-card-strip::-webkit-scrollbar-track { background: transparent; }
+.wander-card-strip::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  border-radius: 2px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

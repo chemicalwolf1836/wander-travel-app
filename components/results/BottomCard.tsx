@@ -79,7 +79,7 @@ export function BottomCard({
       ref={cardRef}
       className="relative rounded-2xl overflow-hidden cursor-pointer"
       style={{
-        height: 180,
+        height: 200,
         width: '100%',
         rotateX: rotX,
         rotateY: rotY,
@@ -111,6 +111,11 @@ export function BottomCard({
       <div className="absolute inset-0"
         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 80%, transparent 100%)' }} />
 
+
+      {/* Index number */}
+      <div className="absolute top-3 left-4 text-xs font-medium pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>
+        {String(index + 1).padStart(2, '0')}
+      </div>
 
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-end p-4"
