@@ -6,7 +6,9 @@ import { createServerClient } from '@/lib/supabase/server'
 import { rateLimit, clientIp } from '@/lib/rateLimit'
 import type { Destination, Preferences } from '@/types'
 
-const client = new Anthropic()
+const client = new Anthropic({
+  baseURL: process.env.ANTHROPIC_PROXY_URL ?? 'https://api.anthropic.com',
+})
 
 const suggestSchema = z.object({
   preferences: z.object({
@@ -67,14 +69,14 @@ export async function POST(request: Request) {
     return NextResponse.json(cached.suggestions)
   }
 
-  // Step 3: Build prompt with real Supabase data
-  const systemPrompt = `You are Wander AI. Use ONLY the real destination data provided below
-to suggest exactly 3 destinations. Do not invent places. Choose the
-3 best matches for the user preferences provided.
+  // Step 3: Build prompt — use DB data when available, fall back to Claude's own knowledge
+  const hasCountries = Array.isArray(countries) && countries.length > 0
+  const systemPrompt = `You are Wander AI. Suggest exactly 3 travel destinations that best match the user preferences below.
 
 IMPORTANT: All text fields (tagline, description, food summary, etc.) must use correct English spelling, grammar, and punctuation. Double-check proper nouns, place names, and cultural terms.
 
-Available destinations: ${JSON.stringify(countries ?? [])}
+${hasCountries ? `Use the destination data below to ground your suggestions:\n${JSON.stringify(countries)}` : 'Use your knowledge of real-world destinations — choose diverse, compelling places from around the world.'}
+
 User preferences: ${preferences.summary}
 
 Respond with ONLY a valid JSON array of exactly 3 destinations using this schema per destination:
