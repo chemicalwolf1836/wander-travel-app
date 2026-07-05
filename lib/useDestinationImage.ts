@@ -66,7 +66,7 @@ async function fetchFromCommons(city: string, country: string): Promise<Destinat
     })
 
   const best = candidates[0]?.ii?.thumburl
-  if (best) return { src: best, thumb: best.replace(/\/\d+px-/, '/400px-') }
+  if (best) return { src: best, thumb: best }
   return null
 }
 

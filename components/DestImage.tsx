@@ -1,14 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
-/**
- * Progressive "blur-up" image: shows the small thumb instantly (blurred),
- * then cross-fades to the full-resolution image once it loads. Both layers
- * are absolutely positioned, so the parent must be `relative` with a fixed
- * size (e.g. a card hero). Pass the same object-cover className you'd use on
- * a plain <img>.
- */
 export function DestImage({
   src,
   thumb,
@@ -25,7 +18,14 @@ export function DestImage({
   eager?: boolean
 }) {
   const [loaded, setLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
   const base = `absolute inset-0 w-full h-full object-cover ${className}`
+
+  // Catch already-cached images that fire onLoad before React attaches the handler
+  useEffect(() => {
+    const el = imgRef.current
+    if (el?.complete && el.naturalWidth > 0) setLoaded(true)
+  }, [src])
 
   return (
     <>
@@ -44,6 +44,7 @@ export function DestImage({
         />
       )}
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         loading={eager ? 'eager' : 'lazy'}

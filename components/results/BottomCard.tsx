@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { ArrowRight, GitCompare } from 'lucide-react'
 import { useDestinationImage } from '@/lib/useDestinationImage'
@@ -35,6 +35,12 @@ export function BottomCard({
 }) {
   const image = useDestinationImage(dest.city, dest.country)
   const [imgLoaded, setImgLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+  // Catch already-cached images that load before onLoad is attached
+  useEffect(() => {
+    const el = imgRef.current
+    if (el?.complete && el.naturalWidth > 0) setImgLoaded(true)
+  }, [image])
   const theme = dest.culturalTheme
   const active = isHovered || isSelected
 
@@ -101,7 +107,7 @@ export function BottomCard({
       <div className="absolute inset-0"
         style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`, opacity: 0.7 }} />
       {image?.src && (
-        <motion.img src={image.thumb} alt={dest.city} loading="lazy" decoding="async"
+        <motion.img ref={imgRef} src={image.thumb} alt={dest.city} loading="lazy" decoding="async"
           onLoad={() => setImgLoaded(true)}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: 'brightness(1.02) saturate(1.25) contrast(1.08)', x: imgX, y: imgY, scale: 1.12, opacity: imgLoaded ? 1 : 0, transition: 'opacity 500ms ease' }} />
