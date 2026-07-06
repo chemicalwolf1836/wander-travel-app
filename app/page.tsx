@@ -217,7 +217,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
             className="text-lg md:text-xl mb-8 leading-relaxed max-w-lg mx-auto"
-            style={{ color: 'var(--color-subtle)' }}
+            style={{ color: 'var(--color-text)', opacity: 0.85 }}
           >
             Tell us what you're dreaming of — we'll find your perfect destination.
           </motion.p>
@@ -244,7 +244,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={handleStartJourney}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
                 style={{
                   backgroundColor: 'var(--color-accent)',
                   color: 'var(--color-bg)',
@@ -257,7 +257,7 @@ export default function HomePage() {
               <button
                 onClick={() => handleSurpriseMe()}
                 disabled={surpriseLoading}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105 disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105 disabled:opacity-60"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
                   color: 'var(--color-text)',
