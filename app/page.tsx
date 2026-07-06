@@ -226,21 +226,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
-            className="mx-auto"
-            style={{ width: 'fit-content' }}
           >
-            {/* Decorative rule — width tracks the buttons below */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-              className="flex items-center gap-4 w-full mb-8"
-            >
-              <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
-              <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>✦</span>
-              <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
-            </motion.div>
-
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={handleStartJourney}
