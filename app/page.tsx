@@ -222,56 +222,59 @@ export default function HomePage() {
             Tell us what you're dreaming of — we'll find your perfect destination.
           </motion.p>
 
-          {/* Decorative rule */}
-          <motion.div
-            initial={{ opacity: 0, scaleX: 0 }}
-            animate={{ opacity: 1, scaleX: 1 }}
-            transition={{ duration: 0.6, delay: 0.35, ease: 'easeOut' }}
-            className="flex items-center justify-center gap-4 mb-8 max-w-xs mx-auto"
-          >
-            <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
-            <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>✦</span>
-            <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
+            className="mx-auto"
+            style={{ width: 'fit-content' }}
           >
-            <button
-              onClick={handleStartJourney}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'var(--color-bg)',
-                boxShadow: `0 0 40px color-mix(in srgb, var(--color-accent) 40%, transparent)`,
-              }}
+            {/* Decorative rule — width tracks the buttons below */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
+              className="flex items-center gap-4 w-full mb-8"
             >
-              Start Your Journey →
-            </button>
+              <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
+              <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>✦</span>
+              <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-text) 12%, transparent)' }} />
+            </motion.div>
 
-            <button
-              onClick={() => handleSurpriseMe()}
-              disabled={surpriseLoading}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105 disabled:opacity-60"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
-                color: 'var(--color-text)',
-                border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
-              }}
-            >
-              {surpriseLoading ? (
-                <span className="flex items-center gap-2">
-                  <span
-                    className="w-4 h-4 rounded-full border-2 animate-spin inline-block"
-                    style={{ borderColor: 'var(--color-text)', borderTopColor: 'transparent' }}
-                  />
-                  Finding…
-                </span>
-              ) : '✦ Surprise me'}
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={handleStartJourney}
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105"
+                style={{
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--color-bg)',
+                  boxShadow: `0 0 40px color-mix(in srgb, var(--color-accent) 40%, transparent)`,
+                }}
+              >
+                Start Your Journey →
+              </button>
+
+              <button
+                onClick={() => handleSurpriseMe()}
+                disabled={surpriseLoading}
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-medium transition-all hover:scale-105 disabled:opacity-60"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
+                  color: 'var(--color-text)',
+                  border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
+                }}
+              >
+                {surpriseLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="w-4 h-4 rounded-full border-2 animate-spin inline-block"
+                      style={{ borderColor: 'var(--color-text)', borderTopColor: 'transparent' }}
+                    />
+                    Finding…
+                  </span>
+                ) : '✦ Surprise me'}
+              </button>
+            </div>
           </motion.div>
 
           {/* Stat line */}
