@@ -222,6 +222,21 @@ export default function HomePage() {
             Tell us what you're dreaming of — we'll find your perfect destination.
           </motion.p>
 
+          {/* Accent bar */}
+          <motion.div
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+            className="mx-auto mb-8"
+            style={{
+              width: 40,
+              height: 2,
+              borderRadius: 1,
+              background: 'var(--color-accent)',
+              boxShadow: '0 0 16px var(--color-accent)',
+            }}
+          />
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
