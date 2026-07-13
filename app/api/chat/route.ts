@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
+import { getAnthropic, extractText, stripFences } from '@/lib/ai'
 import { rateLimit, clientIp } from '@/lib/rateLimit'
-
-const client = new Anthropic()
 
 const chatSchema = z.object({
   messages: z.array(
@@ -46,7 +44,7 @@ export async function POST(request: Request) {
 
   let response
   try {
-    response = await client.messages.create({
+    response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 300,
       system: SYSTEM_PROMPT,
@@ -60,17 +58,14 @@ export async function POST(request: Request) {
     )
   }
 
-  const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
-
-  // Strip markdown code fences Claude sometimes wraps around JSON
-  const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
+  const raw = extractText(response)
 
   // Claude is instructed to return JSON, but occasionally responds in plain text.
   // If parsing fails, treat the response as a conversational message and continue.
   try {
-    const parsed: unknown = JSON.parse(text)
+    const parsed: unknown = JSON.parse(stripFences(raw))
     return NextResponse.json(parsed)
   } catch {
-    return NextResponse.json({ ready: false, message: raw.trim() })
+    return NextResponse.json({ ready: false, message: raw })
   }
 }

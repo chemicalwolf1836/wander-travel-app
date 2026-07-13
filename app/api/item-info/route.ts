@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
-
-const anthropic = new Anthropic()
+import { getAnthropic, extractText } from '@/lib/ai'
+import { rateLimit, clientIp } from '@/lib/rateLimit'
 
 // Server-side cache — survives across requests within the same serverless instance
 const serverCache = new Map<string, { data: ReturnType<typeof makePayload>; ts: number }>()
@@ -54,6 +53,14 @@ async function getCommonsImage(query: string): Promise<string | null> {
 }
 
 export async function GET(req: Request) {
+  const limit = rateLimit(`item-info:${clientIp(req)}`, 60, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } },
+    )
+  }
+
   const { searchParams } = new URL(req.url)
   const name    = searchParams.get('name')
   const context = searchParams.get('context') ?? ''
@@ -97,7 +104,7 @@ export async function GET(req: Request) {
   // ── Step 4: Claude for text (only when Wikipedia wasn't relevant) ────────────
   if (!description) {
     try {
-      const response = await anthropic.messages.create({
+      const response = await getAnthropic().messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 220,
         messages: [{
@@ -105,7 +112,7 @@ export async function GET(req: Request) {
           content: `You are a luxury travel writer. Write 2-3 vivid, atmospheric sentences about "${name}"${context ? ` in the context of ${context}` : ''}. Be specific, sensory, and enticing. No intro phrase, just dive straight in. Use correct English spelling, grammar, and punctuation throughout.`,
         }],
       })
-      description = response.content[0]?.type === 'text' ? response.content[0].text.trim() : ''
+      description = extractText(response)
     } catch (err) {
       // Enrichment is optional — keep any image we already found and return without a description.
       console.error('[item-info] Claude error:', err)

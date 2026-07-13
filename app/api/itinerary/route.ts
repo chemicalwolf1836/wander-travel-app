@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
-
-const client = new Anthropic()
+import { getAnthropic, extractText, parseClaudeJson, ClaudeJsonError, getCached, setCached } from '@/lib/ai'
+import { rateLimit, clientIp } from '@/lib/rateLimit'
 
 const schema = z.object({
   city: z.string(),
@@ -22,20 +21,28 @@ export interface ItineraryDay {
   tip: string
 }
 
-const cache = new Map<string, ItineraryDay[]>()
-
 export async function POST(req: Request) {
+  const limit = rateLimit(`itinerary:${clientIp(req)}`, 20, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } },
+    )
+  }
+
   const body: unknown = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
   const { city, country, attractions, dishes, bestFor, tripDays } = parsed.data
   const cacheKey = `${city}::${tripDays}`
-  if (cache.has(cacheKey)) return NextResponse.json(cache.get(cacheKey))
+
+  const cached = await getCached<ItineraryDay[]>('itinerary', cacheKey)
+  if (cached) return NextResponse.json(cached)
 
   let response
   try {
-    response = await client.messages.create({
+    response = await getAnthropic().messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1200,
       messages: [{
@@ -60,14 +67,14 @@ Write ${tripDays} days. Be specific, sensory, and atmospheric. Use correct Engli
     )
   }
 
-  const raw = response.content[0]?.type === 'text' ? response.content[0].text.trim() : '[]'
-  const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
-
+  let days: ItineraryDay[]
   try {
-    const days = JSON.parse(text) as ItineraryDay[]
-    cache.set(cacheKey, days)
-    return NextResponse.json(days)
-  } catch {
-    return NextResponse.json({ error: 'Failed to parse itinerary' }, { status: 500 })
+    days = parseClaudeJson<ItineraryDay[]>(extractText(response), { expectArray: true })
+  } catch (err) {
+    const status = err instanceof ClaudeJsonError && err.reason === 'shape' ? 502 : 500
+    return NextResponse.json({ error: 'Failed to parse itinerary' }, { status })
   }
+
+  await setCached('itinerary', cacheKey, days)
+  return NextResponse.json(days)
 }

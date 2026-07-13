@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createHash } from 'crypto'
-import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { getAnthropic, extractText, parseClaudeJson, ClaudeJsonError } from '@/lib/ai'
 import { rateLimit, clientIp } from '@/lib/rateLimit'
-import type { Destination, Preferences } from '@/types'
-
-const client = new Anthropic({
-  baseURL: process.env.ANTHROPIC_PROXY_URL ?? 'https://api.anthropic.com',
-})
+import type { Destination } from '@/types'
 
 const suggestSchema = z.object({
   preferences: z.object({
@@ -111,7 +107,7 @@ No markdown. No extra text. Only the JSON array.`
 
   let response
   try {
-    response = await client.messages.create({
+    response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       messages: [{ role: 'user', content: systemPrompt }],
@@ -124,20 +120,16 @@ No markdown. No extra text. Only the JSON array.`
     )
   }
 
-  const raw = response.content[0]?.type === 'text' ? response.content[0].text : '[]'
-  const text = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
-
-  let suggestions: Destination[]
-  try {
-    suggestions = JSON.parse(text)
-  } catch {
-    return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
-  }
-
   // Guard against valid-JSON-but-wrong-shape replies (e.g. an object or empty array):
   // serving or caching those would break the results page for 24h.
-  if (!Array.isArray(suggestions) || suggestions.length === 0) {
-    return NextResponse.json({ error: 'No suggestions returned' }, { status: 502 })
+  let suggestions: Destination[]
+  try {
+    suggestions = parseClaudeJson<Destination[]>(extractText(response), { expectArray: true })
+  } catch (err) {
+    if (err instanceof ClaudeJsonError && err.reason === 'shape') {
+      return NextResponse.json({ error: 'No suggestions returned' }, { status: 502 })
+    }
+    return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
   }
 
   // Step 4: Cache result
