@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search, Route } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
@@ -313,6 +314,20 @@ export default function SavedPage() {
                     <DateButton city={dest.city} />
 
                     <NoteButton city={dest.city} />
+
+                    <Link
+                      href={`/trip/${encodeURIComponent(dest.city)}`}
+                      aria-label={`View trip plan for ${dest.city}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                        color: 'var(--color-accent)',
+                        border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+                      }}
+                    >
+                      <Route size={11} />
+                      Trip
+                    </Link>
 
                     <motion.button
                       onClick={() => handleRemove(dest)}

@@ -4,15 +4,17 @@ import { useEffect, useState } from 'react'
 import { Luggage, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ModalShell } from './ModalShell'
+import { getTripPlan, savePacking, type PackingCategory } from '@/lib/tripPlan'
 import type { Destination } from '@/types'
 
-export type PackingCategory = { name: string; items: string[] }
+export type { PackingCategory }
 
 /* ── Packing list modal ── */
 export function PackingModal({ destination: dest, accent, onClose }: { destination: Destination; accent: string; onClose: () => void }) {
-  const [categories, setCategories] = useState<PackingCategory[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [tripDays, setTripDays] = useState(7)
+  const saved = getTripPlan(dest.city).packing
+  const [categories, setCategories] = useState<PackingCategory[] | null>(saved?.categories ?? null)
+  const [loading, setLoading] = useState(!saved)
+  const [tripDays, setTripDays] = useState(saved?.tripDays ?? 7)
 
   async function fetchPacking(days: number) {
     setLoading(true)
@@ -22,15 +24,19 @@ export function PackingModal({ destination: dest, accent, onClose }: { destinati
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city: dest.city, country: dest.country, bestSeasons: dest.bestSeasons, tripDays: days }),
       })
-      if (res.ok) setCategories(await res.json() as PackingCategory[])
-      else toast.error("Couldn't generate a packing list. Please try again.")
+      if (res.ok) {
+        const cats = await res.json() as PackingCategory[]
+        setCategories(cats)
+        savePacking(dest.city, cats, days) // persist so /trip/[city] can show it and reopening is instant
+      } else toast.error("Couldn't generate a packing list. Please try again.")
     } catch {
       toast.error("Couldn't generate a packing list. Please try again.")
     }
     setLoading(false)
   }
 
-  useEffect(() => { fetchPacking(tripDays) }, [])
+  // Only generate on open when there's nothing saved for this city yet.
+  useEffect(() => { if (!saved) fetchPacking(tripDays) }, [])
 
   return (
     <ModalShell accent={accent} onClose={onClose}>

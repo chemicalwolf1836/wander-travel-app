@@ -4,15 +4,17 @@ import { useEffect, useState } from 'react'
 import { Map as MapIcon, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ModalShell } from './ModalShell'
+import { getTripPlan, saveItinerary, type ItineraryDay } from '@/lib/tripPlan'
 import type { Destination } from '@/types'
 
-export type ItineraryDay = { day: number; title: string; morning: string; afternoon: string; evening: string; tip: string }
+export type { ItineraryDay }
 
 /* ── Itinerary modal ── */
 export function ItineraryModal({ destination: dest, accent, onClose }: { destination: Destination; accent: string; onClose: () => void }) {
-  const [days, setDays] = useState<ItineraryDay[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [tripDays, setTripDays] = useState(5)
+  const saved = getTripPlan(dest.city).itinerary
+  const [days, setDays] = useState<ItineraryDay[] | null>(saved?.days ?? null)
+  const [loading, setLoading] = useState(!saved)
+  const [tripDays, setTripDays] = useState(saved?.tripDays ?? 5)
 
   async function fetchItinerary(n: number) {
     setLoading(true)
@@ -22,15 +24,19 @@ export function ItineraryModal({ destination: dest, accent, onClose }: { destina
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city: dest.city, country: dest.country, attractions: dest.attractions, dishes: dest.food.dishes, bestFor: dest.bestFor, tripDays: n }),
       })
-      if (res.ok) setDays(await res.json() as ItineraryDay[])
-      else toast.error("Couldn't build an itinerary. Please try again.")
+      if (res.ok) {
+        const result = await res.json() as ItineraryDay[]
+        setDays(result)
+        saveItinerary(dest.city, result, n) // persist so /trip/[city] can show it and reopening is instant
+      } else toast.error("Couldn't build an itinerary. Please try again.")
     } catch {
       toast.error("Couldn't build an itinerary. Please try again.")
     }
     setLoading(false)
   }
 
-  useEffect(() => { fetchItinerary(tripDays) }, [])
+  // Only generate on open when there's nothing saved for this city yet.
+  useEffect(() => { if (!saved) fetchItinerary(tripDays) }, [])
 
   return (
     <ModalShell accent={accent} onClose={onClose}>

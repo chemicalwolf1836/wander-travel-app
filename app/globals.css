@@ -171,3 +171,19 @@
     border-radius: 4px;
   }
 }
+
+/* Print styles for the /trip/[city] plan: hide chrome and force a legible
+   light theme regardless of the app's dark/light mode. Accent colours (inline
+   hex from the destination's cultural theme) stay coloured. */
+@media print {
+  .no-print { display: none !important; }
+  body, main { background: #fff !important; }
+  .trip-print {
+    --color-bg: #ffffff;
+    --color-card-bg: #ffffff;
+    --color-text: #111111;
+    --color-subtle: #555555;
+    max-width: none !important;
+    padding-top: 0 !important;
+  }
+}
