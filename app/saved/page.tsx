@@ -252,7 +252,7 @@ export default function SavedPage() {
                     border: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)',
                   }}
                 >
-                  {/* Photo thumbnail (Unsplash/Wikipedia, flag fallback) */}
+                  {/* Photo thumbnail (Wikipedia/Wikimedia Commons, flag fallback) */}
                   <SavedThumb dest={dest} />
 
                   {/* Info */}

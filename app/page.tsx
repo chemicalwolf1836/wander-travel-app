@@ -286,7 +286,7 @@ export default function HomePage() {
             className="mt-5 text-xs tracking-widest uppercase"
             style={{ color: 'var(--color-subtle)', opacity: 0.5 }}
           >
-            250+ destinations · 12 regions · AI-powered
+            Worldwide destinations · AI-powered discovery
           </motion.p>
 
           {/* Cycling city hint while Surprise Me is loading */}

@@ -50,17 +50,6 @@ export interface Preferences {
   other: string
 }
 
-export interface ThemePreset {
-  primary: string
-  accent: string
-  background: string
-  cardBg: string
-  text: string
-  subtle: string
-  fontMood: 'elegant' | 'bold' | 'minimal' | 'warm' | 'vibrant'
-  bgStyle: 'gradient' | 'noise' | 'geometric' | 'clean'
-}
-
 export interface AppSettings {
   fontSize: 'default' | 'large'
   cardLayout: 'grid' | 'list'

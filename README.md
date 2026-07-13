@@ -71,11 +71,12 @@ An AI-powered travel discovery app that helps you find your perfect destination 
 
 ## AI Integration
 
-Three Claude-powered API routes:
+Claude-powered API routes:
 
 - **`/api/suggest`** — takes user preferences and returns 3 structured destination objects including coordinates, cultural theme colours, attractions, food, and practical info. Results are cached in Supabase for 24 hours.
 - **`/api/packing`** — generates a categorised packing list (Claude Haiku) based on destination, climate, and trip length.
 - **`/api/itinerary`** — generates a day-by-day itinerary (Claude Haiku) with morning / afternoon / evening slots and a local tip per day.
+- **`/api/budget`** — estimates a daily travel budget (Claude Haiku) broken down by travel style (budget / mid-range / luxury).
 - **`/api/chat`** — powers the free-text discovery chat; returns structured JSON signalling when the AI has enough information to search.
 - **`/api/item-info`** — enriches attraction and dish chips with Wikipedia summaries and Wikimedia Commons images; Claude fills in where Wikipedia isn't relevant.
 

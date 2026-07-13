@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X, GripHorizontal } from 'lucide-react'
 import { WeatherBadge } from './WeatherBadge'
@@ -8,8 +7,9 @@ import { DishChip } from './DishChip'
 import { TagChip } from './TagChip'
 import { AttractionBadge } from './AttractionBadge'
 import { useDestinationImage } from '@/lib/useDestinationImage'
+import { useWeather } from '@/lib/useWeather'
 import { DestImage } from './DestImage'
-import type { Destination, WeatherData } from '@/types'
+import type { Destination } from '@/types'
 
 interface DetailPanelProps {
   destination: Destination
@@ -17,15 +17,8 @@ interface DetailPanelProps {
 }
 
 export function DetailPanel({ destination, onBack }: DetailPanelProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null)
   const image = useDestinationImage(destination.city, destination.country)
-
-  useEffect(() => {
-    fetch(`/api/weather?city=${encodeURIComponent(destination.city)}&country=${destination.countryCode}`)
-      .then((r) => r.json())
-      .then((data: WeatherData | null) => { if (data) setWeather(data) })
-      .catch(() => null)
-  }, [destination.city, destination.countryCode])
+  const weather = useWeather(destination.city, destination.countryCode)
 
   return (
     <motion.div

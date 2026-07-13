@@ -11,6 +11,7 @@ import { CustomizationPanel } from '@/components/CustomizationPanel'
 import { BottomCard } from '@/components/results/BottomCard'
 import { DestinationDetailCard } from '@/components/results/DestinationDetailCard'
 import { CompareCard } from '@/components/results/CompareCard'
+import { fetchWeather } from '@/lib/useWeather'
 import type { Destination, AppSettings, WeatherData } from '@/types'
 
 const STORAGE_KEY = 'wander_settings'
@@ -71,12 +72,9 @@ export default function ResultsPage() {
   useEffect(() => {
     if (destinations.length === 0) return
     destinations.forEach(dest => {
-      fetch(`/api/weather?city=${encodeURIComponent(dest.city)}&country=${dest.countryCode}`)
-        .then(r => r.json())
-        .then((d: WeatherData | null) => {
-          if (d) setWeatherMap(prev => ({ ...prev, [dest.city]: d }))
-        })
-        .catch(() => null)
+      fetchWeather(dest.city, dest.countryCode).then((d) => {
+        if (d) setWeatherMap(prev => ({ ...prev, [dest.city]: d }))
+      })
     })
   }, [destinations])
 
