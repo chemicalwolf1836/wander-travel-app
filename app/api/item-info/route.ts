@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAnthropic, extractText } from '@/lib/ai'
 import { rateLimit, clientIp } from '@/lib/rateLimit'
+import { wikiFetch } from '@/lib/wikimedia'
 
 // Server-side cache — survives across requests within the same serverless instance
 const serverCache = new Map<string, { data: ReturnType<typeof makePayload>; ts: number }>()
@@ -42,7 +43,7 @@ function isRelevant(searchTerm: string, wikiTitle: string): boolean {
 async function getCommonsImage(query: string): Promise<string | null> {
   try {
     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query)}&prop=imageinfo&iiprop=url&format=json&origin=*&gsrlimit=8`
-    const data = await fetch(url).then(r => r.json())
+    const data = await wikiFetch(url).then(r => r.json())
     const pages = Object.values(data?.query?.pages ?? {}) as Array<{ imageinfo?: Array<{ url: string }> }>
     for (const page of pages) {
       const imgUrl = page.imageinfo?.[0]?.url ?? ''
@@ -77,8 +78,7 @@ export async function GET(req: Request) {
 
   // ── Step 1: Wikipedia search + Commons image search in parallel ─────────────
   const [wikiSearch, commonsContextImage] = await Promise.all([
-    fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&format=json&origin=*&srlimit=1`
+    wikiFetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&format=json&origin=*&srlimit=1`
     ).then(r => r.json()).catch(() => null),
     getCommonsImage(`${name} ${context}`),
   ])
@@ -87,8 +87,7 @@ export async function GET(req: Request) {
   const wikiTitle = wikiSearch?.query?.search?.[0]?.title
   if (wikiTitle && isRelevant(name, wikiTitle)) {
     try {
-      const summary = await fetch(
-        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`
+      const summary = await wikiFetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`
       ).then(r => r.json())
       const sentences = (summary?.extract ?? '').match(/[^.!?]+[.!?]+/g) ?? []
       description = sentences.slice(0, 3).join(' ').trim()
