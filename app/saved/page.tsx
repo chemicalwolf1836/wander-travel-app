@@ -80,6 +80,8 @@ export default function SavedPage() {
       }
       const suggestions: unknown = await res.json()
       sessionStorage.setItem('wander_destinations', JSON.stringify(suggestions))
+      // Results' "Show more" reuses these, so it keeps the same inspiration
+      sessionStorage.setItem('wander_preferences', JSON.stringify(preferences))
       router.push('/results')
     } catch {
       toast.error('Something went wrong. Please check your connection.')

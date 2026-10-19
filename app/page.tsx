@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { toast } from 'sonner'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { getRecentlyViewed } from '@/lib/recentlyViewed'
 import type { Preferences, Destination } from '@/types'
@@ -16,6 +17,7 @@ const FLOATING_DESTINATIONS = [
 
 interface FloatingName {
   name: string
+  side: 'left' | 'right'
   x: number
   y: number
   duration: number
@@ -49,10 +51,13 @@ export default function HomePage() {
 
   useEffect(() => {
     setFloatingNames(
-      FLOATING_DESTINATIONS.map((name) => ({
+      // Alternate names between the left and right margins, spread down the
+      // page, so they never drift behind the headline or buttons.
+      FLOATING_DESTINATIONS.map((name, i) => ({
         name,
-        x: Math.random() * 80 + 5,
-        y: Math.random() * 80 + 5,
+        side: i % 2 === 0 ? 'left' : 'right',
+        x: 1 + Math.random() * 5,
+        y: 14 + (Math.floor(i / 2) / Math.ceil(FLOATING_DESTINATIONS.length / 2)) * 76 + Math.random() * 5,
         duration: 18 + Math.random() * 14,
         delay: Math.random() * 6,
       }))
@@ -180,10 +185,12 @@ export default function HomePage() {
         <motion.button
           key={item.name}
           onClick={() => handleSurpriseMe(item.name)}
-          className="absolute font-bold whitespace-nowrap cursor-pointer select-none"
+          className="absolute hidden xl:block font-bold whitespace-nowrap cursor-pointer select-none"
+          tabIndex={-1}
+          aria-hidden="true"
           style={{
             fontFamily: 'var(--font-playfair)',
-            left: `${item.x}%`,
+            [item.side]: `${item.x}%`,
             top: `${item.y}%`,
             color: 'var(--color-text)',
             fontSize: 'clamp(1rem, 3vw, 2.5rem)',
@@ -242,23 +249,24 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex flex-col items-stretch gap-3 w-full max-w-sm mx-auto">
               <button
                 onClick={handleStartJourney}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-7 rounded-full text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   backgroundColor: 'var(--color-accent)',
                   color: 'var(--color-bg)',
                   boxShadow: `0 0 40px color-mix(in srgb, var(--color-accent) 40%, transparent)`,
                 }}
               >
-                Start Your Journey →
+                Start your journey <ArrowRight size={16} aria-hidden="true" />
               </button>
 
               <button
                 onClick={() => handleSurpriseMe()}
                 disabled={surpriseLoading}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105 disabled:opacity-60"
+                aria-busy={surpriseLoading}
+                className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-6 rounded-full text-base font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
                   color: 'var(--color-text)',
@@ -273,7 +281,7 @@ export default function HomePage() {
                     />
                     Finding…
                   </span>
-                ) : '✦ Surprise me'}
+                ) : <><Sparkles size={16} aria-hidden="true" /> Surprise me</>}
               </button>
             </div>
           </motion.div>
@@ -284,7 +292,7 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55, ease: 'easeOut' }}
             className="mt-5 text-xs tracking-widest uppercase"
-            style={{ color: 'var(--color-subtle)', opacity: 0.5 }}
+            style={{ color: 'var(--color-subtle)' }}
           >
             Worldwide destinations · AI-powered discovery
           </motion.p>
@@ -301,6 +309,7 @@ export default function HomePage() {
                   transition={{ duration: 0.35 }}
                   className="text-sm tracking-widest uppercase"
                   style={{ color: 'var(--color-subtle)' }}
+                  aria-live="polite"
                 >
                   Exploring {loadingCity}…
                 </motion.p>
@@ -324,7 +333,7 @@ export default function HomePage() {
                   <motion.button
                     key={d.city}
                     onClick={() => openRecent(d)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm"
+                    className="inline-flex items-center gap-1.5 min-h-10 px-4 rounded-full text-sm"
                     style={{
                       color: 'var(--color-text)',
                       backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',

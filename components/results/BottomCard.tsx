@@ -16,6 +16,7 @@ export function BottomCard({
   isSelected,
   anyHovered,
   isComparing,
+  comparePending = false,
   onHover,
   onLeave,
   onClick,
@@ -28,6 +29,8 @@ export function BottomCard({
   isSelected: boolean
   anyHovered: boolean
   isComparing: boolean
+  /** Another card is waiting for a second pick — clicking this one compares */
+  comparePending?: boolean
   onHover: () => void
   onLeave: () => void
   onClick: () => void
@@ -151,21 +154,23 @@ export function BottomCard({
             }}
             onClick={(e) => { e.stopPropagation(); onClick() }}
           >
-            View details <ArrowRight size={11} />
+            {comparePending
+              ? <><GitCompare size={11} aria-hidden="true" /> Compare</>
+              : <>View details <ArrowRight size={11} aria-hidden="true" /></>}
           </button>
           <button
-            className="flex items-center justify-center rounded-lg px-2"
+            className="flex items-center justify-center rounded-lg min-w-9"
             style={{
               backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.18)',
               color: isComparing ? theme.background : '#ffffff',
               transition: 'background-color 0.3s ease',
             }}
             onClick={(e) => { e.stopPropagation(); onCompare() }}
-            aria-label="Compare destination"
+            aria-label={isComparing ? `Stop comparing ${dest.city}` : `Compare ${dest.city}`}
             aria-pressed={isComparing}
             title="Compare"
           >
-            <GitCompare size={11} />
+            <GitCompare size={13} aria-hidden="true" />
           </button>
         </div>
       </div>

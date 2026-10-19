@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter, Manrope } from 'next/font/google'
-import { ThemeProvider } from '@/components/ThemeProvider'
-import { Toaster } from 'sonner'
+import { ThemeProvider, ThemedToaster } from '@/components/ThemeProvider'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -63,7 +62,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
         <ThemeProvider>
           {children}
-          <Toaster position="bottom-right" richColors />
+          <ThemedToaster />
         </ThemeProvider>
       </body>
     </html>

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, Menu, ArrowLeft, Heart } from 'lucide-react'
+import { Sun, Moon, Menu, ArrowLeft, Heart, Compass } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { clearPresetStyles } from '@/lib/themePresets'
@@ -37,7 +37,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-md border-b"
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md border-b"
       style={{
         backgroundColor: 'color-mix(in srgb, var(--color-bg) 80%, transparent)',
         borderColor: 'color-mix(in srgb, var(--color-primary) 30%, transparent)',
@@ -67,28 +67,35 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
         )}
       </div>
 
-      {/* Right: saved link + dark/light toggle + settings */}
-      <div className="flex items-center gap-3">
-        <Link
+      {/* Right: primary links + dark/light toggle + settings */}
+      <div className="flex items-center gap-1">
+        <NavLink href="/discover" label="Discover" active={pathname === '/discover'}>
+          <Compass size={18} />
+        </NavLink>
+
+        <NavLink
           href="/saved"
-          className="relative p-2 rounded-full hover:opacity-70 transition-opacity"
-          style={{ color: 'var(--color-text)' }}
-          aria-label="Saved destinations"
+          label="Saved"
+          ariaLabel={savedCount > 0 ? `Saved destinations (${savedCount})` : 'Saved destinations'}
+          active={pathname === '/saved'}
         >
           <Heart size={18} />
           {savedCount > 0 && (
             <span
-              className="absolute top-1.5 right-1.5 block rounded-full"
+              className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-[10px] font-semibold leading-none"
               style={{
-                width: 6,
-                height: 6,
+                minWidth: 18,
+                height: 18,
+                padding: '0 5px',
                 backgroundColor: 'var(--color-accent)',
-                boxShadow: '0 0 4px var(--color-accent)',
+                color: 'var(--color-bg)',
               }}
               aria-hidden="true"
-            />
+            >
+              {savedCount > 99 ? '99+' : savedCount}
+            </span>
           )}
-        </Link>
+        </NavLink>
 
         {mounted && (
           <button
@@ -104,9 +111,9 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
               } catch { /* ignore */ }
               setTheme(theme === 'dark' ? 'light' : 'dark')
             }}
-            className="p-2 rounded-full hover:opacity-70 transition-opacity"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:opacity-70 transition-opacity"
             style={{ color: 'var(--color-text)' }}
-            aria-label="Toggle dark/light mode"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -125,7 +132,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
         {onSettingsOpen && (
           <button
             onClick={onSettingsOpen}
-            className="p-2 rounded-full hover:opacity-70 transition-opacity"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:opacity-70 transition-opacity"
             style={{ color: 'var(--color-text)' }}
             aria-label="Open personalise panel"
           >
@@ -134,5 +141,31 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
         )}
       </div>
     </nav>
+  )
+}
+
+// Icon-only link (minimal look); the label is the tooltip and accessible name.
+// Highlights the current page.
+function NavLink({ href, label, ariaLabel, active, children }: {
+  href: string
+  label: string
+  ariaLabel?: string
+  active: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={ariaLabel ?? label}
+      title={label}
+      aria-current={active ? 'page' : undefined}
+      className="relative flex items-center justify-center w-11 h-11 rounded-full text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]"
+      style={{
+        color: 'var(--color-text)',
+        backgroundColor: active ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : undefined,
+      }}
+    >
+      {children}
+    </Link>
   )
 }
