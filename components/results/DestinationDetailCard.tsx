@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, Heart, Share2, Luggage, Map as MapIcon, Sparkles, Wallet } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, Heart, Share2, Luggage, Map as MapIcon, Sparkles, Wallet, Tag, ShieldCheck } from 'lucide-react'
 import { isFavourite, toggleFavourite } from '@/lib/favourites'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { prefetchItem } from '@/lib/itemInfoCache'
@@ -15,6 +15,8 @@ import { ItineraryModal } from './ItineraryModal'
 import { BudgetModal } from './BudgetModal'
 import { SimilarModal } from './SimilarModal'
 import { ShareCardModal } from './ShareCardModal'
+import { PricesModal } from './PricesModal'
+import { VisaModal } from './VisaModal'
 import type { Destination, WeatherData } from '@/types'
 
 const WEATHER_EMOJI: Record<string, string> = {
@@ -45,6 +47,8 @@ export function DestinationDetailCard({
   const [showBudget, setShowBudget] = useState(false)
   const [showSimilar, setShowSimilar] = useState(false)
   const [showShareCard, setShowShareCard] = useState(false)
+  const [showPrices, setShowPrices] = useState(false)
+  const [showVisa, setShowVisa] = useState(false)
 
   function handleFav() {
     const next = toggleFavourite(dest)
@@ -219,6 +223,12 @@ export function DestinationDetailCard({
             {showSimilar && (
               <SimilarModal destination={dest} accent={theme.accent} onClose={() => setShowSimilar(false)} />
             )}
+            {showPrices && (
+              <PricesModal destination={dest} accent={theme.accent} onClose={() => setShowPrices(false)} />
+            )}
+            {showVisa && (
+              <VisaModal destination={dest} accent={theme.accent} onClose={() => setShowVisa(false)} />
+            )}
             {showShareCard && (
               <ShareCardModal destination={dest} imageUrl={imageUrl} onClose={() => setShowShareCard(false)} />
             )}
@@ -234,11 +244,13 @@ export function DestinationDetailCard({
           )}
 
           {/* Quick action buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
             {[
               { icon: <Luggage size={13} />, label: 'Packing list', action: () => setShowPacking(true) },
               { icon: <MapIcon size={13} />, label: 'Itinerary', action: () => setShowItinerary(true) },
               { icon: <Wallet size={13} />, label: 'Budget', action: () => setShowBudget(true) },
+              { icon: <Tag size={13} />, label: 'Prices', action: () => setShowPrices(true) },
+              { icon: <ShieldCheck size={13} />, label: 'Visa', action: () => setShowVisa(true) },
               { icon: <Sparkles size={13} />, label: 'Similar', action: () => setShowSimilar(true) },
             ].map(({ icon, label, action }) => (
               <button key={label} onClick={action}
