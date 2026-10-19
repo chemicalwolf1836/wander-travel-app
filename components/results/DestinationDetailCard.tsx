@@ -179,6 +179,14 @@ export function DestinationDetailCard({
             </div>
           )}
 
+          {/* Fit for the travel month the user picked */}
+          {dest.monthFit && (
+            <div className="flex items-start gap-2 mb-3 text-sm" style={{ color: 'var(--color-text)' }}>
+              <Calendar size={14} className="mt-0.5 flex-shrink-0" style={{ color: theme.accent }} aria-hidden="true" />
+              <span><span className="font-medium">In your travel month:</span> {dest.monthFit}</span>
+            </div>
+          )}
+
           {/* Best time — grouped with best for as trip-planning context */}
           {dest.bestSeasons && dest.bestSeasons.length > 0 && (
             <div className="flex items-center gap-2 mb-6 flex-wrap">

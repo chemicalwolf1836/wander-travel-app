@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowRight, GitCompare } from 'lucide-react'
+import { ArrowRight, GitCompare, CalendarDays } from 'lucide-react'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { Flag } from './Flag'
 import type { Destination } from '@/types'
@@ -125,6 +125,22 @@ export function BottomCard({
       <div className="absolute top-3 left-4 text-xs font-medium pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>
         {String(index + 1).padStart(2, '0')}
       </div>
+
+      {/* How it suits the chosen travel month */}
+      {dest.monthFit && (
+        <div
+          className="absolute top-2.5 right-2.5 left-12 flex justify-end pointer-events-none"
+          title={dest.monthFit}
+        >
+          <span
+            className="inline-flex items-center gap-1 max-w-full px-2 py-1 rounded-full text-[10px] font-medium truncate"
+            style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(6px)' }}
+          >
+            <CalendarDays size={10} aria-hidden="true" className="flex-shrink-0" />
+            <span className="truncate">{dest.monthFit}</span>
+          </span>
+        </div>
+      )}
 
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-end p-4"

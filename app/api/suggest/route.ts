@@ -93,6 +93,7 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
   "currency": string,
   "language": string,
   "visaInfo": string,
+  "monthFit": string,
   "culturalTheme": {
     "primary": string,
     "accent": string,
@@ -102,6 +103,8 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
     "mood": string
   }
 }
+
+If the user preferences name a travel month, pick places that are good in that month and set "monthFit" to under 12 words on what that month is like there (e.g. "Dry, 24°C and before the summer crowds"). If no month is named, omit "monthFit".
 
 No markdown. No extra text. Only the JSON array.`
 

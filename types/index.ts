@@ -17,6 +17,8 @@ export interface Destination {
   currency?: string
   language?: string
   visaInfo?: string
+  /** How the destination suits the chosen travel month, when one was given. */
+  monthFit?: string
 }
 
 export interface CulturalTheme {
