@@ -156,9 +156,26 @@ export default function SavedPage() {
           )}
         </div>
 
+        {/* Trip tools that work across several saved places */}
+        {saved.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Link
+              href="/plan"
+              className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                color: 'var(--color-accent)',
+                border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+              }}
+            >
+              <Route size={14} aria-hidden="true" /> Plan a route
+            </Link>
+          </div>
+        )}
+
         {/* Divider */}
         <div
-          className="mb-8"
+          className="mt-6 mb-8"
           style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}
         />
 
