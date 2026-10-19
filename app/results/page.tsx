@@ -175,7 +175,7 @@ export default function ResultsPage() {
         <p className="text-lg">Something went wrong finding your destinations.</p>
         <button onClick={() => router.push('/discover')}
           className="flex items-center gap-2 px-6 py-3 rounded-full text-sm"
-          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
           <RefreshCw size={14} /> Try Again
         </button>
       </div>
@@ -265,7 +265,7 @@ export default function ResultsPage() {
                 {/* Keyboard hint + controls */}
                 <div className="flex items-center justify-between px-4 pt-2 pb-1">
                   <div className="hidden md:flex items-center gap-4">
-                    <p className="text-xs tracking-widest uppercase opacity-60" style={{ color: 'var(--color-text)' }}>
+                    <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>
                       ← → to browse
                     </p>
                     <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>
@@ -380,7 +380,7 @@ export default function ResultsPage() {
                 </h2>
                 <button
                   onClick={() => { setView('split'); setCompareIndex(null) }}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full opacity-60 hover:opacity-100 transition-opacity"
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full opacity-80 hover:opacity-100 transition-opacity"
                   style={{ color: 'var(--color-text)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)' }}
                 >
                   <ArrowLeft size={11} /> Back

@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { ArrowRight, GitCompare, CalendarDays } from 'lucide-react'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { Flag } from './Flag'
+import { readableOn, textOn } from '@/lib/contrast'
 import type { Destination } from '@/types'
 
 /* ── Bottom strip card ── */
@@ -46,6 +47,9 @@ export function BottomCard({
   }, [image])
   const theme = dest.culturalTheme
   const active = isHovered || isSelected
+  // Text sits on a near-black scrim over the photo; keep the accent readable there.
+  const taglineColor = readableOn(theme.accent, '#000000', 7)
+  const onAccent = textOn(theme.accent)
 
   // 3D tilt
   const cardRef = useRef<HTMLDivElement>(null)
@@ -118,11 +122,11 @@ export function BottomCard({
 
       {/* Gradient overlay */}
       <div className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.2) 80%, transparent 100%)' }} />
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.35) 80%, rgba(0,0,0,0.15) 100%)' }} />
 
 
       {/* Index number */}
-      <div className="absolute top-3 left-4 text-xs font-medium pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>
+      <div className="absolute top-3 left-4 text-xs font-medium pointer-events-none" style={{ color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
         {String(index + 1).padStart(2, '0')}
       </div>
 
@@ -155,7 +159,7 @@ export function BottomCard({
 
         <p
           className="text-xs italic line-clamp-1 mb-3 font-medium"
-          style={{ color: theme.accent, filter: 'brightness(1.2) saturate(1.3)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+          style={{ color: taglineColor, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
         >
           {dest.tagline}
         </p>
@@ -164,8 +168,9 @@ export function BottomCard({
           <button
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
             style={{
-              backgroundColor: active ? theme.accent : 'rgba(255,255,255,0.18)',
-              color: active ? theme.background : '#ffffff',
+              backgroundColor: active ? theme.accent : 'rgba(255,255,255,0.22)',
+              color: active ? onAccent : '#ffffff',
+              textShadow: active ? 'none' : undefined,
               transition: 'background-color 0.3s ease, color 0.3s ease',
             }}
             onClick={(e) => { e.stopPropagation(); onClick() }}
@@ -177,8 +182,8 @@ export function BottomCard({
           <button
             className="flex items-center justify-center rounded-lg min-w-9"
             style={{
-              backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.18)',
-              color: isComparing ? theme.background : '#ffffff',
+              backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.22)',
+              color: isComparing ? onAccent : '#ffffff',
               transition: 'background-color 0.3s ease',
             }}
             onClick={(e) => { e.stopPropagation(); onCompare() }}

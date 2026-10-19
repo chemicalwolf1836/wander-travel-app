@@ -78,7 +78,7 @@ export default function PlanPage() {
           <div className="rounded-3xl p-8 text-center" style={{ backgroundColor: 'var(--color-card-bg)', border }}>
             <p className="mb-4">Save a few places first, then come back to link them up.</p>
             <Link href="/discover" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold"
-              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>Find destinations</Link>
+              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>Find destinations</Link>
           </div>
         ) : (
           <>
@@ -133,7 +133,7 @@ export default function PlanPage() {
                   <li key={s.city}>
                     <div className="flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--color-card-bg)', border }}>
                       <span className="w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>{i + 1}</span>
+                        style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>{i + 1}</span>
                       <div className="flex-1 min-w-[8rem]">
                         <p className="font-medium">{d.city}</p>
                         <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>{d.country}</p>

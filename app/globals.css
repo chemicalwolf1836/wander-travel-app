@@ -124,7 +124,8 @@
   --color-bg: #f5f0e8;
   --color-card-bg: #ffffff;
   --color-text: #1a1a2e;
-  --color-subtle: #6b7a99;
+  --color-subtle: #5c6886; /* 4.9:1 on --color-bg, 5.6:1 on cards */
+  --color-on-accent: #1a1a2e; /* text on accent-filled buttons */
   --weather-filter: '';
 }
 
@@ -135,7 +136,8 @@
   --color-bg: #0a0f1e;
   --color-card-bg: #111827;
   --color-text: #f0f4ff;
-  --color-subtle: #6b7a99;
+  --color-subtle: #8391ad; /* 5.6:1 on cards, 6:1 on --color-bg */
+  --color-on-accent: #0a0f1e;
   --weather-filter: '';
 }
 

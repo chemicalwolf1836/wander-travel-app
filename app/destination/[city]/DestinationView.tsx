@@ -69,7 +69,7 @@ export function DestinationView() {
         <h1 className="text-3xl" style={{ fontFamily: 'var(--font-playfair)' }}>We couldn&apos;t find {cityParam}</h1>
         <p className="text-sm max-w-sm opacity-80">This link hasn&apos;t been shared from Wander yet. Find it, or somewhere like it, in a few taps.</p>
         <Link href="/discover" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold"
-          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
           Find a destination
         </Link>
       </div>

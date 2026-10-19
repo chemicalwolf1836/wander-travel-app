@@ -331,7 +331,7 @@ export default function DiscoverPage() {
                         : 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
                       border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                     }}
-                    whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
+                    whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
                     whileTap={{ scale: 0.96 }}
                     transition={{ duration: 0.15 }}
                   >
@@ -508,7 +508,7 @@ export default function DiscoverPage() {
                 className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: 'var(--color-accent)',
-                  color: 'var(--color-bg)',
+                  color: 'var(--color-on-accent)',
                   boxShadow: `0 0 20px color-mix(in srgb, var(--color-accent) 50%, transparent)`,
                 }}
               >

@@ -87,7 +87,7 @@ export function VoteView({ id }: { id: string }) {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
         <h1 className="text-3xl" style={{ fontFamily: 'var(--font-playfair)' }}>This vote doesn&apos;t exist</h1>
         <p className="text-sm opacity-80">Check the link with whoever sent it.</p>
-        <Link href="/" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold" style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>Go to Wander</Link>
+        <Link href="/" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold" style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>Go to Wander</Link>
       </div>
     )
   }
@@ -161,7 +161,7 @@ export function VoteView({ id }: { id: string }) {
                 style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border }} />
               <button type="submit" disabled={saving || !name.trim()}
                 className="min-h-14 rounded-full text-base font-semibold disabled:opacity-50"
-                style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+                style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
                 {saving ? 'Saving…' : choices.length ? `Save my vote (${choices.length})` : 'Save my vote'}
               </button>
             </form>

@@ -22,7 +22,7 @@ export default function Error({
       <p className="text-lg">Something went wrong.</p>
       <button onClick={() => unstable_retry()}
         className="flex items-center gap-2 px-6 py-3 rounded-full text-sm"
-        style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+        style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
         <RefreshCw size={14} /> Try again
       </button>
     </div>

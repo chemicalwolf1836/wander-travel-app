@@ -13,6 +13,8 @@ import { getNote, saveNote } from '@/lib/tripNotes'
 import { getTripDate, saveTripDate, countdownLabel } from '@/lib/tripDates'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { DestImage } from '@/components/DestImage'
+import { readableOn } from '@/lib/contrast'
+import { useSurfaceColor } from '@/lib/useSurfaceColor'
 import type { Destination, Preferences } from '@/types'
 
 export default function SavedPage() {
@@ -58,6 +60,11 @@ export default function SavedPage() {
   }
 
   const [creatingPoll, setCreatingPoll] = useState(false)
+  // Accent-coloured text must read on both the page and the row cards.
+  const accent = useSurfaceColor('--color-accent', '#F59E0B')
+  const pageBg = useSurfaceColor('--color-bg', '#0a0f1e')
+  const cardBg = useSurfaceColor()
+  const accentText = readableOn(readableOn(accent, cardBg, 5.5), pageBg, 5.5)
 
   // Turn the saved shortlist into a vote friends can join by link.
   async function handleCreatePoll() {
@@ -141,7 +148,7 @@ export default function SavedPage() {
         {/* Header row */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <Heart size={20} style={{ color: 'var(--color-accent)' }} />
+            <Heart size={20} style={{ color: accentText }} />
             <h1
               className="text-3xl"
               style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
@@ -153,7 +160,7 @@ export default function SavedPage() {
                 className="text-xs px-2 py-0.5 rounded-full"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                  color: 'var(--color-accent)',
+                  color: accentText,
                   border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                 }}
               >
@@ -187,7 +194,7 @@ export default function SavedPage() {
               className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium"
               style={{
                 backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                color: 'var(--color-accent)',
+                color: accentText,
                 border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
               }}
             >
@@ -200,7 +207,7 @@ export default function SavedPage() {
                 className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium disabled:opacity-50"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                  color: 'var(--color-accent)',
+                  color: accentText,
                   border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                 }}
               >
@@ -245,7 +252,7 @@ export default function SavedPage() {
               className="px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
               style={{
                 backgroundColor: 'var(--color-accent)',
-                color: 'var(--color-bg)',
+                color: 'var(--color-on-accent)',
                 boxShadow: '0 0 24px color-mix(in srgb, var(--color-accent) 35%, transparent)',
               }}
             >
@@ -328,7 +335,7 @@ export default function SavedPage() {
                       </span>
                     </div>
                     {dest.tagline && (
-                      <p className="text-xs truncate mb-1" style={{ color: 'var(--color-accent)', opacity: 0.85 }}>
+                      <p className="text-xs truncate mb-1" style={{ color: accentText }}>
                         {dest.tagline}
                       </p>
                     )}
@@ -350,7 +357,7 @@ export default function SavedPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                        color: 'var(--color-accent)',
+                        color: accentText,
                         border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       }}
                       whileHover={{ scale: 1.05 }}
@@ -382,7 +389,7 @@ export default function SavedPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                        color: 'var(--color-accent)',
+                        color: accentText,
                         border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       }}
                     >
@@ -393,7 +400,7 @@ export default function SavedPage() {
                     <motion.button
                       onClick={() => handleRemove(dest)}
                       className="p-2 rounded-full"
-                      style={{ color: 'var(--color-accent)' }}
+                      style={{ color: accentText }}
                       aria-label={`Remove ${dest.city} from saved`}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.9 }}

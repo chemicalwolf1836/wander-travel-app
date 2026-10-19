@@ -90,7 +90,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
                 height: 18,
                 padding: '0 5px',
                 backgroundColor: 'var(--color-accent)',
-                color: 'var(--color-bg)',
+                color: 'var(--color-on-accent)',
               }}
               aria-hidden="true"
             >

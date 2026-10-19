@@ -162,7 +162,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
           className="w-full py-3 rounded-full text-sm font-medium mt-4"
           style={{
             backgroundColor: 'var(--color-accent)',
-            color: 'var(--color-bg)',
+            color: 'var(--color-on-accent)',
           }}
         >
           Back to Destinations

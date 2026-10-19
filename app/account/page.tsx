@@ -53,7 +53,7 @@ export default function AccountPage() {
               </div>
             </div>
             <Link href="/saved" className="inline-flex items-center justify-center min-h-12 rounded-full text-sm font-semibold"
-              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
               Go to saved places
             </Link>
             <button onClick={signOut} className="inline-flex items-center justify-center gap-2 min-h-12 rounded-full text-sm"
@@ -97,7 +97,7 @@ export default function AccountPage() {
             {error && <p className="text-xs" role="alert" style={{ color: '#f87171' }}>{error}</p>}
             <button type="submit" disabled={sending || !email.trim()}
               className="inline-flex items-center justify-center gap-2 min-h-12 rounded-full text-sm font-semibold disabled:opacity-50"
-              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
               <Mail size={16} aria-hidden="true" /> {sending ? 'Sending…' : 'Email me a sign-in link'}
             </button>
             <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>
