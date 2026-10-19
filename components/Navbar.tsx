@@ -68,7 +68,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
       </div>
 
       {/* Right: primary links + dark/light toggle + settings */}
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-1">
         <NavLink href="/discover" label="Discover" active={pathname === '/discover'}>
           <Compass size={18} />
         </NavLink>
@@ -82,7 +82,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
           <Heart size={18} />
           {savedCount > 0 && (
             <span
-              className="absolute -top-0.5 -right-0.5 sm:static flex items-center justify-center rounded-full text-[10px] font-semibold leading-none sm:order-last"
+              className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-[10px] font-semibold leading-none"
               style={{
                 minWidth: 18,
                 height: 18,
@@ -144,7 +144,8 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
   )
 }
 
-// Icon-only on phones, icon + label from sm up. Highlights the current page.
+// Icon-only link (minimal look); the label is the tooltip and accessible name.
+// Highlights the current page.
 function NavLink({ href, label, ariaLabel, active, children }: {
   href: string
   label: string
@@ -156,15 +157,15 @@ function NavLink({ href, label, ariaLabel, active, children }: {
     <Link
       href={href}
       aria-label={ariaLabel ?? label}
+      title={label}
       aria-current={active ? 'page' : undefined}
-      className="relative flex items-center justify-center gap-2 min-w-11 h-11 sm:px-4 rounded-full text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]"
+      className="relative flex items-center justify-center w-11 h-11 rounded-full text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]"
       style={{
         color: 'var(--color-text)',
         backgroundColor: active ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : undefined,
       }}
     >
       {children}
-      <span className="hidden sm:inline">{label}</span>
     </Link>
   )
 }

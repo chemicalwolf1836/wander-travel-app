@@ -249,10 +249,10 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto">
+            <div className="flex flex-col items-stretch gap-3 w-full max-w-sm mx-auto">
               <button
                 onClick={handleStartJourney}
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-12 px-7 rounded-full text-sm font-semibold transition-all hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-7 rounded-full text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   backgroundColor: 'var(--color-accent)',
                   color: 'var(--color-bg)',
@@ -266,7 +266,7 @@ export default function HomePage() {
                 onClick={() => handleSurpriseMe()}
                 disabled={surpriseLoading}
                 aria-busy={surpriseLoading}
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-12 px-6 rounded-full text-sm font-medium transition-all hover:scale-105 disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-6 rounded-full text-base font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
                   color: 'var(--color-text)',
