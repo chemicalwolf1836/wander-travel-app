@@ -308,7 +308,7 @@ export default function SavedPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -30, height: 0, marginBottom: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.05 }}
-                  className="flex items-center gap-4 rounded-2xl px-5 py-4"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 sm:px-5 py-4"
                   style={{
                     backgroundColor: 'var(--color-card-bg)',
                     border: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)',
@@ -318,7 +318,7 @@ export default function SavedPage() {
                   <SavedThumb dest={dest} />
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-[9rem]">
                     <div className="flex items-baseline gap-1.5 mb-0.5">
                       <span className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
                         {dest.city}
@@ -343,7 +343,7 @@ export default function SavedPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                     <motion.button
                       onClick={() => handleExplore(dest)}
                       disabled={exploringCity !== null}
