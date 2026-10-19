@@ -1,4 +1,5 @@
 import type { Destination } from '@/types'
+import { notifyDataChanged } from '@/lib/syncEvents'
 
 const KEY = 'wander_favourites'
 
@@ -15,6 +16,7 @@ export function toggleFavourite(dest: Destination): boolean {
   const updated = exists ? favs.filter(f => f.city !== dest.city) : [...favs, dest]
   localStorage.setItem(KEY, JSON.stringify(updated))
   window.dispatchEvent(new CustomEvent('wander-favourites-changed', { detail: { count: updated.length } }))
+  notifyDataChanged()
   return !exists
 }
 

@@ -8,6 +8,7 @@ import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDa
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
+import { DATA_SYNCED_EVENT } from '@/lib/syncEvents'
 import { getNote, saveNote } from '@/lib/tripNotes'
 import { getTripDate, saveTripDate, countdownLabel } from '@/lib/tripDates'
 import { useDestinationImage } from '@/lib/useDestinationImage'
@@ -29,6 +30,10 @@ export default function SavedPage() {
     setFavourites(getFavourites())
     setHasResults(!!sessionStorage.getItem('wander_destinations'))
     setMounted(true)
+    // Reload when the account sync brings in places saved on another device.
+    const reload = () => setFavourites(getFavourites())
+    window.addEventListener(DATA_SYNCED_EVENT, reload)
+    return () => window.removeEventListener(DATA_SYNCED_EVENT, reload)
   }, [])
 
   function handleRemove(dest: Destination) {

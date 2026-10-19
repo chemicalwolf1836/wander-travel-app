@@ -1,3 +1,5 @@
+import { notifyDataChanged } from '@/lib/syncEvents'
+
 const KEY = 'wander_trip_notes'
 
 type NoteMap = Record<string, string>
@@ -16,4 +18,5 @@ export function saveNote(city: string, text: string) {
   if (text.trim()) notes[city] = text
   else delete notes[city]
   localStorage.setItem(KEY, JSON.stringify(notes))
+  notifyDataChanged()
 }

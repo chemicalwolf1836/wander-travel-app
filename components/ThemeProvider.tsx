@@ -4,6 +4,7 @@ import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes'
 import { MotionConfig } from 'framer-motion'
 import { Toaster } from 'sonner'
 import type { ReactNode } from 'react'
+import { SyncProvider } from './SyncProvider'
 
 interface ThemeProviderProps {
   children: ReactNode
@@ -23,7 +24,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       disableTransitionOnChange={false}
     >
       <MotionConfig reducedMotion="user">
-        {children}
+        <SyncProvider>{children}</SyncProvider>
       </MotionConfig>
     </NextThemesProvider>
   )

@@ -1,3 +1,5 @@
+import { notifyDataChanged } from '@/lib/syncEvents'
+
 const KEY = 'wander_trip_dates'
 
 type DateMap = Record<string, string> // city -> ISO date (yyyy-mm-dd)
@@ -16,6 +18,7 @@ export function saveTripDate(city: string, date: string) {
   if (date) dates[city] = date
   else delete dates[city]
   localStorage.setItem(KEY, JSON.stringify(dates))
+  notifyDataChanged()
 }
 
 /** Whole days from today until the given ISO date. Negative if in the past, null if unset/invalid. */
