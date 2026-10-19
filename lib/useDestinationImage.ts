@@ -42,9 +42,14 @@ export function isNonScenic(title: string): boolean {
  * false hits from a short name embedded in a larger word ("Nice" in "Venice").
  * This is the relevance guard that stops same-named places from colliding.
  */
+// Lower-case and strip accents so "Kyōto" / "São Paulo" match "Kyoto" / "Sao Paulo".
+function fold(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
 export function referencesPlace(text: string, term: string): boolean {
-  const t = ` ${text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `
-  const words = term.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean)
+  const t = ` ${fold(text)} `
+  const words = fold(term).split(/\s+/).filter(Boolean)
   if (words.length === 0) return false
   if (t.includes(` ${words.join(' ')} `)) return true // adjacent words: "hoi an"
   const compact = words.join('')
@@ -62,9 +67,10 @@ export interface CommonsCandidate {
 
 /**
  * Choose the best Commons photo for a destination. Keeps only landscape JPEG
- * photos, drops junk (maps/flags/plates) and non-scenic subjects, then ranks by
- * scenic-ness + whether the title references the place. Returns null when
- * nothing qualifies — the caller shows a gradient rather than a weird photo.
+ * photos whose title names the city (search hits that only mention it in the
+ * description are often photos of somewhere else), drops junk (maps/flags/
+ * plates) and non-scenic subjects, then ranks scenic views first. Returns null
+ * when nothing qualifies, so the caller moves on to the Wikipedia article photo.
  */
 export function selectCommons(candidates: CommonsCandidate[], city: string, country: string): string | null {
   const best = candidates
@@ -76,11 +82,11 @@ export function selectCommons(candidates: CommonsCandidate[], city: string, coun
         (c.width ?? 0) >= (c.height ?? 1) * 1.15 && // landscape
         isPhoto(c.title) &&
         !JUNK.test(c.title) &&
-        !isNonScenic(c.title),
+        !isNonScenic(c.title) &&
+        referencesPlace(c.title, city),
     )
     .sort((a, b) => {
-      const score = (t: string) =>
-        (SCENIC.test(t) ? 2 : 0) + (referencesPlace(t, city) || referencesPlace(t, country) ? 1 : 0)
+      const score = (t: string) => (SCENIC.test(t) ? 2 : 0) + (referencesPlace(t, country) ? 1 : 0)
       const d = score(b.title) - score(a.title)
       return d !== 0 ? d : a.index - b.index // then original search rank
     })[0]
@@ -105,9 +111,9 @@ export function acceptSummary(summary: SummaryLike, country: string): boolean {
 }
 
 // Search Wikimedia Commons (the photo library) for a real, scenic landscape
-// photo of "<city> <country>", then apply the shared selection + relevance logic.
+// photo with the city in its file name, then apply the shared selection logic.
 async function fetchFromCommons(city: string, country: string): Promise<DestinationImage | null> {
-  const q = `${city} ${country}`.trim()
+  const q = `intitle:"${city.replace(/"/g, '')}" ${country}`.trim()
   const url =
     `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*` +
     `&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=20` +
@@ -155,8 +161,9 @@ async function fetchFromSearch(city: string, country: string): Promise<Destinati
   if (!page) return null
 
   const title = page.title ?? ''
-  // Reject wrong-article and non-scenic lead images.
-  if (!(referencesPlace(title, city) || referencesPlace(title, country)) || isNonScenic(title)) return null
+  // Reject wrong-article and non-scenic lead images. The article has to be about
+  // the city itself: a country-level hit would show somewhere else in the country.
+  if (!referencesPlace(title, city) || isNonScenic(title)) return null
 
   const full = page.original?.source ?? page.thumbnail?.source ?? null
   const small = page.thumbnail?.source ?? page.original?.source ?? null

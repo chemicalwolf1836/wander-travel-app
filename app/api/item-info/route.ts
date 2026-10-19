@@ -40,14 +40,29 @@ function isRelevant(searchTerm: string, wikiTitle: string): boolean {
   return hasSignificant && matches.length / searchWords.length >= 0.5
 }
 
-async function getCommonsImage(query: string): Promise<string | null> {
+// File titles that are never a photo of the thing itself.
+const NOT_A_PHOTO = /\bmap\b|locator|location.?map|\bflag\b|coat.?of.?arms|\blogo\b|emblem|\bseal\b|diagram|\bicon\b|stamp|banknote|signature/i
+
+/**
+ * First Commons photo whose file title actually names `subject`, in search-rank
+ * order. Without the title check the top hit for "<dish> <city>" is often an
+ * unrelated photo that merely mentions the words in its description.
+ */
+async function getCommonsImage(query: string, subject: string): Promise<string | null> {
   try {
-    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query)}&prop=imageinfo&iiprop=url&format=json&origin=*&gsrlimit=8`
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query)}&prop=imageinfo&iiprop=url|mime&iiurlwidth=1080&format=json&origin=*&gsrlimit=12`
     const data = await wikiFetch(url).then(r => r.json())
-    const pages = Object.values(data?.query?.pages ?? {}) as Array<{ imageinfo?: Array<{ url: string }> }>
+    const pages = (Object.values(data?.query?.pages ?? {}) as Array<{
+      title?: string
+      index?: number
+      imageinfo?: Array<{ url: string; thumburl?: string; mime?: string }>
+    }>).sort((a, b) => (a.index ?? 99) - (b.index ?? 99))
     for (const page of pages) {
-      const imgUrl = page.imageinfo?.[0]?.url ?? ''
-      if (imgUrl && /\.(jpe?g|png|webp)$/i.test(imgUrl)) return imgUrl
+      const info = page.imageinfo?.[0]
+      const title = (page.title ?? '').replace(/^File:/, '').replace(/\.[a-z]+$/i, '')
+      if (!info || !/^image\/(jpeg|png|webp)$/.test(info.mime ?? '')) continue
+      if (NOT_A_PHOTO.test(title) || !isRelevant(subject, title)) continue
+      return info.thumburl ?? info.url
     }
   } catch { /* optional */ }
   return null
@@ -80,7 +95,7 @@ export async function GET(req: Request) {
   const [wikiSearch, commonsContextImage] = await Promise.all([
     wikiFetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&format=json&origin=*&srlimit=1`
     ).then(r => r.json()).catch(() => null),
-    getCommonsImage(`${name} ${context}`),
+    getCommonsImage(`${name} ${context}`, name),
   ])
 
   // ── Step 2: Wikipedia summary (only if search returned a relevant title) ────
@@ -97,7 +112,7 @@ export async function GET(req: Request) {
 
   // ── Step 3: Use Commons result (already fetched); fall back to name-only ────
   if (!image) {
-    image = commonsContextImage ?? await getCommonsImage(name)
+    image = commonsContextImage ?? await getCommonsImage(name, name)
   }
 
   // ── Step 4: Claude for text (only when Wikipedia wasn't relevant) ────────────
