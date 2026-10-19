@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Send, PenLine, Sparkles, RotateCcw } from 'lucide-react'
+import { Send, PenLine, Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Navbar } from '@/components/Navbar'
 import { ChatMessage } from '@/components/ChatMessage'
@@ -47,6 +47,15 @@ const GUIDED_STEPS = [
     question: "What's your budget?",
     choices: ['Budget-friendly', 'Mid-range', 'Luxury', 'No limit'],
   },
+]
+
+// One-tap examples shown in free mode before the first message, so an empty
+// text box isn't the only way in.
+const STARTER_PROMPTS = [
+  'A food-focused week somewhere in Asia',
+  'Quiet beaches on a low budget',
+  'Hiking and hot springs in autumn',
+  'A romantic city break in Europe',
 ]
 
 interface ChatResponse {
@@ -167,6 +176,7 @@ export default function DiscoverPage() {
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
     setInput('')
+    if (inputRef.current) inputRef.current.style.height = 'auto'
     setLoading(true)
 
     try {
@@ -195,6 +205,21 @@ export default function DiscoverPage() {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong.' }])
       setRetryFn(() => () => sendMessage(content))
     }
+  }
+
+  // Undo the last guided answer: drop the current question and the previous
+  // answer, then show the previous question's choices again.
+  function handleGuidedBack() {
+    if (guidedAnswers.length === 0 || !showGuideChoices || searching) return
+    setMessages((prev) => prev.slice(0, -2))
+    setGuidedAnswers((prev) => prev.slice(0, -1))
+    setGuidedStep((s) => s - 1)
+    setRetryFn(null)
+  }
+
+  function resizeInput(el: HTMLTextAreaElement) {
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }
 
   function handleStartOver() {
@@ -231,7 +256,7 @@ export default function DiscoverPage() {
           <AnimatePresence>
             {mode === 'selecting' && !loading && (
               <motion.div
-                className="flex gap-3 mt-1 ml-11"
+                className="flex flex-wrap gap-3 mt-1 ml-11"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
@@ -286,10 +311,17 @@ export default function DiscoverPage() {
             )}
           </AnimatePresence>
 
-          {/* Progress dots + start over — guided mode only */}
+          {/* Progress + back / start over — guided mode only */}
           {mode === 'guided' && !searching && (
-            <div className="flex items-center gap-3 ml-11 mt-1">
-              <div className="flex gap-1.5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 ml-11 mt-1">
+              <div
+                className="flex gap-1.5"
+                role="progressbar"
+                aria-label="Guided questions"
+                aria-valuemin={0}
+                aria-valuemax={GUIDED_STEPS.length}
+                aria-valuenow={guidedAnswers.length}
+              >
                 {GUIDED_STEPS.map((_, i) => (
                   <div
                     key={i}
@@ -306,14 +338,27 @@ export default function DiscoverPage() {
                   />
                 ))}
               </div>
+              <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>
+                Step {Math.min(guidedStep + 1, GUIDED_STEPS.length)} of {GUIDED_STEPS.length}
+              </span>
               {guidedAnswers.length > 0 && (
-                <button
-                  onClick={handleStartOver}
-                  className="text-xs opacity-50 hover:opacity-80 transition-opacity"
-                  style={{ color: 'var(--color-text)' }}
-                >
-                  Start over
-                </button>
+                <>
+                  <button
+                    onClick={handleGuidedBack}
+                    disabled={!showGuideChoices}
+                    className="flex items-center gap-1 text-xs min-h-8 px-2 rounded-full opacity-70 hover:opacity-100 transition-opacity disabled:opacity-30"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <ArrowLeft size={12} aria-hidden="true" /> Back
+                  </button>
+                  <button
+                    onClick={handleStartOver}
+                    className="text-xs min-h-8 px-2 rounded-full opacity-70 hover:opacity-100 transition-opacity"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    Start over
+                  </button>
+                </>
               )}
             </div>
           )}
@@ -344,8 +389,41 @@ export default function DiscoverPage() {
             )}
           </AnimatePresence>
 
+          {/* Starter prompts — free mode, before the first message */}
+          <AnimatePresence>
+            {mode === 'free' && messages.length === 1 && !loading && (
+              <motion.div
+                className="flex flex-col gap-2 ml-11"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+              >
+                <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>
+                  Not sure where to start? Try one of these:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {STARTER_PROMPTS.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => sendMessage(p)}
+                      className="text-xs min-h-9 px-4 rounded-full transition-colors hover:bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)]"
+                      style={{
+                        color: 'var(--color-text)',
+                        backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--color-text) 14%, transparent)',
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {searching && (
-            <p className="text-center text-sm animate-pulse mt-4" style={{ color: 'var(--color-subtle)' }}>
+            <p role="status" className="text-center text-sm animate-pulse mt-4" style={{ color: 'var(--color-subtle)' }}>
               Finding your perfect destinations…
             </p>
           )}
@@ -371,11 +449,12 @@ export default function DiscoverPage() {
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => { setInput(e.target.value); resizeInput(e.target) }}
                 onKeyDown={handleKeyDown}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
                 placeholder="Tell me about your dream trip…"
+                aria-label="Describe your dream trip"
                 rows={1}
                 className="flex-1 resize-none rounded-2xl px-4 py-3 text-sm outline-none transition-all"
                 style={{
@@ -393,6 +472,7 @@ export default function DiscoverPage() {
               />
               <button
                 onClick={() => sendMessage()}
+                aria-label="Send"
                 disabled={loading || searching || !input.trim()}
                 className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{

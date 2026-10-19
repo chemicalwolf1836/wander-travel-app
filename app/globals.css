@@ -187,3 +187,11 @@
     padding-top: 0 !important;
   }
 }
+/* Respect the OS "reduce motion" setting for CSS transitions and smooth
+   scrolling (framer-motion is handled by <MotionConfig reducedMotion="user">). */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

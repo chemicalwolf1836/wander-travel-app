@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RefreshCw, ArrowLeft, RotateCcw, Plus } from 'lucide-react'
+import { RefreshCw, ArrowLeft, RotateCcw, Plus, GitCompare, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { WorldMap } from '@/components/WorldMap'
@@ -101,10 +101,14 @@ export default function ResultsPage() {
     return () => { clearAccent() }
   }, [])
 
-  // Keyboard navigation: ← → arrows cycle destinations in split view
+  // Keyboard navigation: ← → arrows cycle destinations in split view,
+  // Esc cancels a half-picked comparison
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (view !== 'split' || destinations.length === 0) return
+      const t = e.target as HTMLElement | null
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return
+      if (e.key === 'Escape') setCompareIndex(null)
       if (e.key === 'ArrowRight') setSelectedIndex(i => (i + 1) % destinations.length)
       if (e.key === 'ArrowLeft') setSelectedIndex(i => (i - 1 + destinations.length) % destinations.length)
     }
@@ -213,6 +217,42 @@ export default function ResultsPage() {
                   mapStyle={mapStyle}
                 />
               )}
+
+              {/* Compare banner — explains the pending pick and lets you back out */}
+              <AnimatePresence>
+                {compareIndex !== null && destinations[compareIndex] && (
+                  <motion.div
+                    role="status"
+                    className="absolute left-1/2 top-4 z-10 flex items-center gap-3 pl-4 pr-1.5 py-1.5 rounded-full max-w-[calc(100%-2rem)]"
+                    style={{
+                      x: '-50%',
+                      backgroundColor: 'var(--color-card-bg)',
+                      color: 'var(--color-text)',
+                      border: '1px solid var(--color-accent)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+                    }}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <GitCompare size={14} style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+                    <span className="text-xs sm:text-sm truncate">
+                      Comparing {destinations[compareIndex].city}. Pick a second destination.
+                    </span>
+                    <button
+                      onClick={() => setCompareIndex(null)}
+                      className="flex items-center gap-1 text-xs min-h-8 px-3 rounded-full flex-shrink-0"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
+                      }}
+                    >
+                      <X size={12} aria-hidden="true" /> Cancel
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Cards — fixed-height strip at bottom */}
@@ -223,23 +263,17 @@ export default function ResultsPage() {
                 {/* Keyboard hint + controls */}
                 <div className="flex items-center justify-between px-4 pt-2 pb-1">
                   <div className="hidden md:flex items-center gap-4">
-                    <p className="text-xs tracking-widest uppercase opacity-30" style={{ color: 'var(--color-text)' }}>
+                    <p className="text-xs tracking-widest uppercase opacity-60" style={{ color: 'var(--color-text)' }}>
                       ← → to browse
                     </p>
-                    <p className="text-xs tracking-widest uppercase opacity-50" style={{ color: 'var(--color-subtle)' }}>
+                    <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>
                       {destinations.length} destination{destinations.length !== 1 ? 's' : ''} found
                     </p>
                   </div>
                   <div className="flex items-center gap-3 ml-auto">
-                    {compareIndex !== null && (
-                      <span className="text-xs px-2 py-0.5 rounded-full animate-pulse"
-                        style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 15%, transparent)', color: 'var(--color-accent)' }}>
-                        Pick second destination to compare
-                      </span>
-                    )}
                     <button
                       onClick={handleTryAgain}
-                      className="flex items-center gap-1.5 text-xs opacity-50 hover:opacity-80 transition-opacity"
+                      className="flex items-center gap-1.5 text-xs min-h-8 opacity-70 hover:opacity-100 transition-opacity"
                       style={{ color: 'var(--color-text)' }}
                     >
                       <RotateCcw size={11} /> Try different preferences
@@ -269,6 +303,7 @@ export default function ResultsPage() {
                       isSelected={selectedIndex === i}
                       anyHovered={hoveredIndex !== null}
                       isComparing={compareIndex === i}
+                      comparePending={compareIndex !== null && compareIndex !== i}
                       onHover={() => setHoveredIndex(i)}
                       onLeave={() => setHoveredIndex(null)}
                       onClick={() => {
