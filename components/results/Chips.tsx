@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { textOn } from '@/lib/contrast'
 
 /* ── Clickable item chip ── */
 export function ItemChip({ label, accent, onClick, onPrefetch }: { label: string; accent: string; onClick: () => void; onPrefetch?: () => void }) {
@@ -16,7 +17,7 @@ export function ItemChip({ label, accent, onClick, onPrefetch }: { label: string
       }}
       whileHover={{
         backgroundColor: accent,
-        color: '#fff',
+        color: textOn(accent),
         scale: 1.04,
       }}
       whileTap={{ scale: 0.96 }}

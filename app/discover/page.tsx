@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Send, PenLine, Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
+import { Send, PenLine, Sparkles, RotateCcw, ArrowLeft, CalendarDays } from 'lucide-react'
+import { MONTHS, getTravelMonth, setTravelMonth, withMonth } from '@/lib/travelMonth'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Navbar } from '@/components/Navbar'
 import { ChatMessage } from '@/components/ChatMessage'
@@ -81,9 +82,17 @@ export default function DiscoverPage() {
   const [showGuideChoices, setShowGuideChoices] = useState(false)
   const [selectedChip, setSelectedChip] = useState<string | null>(null)
   const [retryFn, setRetryFn] = useState<(() => void) | null>(null)
+  const [month, setMonth] = useState('')
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => { setMonth(getTravelMonth()) }, [])
+
+  function handleMonthChange(value: string) {
+    setMonth(value)
+    setTravelMonth(value)
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -103,7 +112,8 @@ export default function DiscoverPage() {
     }, 150)
   }
 
-  async function runSuggest(preferences: Preferences) {
+  async function runSuggest(basePreferences: Preferences) {
+    const preferences = withMonth(basePreferences, month)
     setRetryFn(null)
     setSearching(true)
     try {
@@ -115,7 +125,7 @@ export default function DiscoverPage() {
       if (!res.ok) {
         setSearching(false)
         setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations." }])
-        setRetryFn(() => () => runSuggest(preferences))
+        setRetryFn(() => () => runSuggest(basePreferences))
         return
       }
       const suggestions: unknown = await res.json()
@@ -125,7 +135,7 @@ export default function DiscoverPage() {
     } catch {
       setSearching(false)
       setMessages((prev) => [...prev, { role: 'assistant', content: "I had trouble finding destinations." }])
-      setRetryFn(() => () => runSuggest(preferences))
+      setRetryFn(() => () => runSuggest(basePreferences))
     }
   }
 
@@ -247,6 +257,27 @@ export default function DiscoverPage() {
 
       <div className={`flex-1 overflow-y-auto pt-20 px-4 max-w-2xl mx-auto w-full ${showInput ? 'pb-36' : 'pb-10'}`}>
         <div className="flex flex-col gap-4 py-6">
+          {/* Travel month — tunes suggestions to the season */}
+          <div className="flex items-center gap-2 ml-11 text-xs" style={{ color: 'var(--color-subtle)' }}>
+            <CalendarDays size={14} aria-hidden="true" style={{ color: 'var(--color-accent)' }} />
+            <label htmlFor="travel-month">When are you going?</label>
+            <select
+              id="travel-month"
+              value={month}
+              onChange={(e) => handleMonthChange(e.target.value)}
+              disabled={searching}
+              className="min-h-9 px-3 rounded-full text-xs outline-none cursor-pointer"
+              style={{
+                backgroundColor: month ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : 'color-mix(in srgb, var(--color-text) 6%, transparent)',
+                color: 'var(--color-text)',
+                border: '1px solid color-mix(in srgb, var(--color-text) 14%, transparent)',
+              }}
+            >
+              <option value="">Any time</option>
+              {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+
           {messages.map((msg, i) => (
             <ChatMessage key={i} message={msg} index={i} />
           ))}
@@ -300,7 +331,7 @@ export default function DiscoverPage() {
                         : 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
                       border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                     }}
-                    whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
+                    whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
                     whileTap={{ scale: 0.96 }}
                     transition={{ duration: 0.15 }}
                   >
@@ -477,7 +508,7 @@ export default function DiscoverPage() {
                 className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: 'var(--color-accent)',
-                  color: 'var(--color-bg)',
+                  color: 'var(--color-on-accent)',
                   boxShadow: `0 0 20px color-mix(in srgb, var(--color-accent) 50%, transparent)`,
                 }}
               >

@@ -17,7 +17,7 @@ export default function NotFound() {
       <div className="flex flex-col sm:flex-row gap-3 mt-2">
         <Link href="/discover"
           className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold"
-          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
           Find a destination
         </Link>
         <Link href="/"

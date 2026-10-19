@@ -1,10 +1,12 @@
 'use client'
 
+import { textOn } from '@/lib/contrast'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDismissable } from '@/lib/useDismissable'
+import { publishDestination } from '@/lib/sharedDestinations'
 import type { Destination } from '@/types'
 
 /* ── Share card modal ── */
@@ -12,15 +14,21 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
   const theme = dest.culturalTheme
   const dialogRef = useDismissable<HTMLDivElement>(onClose)
 
+  // The link opens the destination on any device (it's stored server-side).
+  const shareUrl = typeof window === 'undefined'
+    ? ''
+    : `${window.location.origin}/destination/${encodeURIComponent(dest.city)}`
+  const shareText = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
+
   async function handleCopy() {
-    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
-    await navigator.clipboard.writeText(text).catch(() => null)
-    toast('Copied to clipboard')
+    publishDestination(dest)
+    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).catch(() => null)
+    toast('Link copied')
   }
 
   async function handleNativeShare() {
-    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
-    await navigator.share({ title: dest.city, text }).catch(() => null)
+    publishDestination(dest)
+    await navigator.share({ title: dest.city, text: shareText, url: shareUrl }).catch(() => null)
   }
 
   return (
@@ -50,10 +58,10 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${theme.primary}ee 0%, ${theme.primary}88 40%, transparent 100%)` }} />
           <div className="absolute top-5 right-5 text-4xl">{dest.emoji}</div>
           <div className="absolute bottom-0 left-0 right-0 p-8">
-            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Discovered on Wander</p>
+            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.85)' }}>Discovered on Wander</p>
             <h2 className="text-5xl text-white leading-none mb-1" style={{ fontFamily: 'var(--font-playfair)' }}>{dest.city}</h2>
-            <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.75)' }}>{dest.country} · {dest.region}</p>
-            <p className="text-sm italic leading-snug" style={{ color: 'rgba(255,255,255,0.85)' }}>{dest.tagline}</p>
+            <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.9)' }}>{dest.country} · {dest.region}</p>
+            <p className="text-sm italic leading-snug" style={{ color: '#ffffff' }}>{dest.tagline}</p>
             <div className="flex flex-wrap gap-1.5 mt-4">
               {dest.bestFor.slice(0, 3).map(b => (
                 <span key={b} className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>{b}</span>
@@ -67,17 +75,17 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
           <button onClick={handleCopy}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-            Copy text
+            Copy link
           </button>
           {'share' in navigator && (
             <button onClick={handleNativeShare}
               className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
-              style={{ backgroundColor: theme.accent, color: theme.background }}>
+              style={{ backgroundColor: theme.accent, color: textOn(theme.accent) }}>
               Share <Share2 size={13} />
             </button>
           )}
         </div>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Screenshot the card to save it</p>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>Screenshot the card to save it</p>
       </motion.div>
     </motion.div>
   )

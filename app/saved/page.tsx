@@ -4,14 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search, Route } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search, Route, Vote } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
+import { DATA_SYNCED_EVENT } from '@/lib/syncEvents'
 import { getNote, saveNote } from '@/lib/tripNotes'
 import { getTripDate, saveTripDate, countdownLabel } from '@/lib/tripDates'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { DestImage } from '@/components/DestImage'
+import { readableOn } from '@/lib/contrast'
+import { useSurfaceColor } from '@/lib/useSurfaceColor'
 import type { Destination, Preferences } from '@/types'
 
 export default function SavedPage() {
@@ -29,6 +32,10 @@ export default function SavedPage() {
     setFavourites(getFavourites())
     setHasResults(!!sessionStorage.getItem('wander_destinations'))
     setMounted(true)
+    // Reload when the account sync brings in places saved on another device.
+    const reload = () => setFavourites(getFavourites())
+    window.addEventListener(DATA_SYNCED_EVENT, reload)
+    return () => window.removeEventListener(DATA_SYNCED_EVENT, reload)
   }, [])
 
   function handleRemove(dest: Destination) {
@@ -50,6 +57,34 @@ export default function SavedPage() {
         },
       },
     })
+  }
+
+  const [creatingPoll, setCreatingPoll] = useState(false)
+  // Accent-coloured text must read on both the page and the row cards.
+  const accent = useSurfaceColor('--color-accent', '#F59E0B')
+  const pageBg = useSurfaceColor('--color-bg', '#0a0f1e')
+  const cardBg = useSurfaceColor()
+  const accentText = readableOn(readableOn(accent, cardBg, 5.5), pageBg, 5.5)
+
+  // Turn the saved shortlist into a vote friends can join by link.
+  async function handleCreatePoll() {
+    setCreatingPoll(true)
+    try {
+      const options = favourites.slice(0, 12).map(d => ({
+        city: d.city, country: d.country, countryCode: d.countryCode ?? '', flagEmoji: d.flagEmoji ?? '', tagline: d.tagline ?? '',
+      }))
+      const res = await fetch('/api/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Where should we go?', options }),
+      })
+      if (!res.ok) throw new Error()
+      const { id } = await res.json() as { id: string }
+      router.push(`/vote/${id}`)
+    } catch {
+      toast.error("Couldn't start a vote. Please try again.")
+      setCreatingPoll(false)
+    }
   }
 
   async function handleExplore(dest: Destination) {
@@ -113,7 +148,7 @@ export default function SavedPage() {
         {/* Header row */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <Heart size={20} style={{ color: 'var(--color-accent)' }} />
+            <Heart size={20} style={{ color: accentText }} />
             <h1
               className="text-3xl"
               style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
@@ -125,7 +160,7 @@ export default function SavedPage() {
                 className="text-xs px-2 py-0.5 rounded-full"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                  color: 'var(--color-accent)',
+                  color: accentText,
                   border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                 }}
               >
@@ -151,9 +186,40 @@ export default function SavedPage() {
           )}
         </div>
 
+        {/* Trip tools that work across several saved places */}
+        {saved.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Link
+              href="/plan"
+              className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                color: accentText,
+                border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+              }}
+            >
+              <Route size={14} aria-hidden="true" /> Plan a route
+            </Link>
+            {saved.length >= 2 && (
+              <button
+                onClick={handleCreatePoll}
+                disabled={creatingPoll}
+                className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium disabled:opacity-50"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                  color: accentText,
+                  border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                <Vote size={14} aria-hidden="true" /> {creatingPoll ? 'Starting…' : 'Let friends vote'}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Divider */}
         <div
-          className="mb-8"
+          className="mt-6 mb-8"
           style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}
         />
 
@@ -186,7 +252,7 @@ export default function SavedPage() {
               className="px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
               style={{
                 backgroundColor: 'var(--color-accent)',
-                color: 'var(--color-bg)',
+                color: 'var(--color-on-accent)',
                 boxShadow: '0 0 24px color-mix(in srgb, var(--color-accent) 35%, transparent)',
               }}
             >
@@ -249,7 +315,7 @@ export default function SavedPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -30, height: 0, marginBottom: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.05 }}
-                  className="flex items-center gap-4 rounded-2xl px-5 py-4"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 sm:px-5 py-4"
                   style={{
                     backgroundColor: 'var(--color-card-bg)',
                     border: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)',
@@ -259,7 +325,7 @@ export default function SavedPage() {
                   <SavedThumb dest={dest} />
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-[9rem]">
                     <div className="flex items-baseline gap-1.5 mb-0.5">
                       <span className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
                         {dest.city}
@@ -269,7 +335,7 @@ export default function SavedPage() {
                       </span>
                     </div>
                     {dest.tagline && (
-                      <p className="text-xs truncate mb-1" style={{ color: 'var(--color-accent)', opacity: 0.85 }}>
+                      <p className="text-xs truncate mb-1" style={{ color: accentText }}>
                         {dest.tagline}
                       </p>
                     )}
@@ -284,14 +350,14 @@ export default function SavedPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                     <motion.button
                       onClick={() => handleExplore(dest)}
                       disabled={exploringCity !== null}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                        color: 'var(--color-accent)',
+                        color: accentText,
                         border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       }}
                       whileHover={{ scale: 1.05 }}
@@ -323,7 +389,7 @@ export default function SavedPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
                       style={{
                         backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                        color: 'var(--color-accent)',
+                        color: accentText,
                         border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       }}
                     >
@@ -334,7 +400,7 @@ export default function SavedPage() {
                     <motion.button
                       onClick={() => handleRemove(dest)}
                       className="p-2 rounded-full"
-                      style={{ color: 'var(--color-accent)' }}
+                      style={{ color: accentText }}
                       aria-label={`Remove ${dest.city} from saved`}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.9 }}

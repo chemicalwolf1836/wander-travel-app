@@ -82,6 +82,8 @@ export function TripView({ city }: { city: string }) {
   }, [dest, weather?.condition])
 
   const accent = dest?.culturalTheme?.accent ?? 'var(--color-accent)'
+  // applyTheme() derives a contrast-checked version of the accent for text.
+  const accentText = `var(--color-accent-text, ${accent})`
 
   function handleCopy() {
     const text = buildPlanText(city, dest, plan, date, note)
@@ -111,7 +113,7 @@ export function TripView({ city }: { city: string }) {
               <Copy size={13} /> Copy plan
             </button>
             <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full"
-              style={{ backgroundColor: accent, color: '#fff' }}>
+              style={{ backgroundColor: accent, color: 'var(--color-on-accent)' }}>
               <Printer size={13} /> Print trip
             </button>
           </div>
@@ -141,13 +143,13 @@ export function TripView({ city }: { city: string }) {
           <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {date && (
               <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
-                <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-1" style={{ color: accent }}><CalendarDays size={13} /> Dates</p>
+                <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-1" style={{ color: accentText }}><CalendarDays size={13} /> Dates</p>
                 <p className="text-sm" style={{ color: 'var(--color-text)' }}>{date} · {countdownLabel(date)}</p>
               </div>
             )}
             {note && (
               <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
-                <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-1" style={{ color: accent }}><StickyNote size={13} /> Notes</p>
+                <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-1" style={{ color: accentText }}><StickyNote size={13} /> Notes</p>
                 <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--color-text)' }}>{note}</p>
               </div>
             )}
@@ -162,7 +164,7 @@ export function TripView({ city }: { city: string }) {
               {plan.itinerary.days.map(d => (
                 <div key={d.day} className="break-inside-avoid">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `color-mix(in srgb, ${accent} 15%, transparent)`, color: accent }}>Day {d.day}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `color-mix(in srgb, ${accent} 15%, transparent)`, color: accentText }}>Day {d.day}</span>
                     <p className="text-sm font-semibold">{d.title}</p>
                   </div>
                   {([['Morning', d.morning], ['Afternoon', d.afternoon], ['Evening', d.evening]] as const).map(([label, text]) => (
@@ -171,7 +173,7 @@ export function TripView({ city }: { city: string }) {
                       <p className="text-xs leading-relaxed">{text}</p>
                     </div>
                   ))}
-                  {d.tip && <p className="text-xs italic mt-1.5 pl-1 border-l-2" style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
+                  {d.tip && <p className="text-xs italic mt-1.5 pl-1 border-l-2" style={{ color: accentText, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
                 </div>
               ))}
             </div>
@@ -185,10 +187,10 @@ export function TripView({ city }: { city: string }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {plan.packing.categories.map(cat => (
                 <div key={cat.name} className="break-inside-avoid">
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>{cat.name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accentText }}>{cat.name}</p>
                   <ul className="space-y-1">
                     {cat.items.map(item => (
-                      <li key={item} className="flex items-start gap-2 text-xs"><span style={{ color: accent, marginTop: 2 }}>·</span>{item}</li>
+                      <li key={item} className="flex items-start gap-2 text-xs"><span style={{ color: accentText, marginTop: 2 }}>·</span>{item}</li>
                     ))}
                   </ul>
                 </div>
@@ -203,7 +205,7 @@ export function TripView({ city }: { city: string }) {
             <p className="text-sm mb-4" style={{ color: 'var(--color-subtle)' }}>
               No trip plan yet for {city}. Open its detail view to add trip dates, notes, an itinerary, or a packing list — they&apos;ll show up here.
             </p>
-            <Link href="/saved" className="text-sm underline" style={{ color: accent }}>Back to saved</Link>
+            <Link href="/saved" className="text-sm underline" style={{ color: accentText }}>Back to saved</Link>
           </div>
         )}
       </div>

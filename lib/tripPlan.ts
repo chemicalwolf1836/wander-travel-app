@@ -19,6 +19,8 @@ export interface TripPlan {
   packing?: { categories: PackingCategory[]; tripDays: number }
 }
 
+import { notifyDataChanged } from '@/lib/syncEvents'
+
 const KEY = 'wander_trip_plans'
 
 type PlanMap = Record<string, TripPlan>
@@ -35,6 +37,7 @@ function load(): PlanMap {
 function save(plans: PlanMap) {
   if (typeof window === 'undefined') return
   localStorage.setItem(KEY, JSON.stringify(plans))
+  notifyDataChanged()
 }
 
 /** The stored plan for a city, or an empty object if nothing has been generated. */

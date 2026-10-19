@@ -255,7 +255,7 @@ export default function HomePage() {
                 className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-7 rounded-full text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   backgroundColor: 'var(--color-accent)',
-                  color: 'var(--color-bg)',
+                  color: 'var(--color-on-accent)',
                   boxShadow: `0 0 40px color-mix(in srgb, var(--color-accent) 40%, transparent)`,
                 }}
               >

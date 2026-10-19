@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, Menu, ArrowLeft, Heart, Compass } from 'lucide-react'
+import { Sun, Moon, Menu, ArrowLeft, Heart, Compass, UserRound } from 'lucide-react'
+import { useSync } from './SyncProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { clearPresetStyles } from '@/lib/themePresets'
@@ -19,6 +20,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
   const [mounted, setMounted] = useState(false)
   const [savedCount, setSavedCount] = useState(0)
   const isDestinationPage = pathname.startsWith('/destination/')
+  const { user } = useSync()
 
   useEffect(() => {
     setMounted(true)
@@ -88,12 +90,27 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
                 height: 18,
                 padding: '0 5px',
                 backgroundColor: 'var(--color-accent)',
-                color: 'var(--color-bg)',
+                color: 'var(--color-on-accent)',
               }}
               aria-hidden="true"
             >
               {savedCount > 99 ? '99+' : savedCount}
             </span>
+          )}
+        </NavLink>
+
+        <NavLink
+          href="/account"
+          label={user ? 'Account (synced)' : 'Sign in to sync'}
+          active={pathname === '/account'}
+        >
+          <UserRound size={18} />
+          {user && (
+            <span
+              className="absolute top-2 right-2 block rounded-full"
+              style={{ width: 7, height: 7, backgroundColor: 'var(--color-accent)' }}
+              aria-hidden="true"
+            />
           )}
         </NavLink>
 

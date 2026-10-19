@@ -14,6 +14,10 @@ describe('referencesPlace', () => {
   it('does NOT match a short name embedded in another word (Nice in Venice)', () => {
     expect(referencesPlace('Grand Canal of Venice, Italy', 'Nice')).toBe(false)
   })
+  it('ignores accents (Kyōto, São Paulo)', () => {
+    expect(referencesPlace('Kyōto Gion district at night', 'Kyoto')).toBe(true)
+    expect(referencesPlace('Avenida Paulista, São Paulo', 'Sao Paulo')).toBe(true)
+  })
   it('returns false when the place is absent', () => {
     expect(referencesPlace('Island in Antigua and Barbuda', 'Guatemala')).toBe(false)
   })
@@ -52,6 +56,15 @@ describe('selectCommons', () => {
       land('Kyoto riverside view'),
     ], 'Kyoto', 'Japan')
     expect(chosen).toContain('Kyoto%20riverside%20view')
+  })
+
+  it('drops photos whose title does not name the city, however scenic', () => {
+    const chosen = selectCommons([
+      land('Mount Fuji panorama at sunset, Japan'), // scenic, right country, wrong place
+      land('Fushimi Inari, Kyoto'),
+    ], 'Kyoto', 'Japan')
+    expect(chosen).toContain('Fushimi%20Inari%2C%20Kyoto')
+    expect(selectCommons([land('Mount Fuji panorama at sunset, Japan')], 'Kyoto', 'Japan')).toBeNull()
   })
 
   it('returns null when everything is non-scenic or junk', () => {

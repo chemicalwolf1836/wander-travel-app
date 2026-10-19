@@ -19,6 +19,7 @@ An AI-powered travel discovery app that helps you find your perfect destination 
 - **Guided mode** — tap through preset choice chips (climate, budget, travel style, etc.) for a structured flow
 - **Surprise Me** — one-tap random destination discovery from the home page
 - **Clickable floating city names** on the home page trigger a Surprise Me search inspired by that city
+- **Travel month** — pick when you're going; suggestions are tuned to that month and each card says what it's like then
 
 ### Results
 - **Interactive world map** with animated destination pins; accent colour shifts to match each destination's cultural theme
@@ -33,15 +34,23 @@ An AI-powered travel discovery app that helps you find your perfect destination 
 - **Packing list** — AI-generated list organised by category; choose your trip length (3–14 days)
 - **Itinerary builder** — day-by-day plan with morning / afternoon / evening breakdowns and insider tips; choose 3–10 days
 - **Similar destinations** — AI suggests 3 more places with a matching vibe
+- **Prices** — rough flight cost from your home city, per-night stay prices by tier, and links to search Google Flights, Booking.com and Airbnb
+- **Visa & safety** — pick your passport to see the entry requirement and a safety summary, with links to official travel advice
 
 ### Saved
 - **Heart any destination** to save it; saved list persists across sessions
 - **Undo remove** — a 3.5-second grace window with an Undo toast
 - **Trip notes** — jot personal notes (dates, budget, ideas) on each saved destination; saves automatically
 - **Explore from saved** — generate new suggestions inspired by any saved city
+- **Plan a route** — chain saved places into a multi-city trip with days per stop, a route map and leg distances
+- **Let friends vote** — turn your shortlist into a shareable poll; friends tick every place they'd be happy with
+
+### Account
+- **Passwordless sign-in** — email magic link; saved places, notes, dates, plans and the route sync across devices
 
 ### Share
-- **Share card** — a styled travel-poster modal with Copy text and native Share options; screenshot to save
+- **Share card** — a styled travel-poster modal with Copy link and native Share options; screenshot to save
+- **Shareable links** — `/destination/<city>` opens on any device, not just the one that found it
 
 ### Personalise panel
 - Dark / light mode toggle
@@ -78,6 +87,8 @@ Claude-powered API routes:
 - **`/api/itinerary`** — generates a day-by-day itinerary (Claude Haiku) with morning / afternoon / evening slots and a local tip per day.
 - **`/api/budget`** — estimates a daily travel budget (Claude Haiku) broken down by travel style (budget / mid-range / luxury).
 - **`/api/chat`** — powers the free-text discovery chat; returns structured JSON signalling when the AI has enough information to search.
+- **`/api/prices`** — rough flight and accommodation price ranges (Claude Haiku, cached 7 days).
+- **`/api/visa`** — entry requirement and safety summary for a passport/destination pair (Claude Haiku, cached 7 days).
 - **`/api/item-info`** — enriches attraction and dish chips with Wikipedia summaries and Wikimedia Commons images; Claude fills in where Wikipedia isn't relevant.
 
 ---
@@ -100,6 +111,8 @@ SUPABASE_SERVICE_ROLE_KEY
 NEXT_PUBLIC_MAPBOX_TOKEN
 OPENWEATHER_API_KEY
 ```
+
+Database: apply the SQL files in `supabase/migrations/` in order (`supabase db push`, or paste them into the Supabase SQL editor). For sign-in, add your site URL and `<site>/account` to **Authentication → URL Configuration** in Supabase.
 
 ---
 

@@ -8,7 +8,7 @@ export function TypingIndicator() {
       {/* AI avatar */}
       <div
         className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-        style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}
+        style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
       >
         W
       </div>

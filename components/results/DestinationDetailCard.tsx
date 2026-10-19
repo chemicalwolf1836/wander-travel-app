@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, Heart, Share2, Luggage, Map as MapIcon, Sparkles, Wallet } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, Heart, Share2, Luggage, Map as MapIcon, Sparkles, Wallet, Tag, ShieldCheck } from 'lucide-react'
 import { isFavourite, toggleFavourite } from '@/lib/favourites'
 import { useDestinationImage } from '@/lib/useDestinationImage'
 import { prefetchItem } from '@/lib/itemInfoCache'
 import { DestImage } from '@/components/DestImage'
 import { Flag } from './Flag'
+import { readableOn, textOn } from '@/lib/contrast'
+import { useSurfaceColor } from '@/lib/useSurfaceColor'
 import { ItemChip, ExperienceChip } from './Chips'
 import { ItemModal } from './ItemModal'
 import { PackingModal } from './PackingModal'
@@ -15,6 +17,8 @@ import { ItineraryModal } from './ItineraryModal'
 import { BudgetModal } from './BudgetModal'
 import { SimilarModal } from './SimilarModal'
 import { ShareCardModal } from './ShareCardModal'
+import { PricesModal } from './PricesModal'
+import { VisaModal } from './VisaModal'
 import type { Destination, WeatherData } from '@/types'
 
 const WEATHER_EMOJI: Record<string, string> = {
@@ -37,6 +41,9 @@ export function DestinationDetailCard({
   const image = useDestinationImage(dest.city, dest.country)
   const imageUrl = image?.src ?? null
   const theme = dest.culturalTheme
+  // Accent text has to read on the card surface in both light and dark mode.
+  const surface = useSurfaceColor()
+  const accentText = readableOn(theme.accent, surface)
   const [activeItem, setActiveItem] = useState<string | null>(null)
   const [fav, setFav] = useState(() => isFavourite(dest.city))
   const [shared, setShared] = useState(false)
@@ -45,6 +52,8 @@ export function DestinationDetailCard({
   const [showBudget, setShowBudget] = useState(false)
   const [showSimilar, setShowSimilar] = useState(false)
   const [showShareCard, setShowShareCard] = useState(false)
+  const [showPrices, setShowPrices] = useState(false)
+  const [showVisa, setShowVisa] = useState(false)
 
   function handleFav() {
     const next = toggleFavourite(dest)
@@ -80,7 +89,7 @@ export function DestinationDetailCard({
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }} />
           )}
           <div className="absolute inset-0"
-            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)' }} />
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.1) 100%)' }} />
 
           {/* Top-right action buttons */}
           <div className="absolute top-4 right-4 flex gap-2">
@@ -119,7 +128,7 @@ export function DestinationDetailCard({
         {/* Body */}
         <div className="overflow-y-auto flex-1 px-5 sm:px-8 py-6">
           <p className="text-base italic leading-relaxed mb-3 font-medium"
-            style={{ color: theme.accent, filter: 'brightness(1.15) saturate(1.2)' }}>
+            style={{ color: accentText }}>
             {dest.tagline}
           </p>
           <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-text)' }}>
@@ -134,12 +143,12 @@ export function DestinationDetailCard({
             {dest.attractions.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Landmark size={12} style={{ color: theme.accent }} />
-                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>See</span>
+                  <Landmark size={12} style={{ color: accentText }} />
+                  <span className="text-xs tracking-widest uppercase" style={{ color: accentText }}>See</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {dest.attractions.slice(0, 5).map((a) => (
-                    <ItemChip key={a} label={a} accent={theme.accent} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
+                    <ItemChip key={a} label={a} accent={accentText} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
                   ))}
                 </div>
               </div>
@@ -147,8 +156,8 @@ export function DestinationDetailCard({
             {dest.food.dishes.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Utensils size={12} style={{ color: theme.accent }} />
-                  <span className="text-xs tracking-widest uppercase" style={{ color: theme.accent }}>Eat</span>
+                  <Utensils size={12} style={{ color: accentText }} />
+                  <span className="text-xs tracking-widest uppercase" style={{ color: accentText }}>Eat</span>
                 </div>
                 {dest.food.summary && (
                   <p className="text-xs italic leading-snug mb-3" style={{ color: 'var(--color-subtle)' }}>
@@ -157,7 +166,7 @@ export function DestinationDetailCard({
                 )}
                 <div className="flex flex-wrap gap-2">
                   {dest.food.dishes.slice(0, 5).map((d) => (
-                    <ItemChip key={d} label={d} accent={theme.accent} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
+                    <ItemChip key={d} label={d} accent={accentText} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
                   ))}
                 </div>
               </div>
@@ -179,6 +188,14 @@ export function DestinationDetailCard({
             </div>
           )}
 
+          {/* Fit for the travel month the user picked */}
+          {dest.monthFit && (
+            <div className="flex items-start gap-2 mb-3 text-sm" style={{ color: 'var(--color-text)' }}>
+              <Calendar size={14} className="mt-0.5 flex-shrink-0" style={{ color: accentText }} aria-hidden="true" />
+              <span><span className="font-medium">In your travel month:</span> {dest.monthFit}</span>
+            </div>
+          )}
+
           {/* Best time — grouped with best for as trip-planning context */}
           {dest.bestSeasons && dest.bestSeasons.length > 0 && (
             <div className="flex items-center gap-2 mb-6 flex-wrap">
@@ -197,19 +214,25 @@ export function DestinationDetailCard({
 
           <AnimatePresence>
             {activeItem && (
-              <ItemModal item={activeItem} city={dest.city} accent={theme.accent} onClose={() => setActiveItem(null)} />
+              <ItemModal item={activeItem} city={dest.city} accent={accentText} onClose={() => setActiveItem(null)} />
             )}
             {showPacking && (
-              <PackingModal destination={dest} accent={theme.accent} onClose={() => setShowPacking(false)} />
+              <PackingModal destination={dest} accent={accentText} onClose={() => setShowPacking(false)} />
             )}
             {showItinerary && (
-              <ItineraryModal destination={dest} accent={theme.accent} onClose={() => setShowItinerary(false)} />
+              <ItineraryModal destination={dest} accent={accentText} onClose={() => setShowItinerary(false)} />
             )}
             {showBudget && (
-              <BudgetModal destination={dest} accent={theme.accent} onClose={() => setShowBudget(false)} />
+              <BudgetModal destination={dest} accent={accentText} onClose={() => setShowBudget(false)} />
             )}
             {showSimilar && (
-              <SimilarModal destination={dest} accent={theme.accent} onClose={() => setShowSimilar(false)} />
+              <SimilarModal destination={dest} accent={accentText} onClose={() => setShowSimilar(false)} />
+            )}
+            {showPrices && (
+              <PricesModal destination={dest} accent={accentText} onClose={() => setShowPrices(false)} />
+            )}
+            {showVisa && (
+              <VisaModal destination={dest} accent={accentText} onClose={() => setShowVisa(false)} />
             )}
             {showShareCard && (
               <ShareCardModal destination={dest} imageUrl={imageUrl} onClose={() => setShowShareCard(false)} />
@@ -226,18 +249,20 @@ export function DestinationDetailCard({
           )}
 
           {/* Quick action buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
             {[
               { icon: <Luggage size={13} />, label: 'Packing list', action: () => setShowPacking(true) },
               { icon: <MapIcon size={13} />, label: 'Itinerary', action: () => setShowItinerary(true) },
               { icon: <Wallet size={13} />, label: 'Budget', action: () => setShowBudget(true) },
+              { icon: <Tag size={13} />, label: 'Prices', action: () => setShowPrices(true) },
+              { icon: <ShieldCheck size={13} />, label: 'Visa', action: () => setShowVisa(true) },
               { icon: <Sparkles size={13} />, label: 'Similar', action: () => setShowSimilar(true) },
             ].map(({ icon, label, action }) => (
               <button key={label} onClick={action}
                 className="flex flex-col items-center gap-1 py-3 rounded-xl text-xs font-medium transition-all hover:scale-[1.03]"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
-                  color: 'var(--color-accent)',
+                  color: accentText,
                   border: '1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)',
                 }}>
                 {icon}{label}
@@ -249,8 +274,7 @@ export function DestinationDetailCard({
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.015] active:scale-[0.99]"
             style={{
               backgroundColor: theme.accent,
-              color: theme.background,
-              filter: 'brightness(1.1) saturate(1.2)',
+              color: textOn(theme.accent),
               boxShadow: `0 0 40px color-mix(in srgb, ${theme.accent} 55%, transparent), 0 4px 16px rgba(0,0,0,0.3)`,
             }}>
             Explore {dest.city} <ArrowRight size={15} />
@@ -260,7 +284,7 @@ export function DestinationDetailCard({
 
       <motion.button onClick={onBack}
         className="mt-4 flex items-center gap-2 text-xs tracking-widest uppercase self-center transition-opacity"
-        style={{ color: 'var(--color-text)', opacity: 0.45 }}
+        style={{ color: 'var(--color-subtle)' }}
         whileHover={{ opacity: 1 }}>
         <ArrowLeft size={12} /> Back to destinations
       </motion.button>

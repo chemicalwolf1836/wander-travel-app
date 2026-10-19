@@ -3,12 +3,15 @@
 import { useEffect, useState } from 'react'
 import { Sparkles, X } from 'lucide-react'
 import { ModalShell } from './ModalShell'
+import { readableOn } from '@/lib/contrast'
+import { useSurfaceColor } from '@/lib/useSurfaceColor'
 import type { Destination } from '@/types'
 
 /* ── Similar destinations modal ── */
 export function SimilarModal({ destination: dest, accent, onClose }: { destination: Destination; accent: string; onClose: () => void }) {
   const [similar, setSimilar] = useState<Destination[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const surface = useSurfaceColor()
 
   useEffect(() => {
     fetch('/api/suggest', {
@@ -54,7 +57,7 @@ export function SimilarModal({ destination: dest, accent, onClose }: { destinati
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{s.city}</p>
                   <p className="text-xs mb-1" style={{ color: 'var(--color-subtle)' }}>{s.country} · {s.region}</p>
-                  <p className="text-xs italic line-clamp-2" style={{ color: s.culturalTheme.accent }}>{s.tagline}</p>
+                  <p className="text-xs italic line-clamp-2" style={{ color: readableOn(s.culturalTheme.accent, surface) }}>{s.tagline}</p>
                 </div>
               </div>
             ))}
