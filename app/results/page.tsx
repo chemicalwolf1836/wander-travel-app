@@ -331,7 +331,7 @@ export default function ResultsPage() {
                       onClick={handleLoadMore}
                       disabled={loadingMore}
                       className="flex flex-col items-center justify-center gap-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-opacity hover:opacity-80"
-                      style={{ height: 180, width: 120, border: '1.5px dashed color-mix(in srgb, var(--color-text) 20%, transparent)', color: 'var(--color-subtle)' }}
+                      style={{ height: 'clamp(260px, 36vh, 340px)', width: 120, border: '1.5px dashed color-mix(in srgb, var(--color-text) 20%, transparent)', color: 'var(--color-subtle)' }}
                     >
                       {loadingMore
                         ? <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
