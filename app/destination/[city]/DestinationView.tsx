@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
@@ -8,10 +9,24 @@ import { Navbar } from '@/components/Navbar'
 import { MapTransport } from '@/components/MapTransport'
 import { DetailPanel } from '@/components/DetailPanel'
 import { applyTheme, resetTheme } from '@/lib/applyTheme'
-import { recordView } from '@/lib/recentlyViewed'
+import { recordView, getRecentlyViewed } from '@/lib/recentlyViewed'
+import { getFavourites } from '@/lib/favourites'
+import { publishDestination, fetchSharedDestination } from '@/lib/sharedDestinations'
 import type { Destination } from '@/types'
 
-type FlowState = 'loading' | 'map-enter' | 'fly-to' | 'panel-open'
+type FlowState = 'loading' | 'missing' | 'map-enter' | 'fly-to' | 'panel-open'
+
+// This device first (session, saved, recently viewed), then the shared copy
+// on the server, so a link sent to someone else still opens.
+async function resolveDestination(city: string): Promise<Destination | null> {
+  try {
+    const raw = sessionStorage.getItem(`wander_dest_${city}`)
+    if (raw) return JSON.parse(raw) as Destination
+  } catch { /* ignore */ }
+  const local = getFavourites().find(d => d.city === city) ?? getRecentlyViewed().find(d => d.city === city)
+  if (local) return local
+  return fetchSharedDestination(city)
+}
 
 export function DestinationView() {
   const router = useRouter()
@@ -23,17 +38,19 @@ export function DestinationView() {
   const [flowState, setFlowState] = useState<FlowState>('loading')
 
   useEffect(() => {
-    const raw = sessionStorage.getItem(`wander_dest_${cityParam}`)
-    if (!raw) {
-      router.push('/results')
-      return
-    }
-    const dest: Destination = JSON.parse(raw)
-    setDestination(dest)
-    recordView(dest)
-    applyTheme(dest.culturalTheme, dest.weather?.condition)
-    setFlowState('map-enter')
-  }, [cityParam, router])
+    let cancelled = false
+    resolveDestination(cityParam).then((dest) => {
+      if (cancelled) return
+      if (!dest) { setFlowState('missing'); return }
+      sessionStorage.setItem(`wander_dest_${dest.city}`, JSON.stringify(dest))
+      setDestination(dest)
+      recordView(dest)
+      publishDestination(dest)
+      applyTheme(dest.culturalTheme, dest.weather?.condition)
+      setFlowState('map-enter')
+    })
+    return () => { cancelled = true }
+  }, [cityParam])
 
   function handleFlyComplete() {
     setFlowState('panel-open')
@@ -41,7 +58,22 @@ export function DestinationView() {
 
   function handleBack() {
     resetTheme()
-    router.push('/results')
+    // Someone who arrived from a shared link has no results to go back to.
+    router.push(sessionStorage.getItem('wander_destinations') ? '/results' : '/discover')
+  }
+
+  if (flowState === 'missing') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center"
+        style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
+        <h1 className="text-3xl" style={{ fontFamily: 'var(--font-playfair)' }}>We couldn&apos;t find {cityParam}</h1>
+        <p className="text-sm max-w-sm opacity-80">This link hasn&apos;t been shared from Wander yet. Find it, or somewhere like it, in a few taps.</p>
+        <Link href="/discover" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold"
+          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-bg)' }}>
+          Find a destination
+        </Link>
+      </div>
+    )
   }
 
   if (!destination) {

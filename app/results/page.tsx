@@ -12,6 +12,7 @@ import { BottomCard } from '@/components/results/BottomCard'
 import { DestinationDetailCard } from '@/components/results/DestinationDetailCard'
 import { CompareCard } from '@/components/results/CompareCard'
 import { fetchWeather } from '@/lib/useWeather'
+import { publishDestination } from '@/lib/sharedDestinations'
 import type { Destination, AppSettings, WeatherData } from '@/types'
 
 const STORAGE_KEY = 'wander_settings'
@@ -129,6 +130,7 @@ export default function ResultsPage() {
   const handleNavigate = useCallback((destination: Destination) => {
     setNavigating(true)
     sessionStorage.setItem(`wander_dest_${destination.city}`, JSON.stringify(destination))
+    publishDestination(destination)
     setTimeout(() => router.push(`/destination/${encodeURIComponent(destination.city)}`), 400)
   }, [router])
 

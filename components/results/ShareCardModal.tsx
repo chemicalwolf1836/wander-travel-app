@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDismissable } from '@/lib/useDismissable'
+import { publishDestination } from '@/lib/sharedDestinations'
 import type { Destination } from '@/types'
 
 /* ── Share card modal ── */
@@ -12,15 +13,21 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
   const theme = dest.culturalTheme
   const dialogRef = useDismissable<HTMLDivElement>(onClose)
 
+  // The link opens the destination on any device (it's stored server-side).
+  const shareUrl = typeof window === 'undefined'
+    ? ''
+    : `${window.location.origin}/destination/${encodeURIComponent(dest.city)}`
+  const shareText = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
+
   async function handleCopy() {
-    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
-    await navigator.clipboard.writeText(text).catch(() => null)
-    toast('Copied to clipboard')
+    publishDestination(dest)
+    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).catch(() => null)
+    toast('Link copied')
   }
 
   async function handleNativeShare() {
-    const text = `✈️ ${dest.city}, ${dest.country} — ${dest.tagline} | Discovered on Wander`
-    await navigator.share({ title: dest.city, text }).catch(() => null)
+    publishDestination(dest)
+    await navigator.share({ title: dest.city, text: shareText, url: shareUrl }).catch(() => null)
   }
 
   return (
@@ -67,7 +74,7 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
           <button onClick={handleCopy}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-            Copy text
+            Copy link
           </button>
           {'share' in navigator && (
             <button onClick={handleNativeShare}
