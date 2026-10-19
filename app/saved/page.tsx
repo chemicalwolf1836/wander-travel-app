@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search, Route } from 'lucide-react'
+import { Heart, MapPin, ArrowRight, Compass, StickyNote, ChevronDown, CalendarDays, Search, Route, Vote } from 'lucide-react'
 import { toast } from 'sonner'
 import { Navbar } from '@/components/Navbar'
 import { getFavourites, toggleFavourite } from '@/lib/favourites'
@@ -55,6 +55,29 @@ export default function SavedPage() {
         },
       },
     })
+  }
+
+  const [creatingPoll, setCreatingPoll] = useState(false)
+
+  // Turn the saved shortlist into a vote friends can join by link.
+  async function handleCreatePoll() {
+    setCreatingPoll(true)
+    try {
+      const options = favourites.slice(0, 12).map(d => ({
+        city: d.city, country: d.country, countryCode: d.countryCode ?? '', flagEmoji: d.flagEmoji ?? '', tagline: d.tagline ?? '',
+      }))
+      const res = await fetch('/api/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Where should we go?', options }),
+      })
+      if (!res.ok) throw new Error()
+      const { id } = await res.json() as { id: string }
+      router.push(`/vote/${id}`)
+    } catch {
+      toast.error("Couldn't start a vote. Please try again.")
+      setCreatingPoll(false)
+    }
   }
 
   async function handleExplore(dest: Destination) {
@@ -170,6 +193,20 @@ export default function SavedPage() {
             >
               <Route size={14} aria-hidden="true" /> Plan a route
             </Link>
+            {saved.length >= 2 && (
+              <button
+                onClick={handleCreatePoll}
+                disabled={creatingPoll}
+                className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium disabled:opacity-50"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                  color: 'var(--color-accent)',
+                  border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
+                }}
+              >
+                <Vote size={14} aria-hidden="true" /> {creatingPoll ? 'Starting…' : 'Let friends vote'}
+              </button>
+            )}
           </div>
         )}
 
