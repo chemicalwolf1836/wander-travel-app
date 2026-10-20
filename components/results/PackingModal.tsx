@@ -43,7 +43,7 @@ export function PackingModal({ destination: dest, accent, onClose }: { destinati
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
         <div className="flex items-center gap-2">
           <Luggage size={16} style={{ color: accent }} />
-          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Packing list for {dest.city}</h3>
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}>Packing list for {dest.city}</h3>
         </div>
         <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
@@ -51,11 +51,9 @@ export function PackingModal({ destination: dest, accent, onClose }: { destinati
         <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Trip length:</span>
         {[3, 5, 7, 10, 14].map(d => (
           <button key={d} onClick={() => { setTripDays(d); fetchPacking(d) }}
-            className="text-xs px-2.5 py-1 rounded-full transition-colors"
-            style={{
-              backgroundColor: tripDays === d ? accent : 'color-mix(in srgb, var(--color-text) 8%, transparent)',
-              color: tripDays === d ? '#fff' : 'var(--color-subtle)',
-            }}>{d}d</button>
+            className="mono-chip text-xs px-2.5 py-1 rounded-full"
+            aria-pressed={tripDays === d}
+            style={tripDays === d ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}>{d}d</button>
         ))}
       </div>
       <div className="overflow-y-auto flex-1 px-6 py-4">
@@ -67,7 +65,7 @@ export function PackingModal({ destination: dest, accent, onClose }: { destinati
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {categories.map(cat => (
               <div key={cat.name}>
-                <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>{cat.name}</p>
+                <p className="text-[13px] font-medium mb-2" style={{ color: accent }}>{cat.name}</p>
                 <ul className="space-y-1">
                   {cat.items.map(item => (
                     <li key={item} className="flex items-start gap-2 text-xs" style={{ color: 'var(--color-text)' }}>

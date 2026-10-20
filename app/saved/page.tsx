@@ -151,7 +151,7 @@ export default function SavedPage() {
             <Heart size={20} style={{ color: accentText }} />
             <h1
               className="text-3xl"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
             >
               Saved
             </h1>
@@ -170,19 +170,13 @@ export default function SavedPage() {
           </div>
 
           {hasResults && (
-            <motion.button
+            <button
               onClick={() => router.push('/results')}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
-              style={{
-                color: 'var(--color-subtle)',
-                border: '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)',
-              }}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
+              className="mono-chip is-outline flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl"
             >
               <ArrowRight size={11} className="rotate-180" />
               Back to destinations
-            </motion.button>
+            </button>
           )}
         </div>
 
@@ -191,12 +185,7 @@ export default function SavedPage() {
           <div className="flex flex-wrap gap-2 mt-4">
             <Link
               href="/plan"
-              className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                color: accentText,
-                border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
-              }}
+              className="mono-chip inline-flex items-center gap-2 min-h-10 px-4 rounded-xl text-sm font-medium"
             >
               <Route size={14} aria-hidden="true" /> Plan a route
             </Link>
@@ -204,12 +193,7 @@ export default function SavedPage() {
               <button
                 onClick={handleCreatePoll}
                 disabled={creatingPoll}
-                className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm font-medium disabled:opacity-50"
-                style={{
-                  backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                  color: accentText,
-                  border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
-                }}
+                className="mono-chip inline-flex items-center gap-2 min-h-10 px-4 rounded-xl text-sm font-medium disabled:opacity-50"
               >
                 <Vote size={14} aria-hidden="true" /> {creatingPoll ? 'Starting…' : 'Let friends vote'}
               </button>
@@ -240,7 +224,7 @@ export default function SavedPage() {
             </div>
             <p
               className="text-2xl mb-2"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
             >
               Nothing saved yet
             </p>
@@ -249,12 +233,8 @@ export default function SavedPage() {
             </p>
             <button
               onClick={() => router.push('/discover')}
-              className="px-6 py-3 rounded-full text-sm font-medium transition-all hover:scale-105"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'var(--color-on-accent)',
-                boxShadow: '0 0 24px color-mix(in srgb, var(--color-accent) 35%, transparent)',
-              }}
+              className="mono-cta px-6 py-3 rounded-[14px] text-sm font-medium"
+              style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
             >
               Start exploring
             </button>
@@ -282,11 +262,9 @@ export default function SavedPage() {
                       <button
                         key={r}
                         onClick={() => setRegionFilter(r)}
-                        className="text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
-                        style={{
-                          backgroundColor: regionFilter === r ? 'var(--color-accent)' : 'color-mix(in srgb, var(--color-text) 6%, transparent)',
-                          color: regionFilter === r ? 'var(--color-bg)' : 'var(--color-subtle)',
-                        }}
+                        aria-pressed={regionFilter === r}
+                        className="mono-chip text-xs px-3 py-1.5 rounded-xl whitespace-nowrap"
+                        style={regionFilter === r ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}
                       >
                         {r === 'all' ? 'All' : r}
                       </button>
@@ -351,17 +329,10 @@ export default function SavedPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                    <motion.button
+                    <button
                       onClick={() => handleExplore(dest)}
                       disabled={exploringCity !== null}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
-                      style={{
-                        backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                        color: accentText,
-                        border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.97 }}
+                      className="mono-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium disabled:opacity-50"
                     >
                       {exploringCity === dest.city ? (
                         <>
@@ -377,7 +348,7 @@ export default function SavedPage() {
                           Explore
                         </>
                       )}
-                    </motion.button>
+                    </button>
 
                     <DateButton city={dest.city} />
 
@@ -386,12 +357,7 @@ export default function SavedPage() {
                     <Link
                       href={`/trip/${encodeURIComponent(dest.city)}`}
                       aria-label={`View trip plan for ${dest.city}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
-                      style={{
-                        backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                        color: accentText,
-                        border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
-                      }}
+                      className="mono-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
                     >
                       <Route size={11} />
                       Trip

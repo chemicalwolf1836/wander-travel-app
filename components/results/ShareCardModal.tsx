@@ -58,10 +58,10 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${theme.primary}ee 0%, ${theme.primary}88 40%, transparent 100%)` }} />
           <div className="absolute top-5 right-5 text-4xl">{dest.emoji}</div>
           <div className="absolute bottom-0 left-0 right-0 p-8">
-            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.85)' }}>Discovered on Wander</p>
-            <h2 className="text-5xl text-white leading-none mb-1" style={{ fontFamily: 'var(--font-playfair)' }}>{dest.city}</h2>
+            <p className="text-[13px] font-medium mb-2" style={{ color: 'rgba(255,255,255,0.85)' }}>Discovered on Wander</p>
+            <h2 className="text-5xl font-light text-white leading-none mb-1" style={{ fontFamily: 'var(--font-outfit)' }}>{dest.city}</h2>
             <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.9)' }}>{dest.country} · {dest.region}</p>
-            <p className="text-sm italic leading-snug" style={{ color: '#ffffff' }}>{dest.tagline}</p>
+            <p className="text-sm leading-snug" style={{ color: '#ffffff' }}>{dest.tagline}</p>
             <div className="flex flex-wrap gap-1.5 mt-4">
               {dest.bestFor.slice(0, 3).map(b => (
                 <span key={b} className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>{b}</span>
@@ -73,13 +73,12 @@ export function ShareCardModal({ destination: dest, imageUrl, onClose }: { desti
         {/* Actions */}
         <div className="flex gap-3">
           <button onClick={handleCopy}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            className="flex items-center gap-2 min-h-11 px-5 rounded-[14px] text-sm font-medium bg-white/15 text-white border border-white/20 backdrop-blur-md transition-colors hover:bg-white hover:text-black active:scale-[0.97]">
             Copy link
           </button>
           {'share' in navigator && (
             <button onClick={handleNativeShare}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
+              className="mono-cta flex items-center gap-2 min-h-11 px-5 rounded-[14px] text-sm font-medium"
               style={{ backgroundColor: theme.accent, color: textOn(theme.accent) }}>
               Share <Share2 size={13} />
             </button>

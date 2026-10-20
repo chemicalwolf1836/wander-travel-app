@@ -70,6 +70,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
         {/* Close */}
         <button
           onClick={onBack}
+          aria-label="Close"
           className="absolute top-3 right-3 p-2 rounded-full hover:opacity-100 transition-opacity"
           style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff', opacity: 0.85 }}
         >
@@ -79,7 +80,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
         {/* Title overlay */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
           <div className="max-w-2xl mx-auto" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
-            <h1 className="text-4xl mb-0.5" style={{ fontFamily: 'var(--font-playfair)', color: '#fff' }}>
+            <h1 className="text-4xl font-light mb-0.5" style={{ fontFamily: 'var(--font-outfit)', color: '#fff' }}>
               {destination.emoji} {destination.city}
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.9)' }}>
@@ -107,7 +108,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
           <div className="mb-6">
             <h3
               className="text-lg mb-2"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
             >
               Food Culture
             </h3>
@@ -127,7 +128,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
           <div className="mb-6">
             <h3
               className="text-lg mb-3"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
             >
               Top Attractions
             </h3>
@@ -144,7 +145,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
           <div className="mb-6">
             <h3
               className="text-lg mb-3"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
             >
               Best For
             </h3>
@@ -159,7 +160,7 @@ export function DetailPanel({ destination, onBack }: DetailPanelProps) {
         {/* Back button */}
         <button
           onClick={onBack}
-          className="w-full py-3 rounded-full text-sm font-medium mt-4"
+          className="mono-cta w-full min-h-12 rounded-[14px] text-sm font-medium mt-4"
           style={{
             backgroundColor: 'var(--color-accent)',
             color: 'var(--color-on-accent)',

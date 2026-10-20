@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowRight, GitCompare, CalendarDays } from 'lucide-react'
+import { ArrowRight, GitCompare, CalendarDays, Heart } from 'lucide-react'
 import { useDestinationImage } from '@/lib/useDestinationImage'
+import { isFavourite, toggleFavourite } from '@/lib/favourites'
 import { Flag } from './Flag'
 import { readableOn, textOn } from '@/lib/contrast'
 import type { Destination } from '@/types'
@@ -50,6 +51,8 @@ export function BottomCard({
   // Text sits on a near-black scrim over the photo; keep the accent readable there.
   const taglineColor = readableOn(theme.accent, '#000000', 7)
   const onAccent = textOn(theme.accent)
+  const [saved, setSaved] = useState(false)
+  useEffect(() => { setSaved(isFavourite(dest.city)) }, [dest.city])
 
   // 3D tilt
   const cardRef = useRef<HTMLDivElement>(null)
@@ -72,7 +75,7 @@ export function BottomCard({
   return (
     // Outer: cinematic reveal + perspective
     <motion.div
-      style={{ flex: 1, minWidth: 200, perspective: 800 }}
+      style={{ flex: '1 0 260px', maxWidth: 360, perspective: 800 }}
       initial={{ opacity: 0, scale: 0.88, y: 16, filter: 'blur(8px)' }}
       animate={{
         opacity: isRevealed ? 1 : 0,
@@ -90,10 +93,11 @@ export function BottomCard({
     {/* Inner: tilt + hover scale + dim */}
     <motion.div
       ref={cardRef}
-      className="relative rounded-2xl overflow-hidden cursor-pointer"
+      className="relative rounded-[20px] overflow-hidden cursor-pointer"
       style={{
-        height: 200,
+        height: 'clamp(260px, 36vh, 340px)',
         width: '100%',
+        boxShadow: '0 14px 32px rgba(0,0,0,0.28)',
         rotateX: rotX,
         rotateY: rotY,
         border: `1px solid ${active
@@ -122,68 +126,67 @@ export function BottomCard({
 
       {/* Gradient overlay */}
       <div className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.35) 80%, rgba(0,0,0,0.15) 100%)' }} />
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0.3) 100%)' }} />
 
 
-      {/* Index number */}
-      <div className="absolute top-3 left-4 text-xs font-medium pointer-events-none" style={{ color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-        {String(index + 1).padStart(2, '0')}
-      </div>
-
-      {/* How it suits the chosen travel month */}
-      {dest.monthFit && (
-        <div
-          className="absolute top-2.5 right-2.5 left-12 flex justify-end pointer-events-none"
-          title={dest.monthFit}
-        >
+      {/* Top row: how it suits the travel month, and save */}
+      <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+        {dest.monthFit ? (
           <span
-            className="inline-flex items-center gap-1 max-w-full px-2 py-1 rounded-full text-[10px] font-medium truncate"
+            className="inline-flex items-center gap-1.5 min-w-0 min-h-8 px-3 rounded-full text-xs font-medium pointer-events-none"
             style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(6px)' }}
+            title={dest.monthFit}
           >
-            <CalendarDays size={10} aria-hidden="true" className="flex-shrink-0" />
+            <CalendarDays size={13} aria-hidden="true" className="flex-shrink-0" />
             <span className="truncate">{dest.monthFit}</span>
           </span>
-        </div>
-      )}
+        ) : <span />}
+        <button
+          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(6px)' }}
+          onClick={(e) => { e.stopPropagation(); setSaved(toggleFavourite(dest)) }}
+          aria-label={saved ? `Remove ${dest.city} from saved` : `Save ${dest.city}`}
+          aria-pressed={saved}
+          title={saved ? 'Saved' : 'Save'}
+        >
+          <Heart size={17} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+        </button>
+      </div>
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-4"
-        style={{ textShadow: '0 1px 4px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.9)' }}>
-        <h3 className="text-xl leading-tight mb-0.5 font-semibold"
-          style={{ fontFamily: 'var(--font-playfair)', color: '#ffffff' }}>
+      <div className="absolute inset-x-0 bottom-0 flex flex-col p-5"
+        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+        <h3 className="text-[32px] leading-none mb-1.5 font-light"
+          style={{ fontFamily: 'var(--font-outfit)', color: '#ffffff' }}>
           {dest.city}
         </h3>
-        <p className="text-xs mb-2 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.88)' }}>
+        <p className="text-sm mb-1.5 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.92)' }}>
           <Flag code={dest.countryCode} size={16} /> {dest.country}
         </p>
-
-        <p
-          className="text-xs italic line-clamp-1 mb-3 font-medium"
-          style={{ color: taglineColor, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
-        >
+        <p className="text-sm line-clamp-1 mb-4" style={{ color: taglineColor }}>
           {dest.tagline}
         </p>
 
-        <div className="flex gap-1.5">
+        <div className="flex gap-2.5" style={{ textShadow: 'none' }}>
           <button
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+            className="mono-cta flex-1 flex items-center justify-center gap-2 min-h-12 rounded-[14px] text-sm font-semibold"
             style={{
-              backgroundColor: active ? theme.accent : 'rgba(255,255,255,0.22)',
-              color: active ? onAccent : '#ffffff',
-              textShadow: active ? 'none' : undefined,
-              transition: 'background-color 0.3s ease, color 0.3s ease',
+              backgroundColor: active || comparePending ? theme.accent : '#ffffff',
+              color: active || comparePending ? onAccent : '#111827',
+              transition: 'background-color 0.3s ease, color 0.3s ease, filter 200ms ease, transform 200ms ease',
             }}
             onClick={(e) => { e.stopPropagation(); onClick() }}
           >
             {comparePending
-              ? <><GitCompare size={11} aria-hidden="true" /> Compare</>
-              : <>View details <ArrowRight size={11} aria-hidden="true" /></>}
+              ? <><GitCompare size={15} aria-hidden="true" /> Compare</>
+              : <>View details <ArrowRight size={15} aria-hidden="true" /></>}
           </button>
           <button
-            className="flex items-center justify-center rounded-lg min-w-9"
+            className="flex items-center justify-center rounded-[14px] w-12 min-h-12"
             style={{
-              backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.22)',
+              backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.14)',
               color: isComparing ? onAccent : '#ffffff',
+              border: isComparing ? '0' : '1px solid rgba(255,255,255,0.35)',
               transition: 'background-color 0.3s ease',
             }}
             onClick={(e) => { e.stopPropagation(); onCompare() }}
@@ -191,7 +194,7 @@ export function BottomCard({
             aria-pressed={isComparing}
             title="Compare"
           >
-            <GitCompare size={13} aria-hidden="true" />
+            <GitCompare size={17} aria-hidden="true" />
           </button>
         </div>
       </div>

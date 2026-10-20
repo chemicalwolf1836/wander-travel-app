@@ -38,6 +38,7 @@ export function ThemedToaster() {
       position="bottom-right"
       richColors
       closeButton
+      toastOptions={{ style: { fontFamily: 'var(--font-outfit), sans-serif', borderRadius: 14 } }}
       theme={resolvedTheme === 'light' ? 'light' : 'dark'}
     />
   )

@@ -185,11 +185,11 @@ export default function HomePage() {
         <motion.button
           key={item.name}
           onClick={() => handleSurpriseMe(item.name)}
-          className="absolute hidden xl:block font-bold whitespace-nowrap cursor-pointer select-none"
+          className="absolute hidden xl:block font-extralight whitespace-nowrap cursor-pointer select-none"
           tabIndex={-1}
           aria-hidden="true"
           style={{
-            fontFamily: 'var(--font-playfair)',
+            fontFamily: 'var(--font-outfit)',
             [item.side]: `${item.x}%`,
             top: `${item.y}%`,
             color: 'var(--color-text)',
@@ -214,7 +214,7 @@ export default function HomePage() {
         >
           <h1
             className="text-5xl md:text-7xl lg:text-8xl mb-6 leading-tight"
-            style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+            style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
           >
             Where do you want to go?
           </h1>
@@ -240,7 +240,6 @@ export default function HomePage() {
               height: 2,
               borderRadius: 1,
               background: 'var(--color-accent)',
-              boxShadow: '0 0 16px var(--color-accent)',
             }}
           />
 
@@ -252,12 +251,8 @@ export default function HomePage() {
             <div className="flex flex-col items-stretch gap-3 w-full max-w-sm mx-auto">
               <button
                 onClick={handleStartJourney}
-                className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-7 rounded-full text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  backgroundColor: 'var(--color-accent)',
-                  color: 'var(--color-on-accent)',
-                  boxShadow: `0 0 40px color-mix(in srgb, var(--color-accent) 40%, transparent)`,
-                }}
+                className="mono-cta inline-flex items-center justify-center gap-2 w-full min-h-14 px-7 rounded-[14px] text-base font-medium"
+                style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
               >
                 Start your journey <ArrowRight size={16} aria-hidden="true" />
               </button>
@@ -266,12 +261,7 @@ export default function HomePage() {
                 onClick={() => handleSurpriseMe()}
                 disabled={surpriseLoading}
                 aria-busy={surpriseLoading}
-                className="inline-flex items-center justify-center gap-2 w-full min-h-14 px-6 rounded-full text-base font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
-                style={{
-                  backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
-                  color: 'var(--color-text)',
-                  border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
-                }}
+                className="mono-tile inline-flex items-center justify-center gap-2 w-full min-h-14 px-6 rounded-[14px] text-base disabled:opacity-60"
               >
                 {surpriseLoading ? (
                   <span className="flex items-center gap-2">
@@ -291,7 +281,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55, ease: 'easeOut' }}
-            className="mt-5 text-xs tracking-widest uppercase"
+            className="mt-5 text-[13px] font-medium"
             style={{ color: 'var(--color-subtle)' }}
           >
             Worldwide destinations · AI-powered discovery
@@ -325,7 +315,7 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
               className="mt-10"
             >
-              <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--color-subtle)' }}>
+              <p className="text-[13px] font-medium mb-3" style={{ color: 'var(--color-subtle)' }}>
                 Recently viewed
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2">
@@ -333,14 +323,7 @@ export default function HomePage() {
                   <motion.button
                     key={d.city}
                     onClick={() => openRecent(d)}
-                    className="inline-flex items-center gap-1.5 min-h-10 px-4 rounded-full text-sm"
-                    style={{
-                      color: 'var(--color-text)',
-                      backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',
-                      border: '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)',
-                    }}
-                    whileHover={{ scale: 1.06, backgroundColor: 'color-mix(in srgb, var(--color-accent) 14%, transparent)' }}
-                    whileTap={{ scale: 0.97 }}
+                    className="mono-chip inline-flex items-center gap-1.5 min-h-10 px-4 rounded-xl text-sm"
                   >
                     <span>{d.flagEmoji}</span> {d.city}
                   </motion.button>

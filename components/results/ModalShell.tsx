@@ -23,7 +23,7 @@ export function ModalShell({ accent, onClose, children }: { accent: string; onCl
           maxWidth: 560, maxHeight: '85vh',
           backgroundColor: 'var(--color-card-bg)',
           border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
-          boxShadow: `0 0 60px color-mix(in srgb, ${accent} 22%, transparent), 0 24px 48px rgba(0,0,0,0.5)`,
+          boxShadow: `0 0 60px color-mix(in srgb, ${accent} 12%, transparent), 0 24px 48px rgba(0,0,0,0.5)`,
         }}
         initial={{ scale: 0.88, y: 20, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}

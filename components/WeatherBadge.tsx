@@ -25,9 +25,8 @@ export function WeatherBadge({ weather }: WeatherBadgeProps) {
     <div
       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
       style={{
-        backgroundColor: 'color-mix(in srgb, var(--color-accent) 15%, transparent)',
+        backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',
         color: 'var(--color-text)',
-        border: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)',
       }}
     >
       {icon}
