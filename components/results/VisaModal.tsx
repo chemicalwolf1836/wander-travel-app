@@ -64,7 +64,7 @@ export function VisaModal({ destination: dest, accent, onClose }: { destination:
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
         <div className="flex items-center gap-2">
           <ShieldCheck size={16} style={{ color: accent }} aria-hidden="true" />
-          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Entry and safety: {dest.country}</h3>
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}>Entry and safety: {dest.country}</h3>
         </div>
         <button onClick={onClose} aria-label="Close panel" className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
@@ -98,7 +98,7 @@ export function VisaModal({ destination: dest, accent, onClose }: { destination:
               {info.maxStay && <p className="text-xs mt-1" style={{ color: 'var(--color-subtle)' }}>Typical stay allowed: {info.maxStay}</p>}
             </div>
             <div className="pt-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
-              <p className="text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--color-subtle)' }}>Safety</p>
+              <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--color-subtle)' }}>Safety</p>
               {info.advisory.level && (
                 <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Level {info.advisory.level}: {ADVISORY_LABEL[info.advisory.level]}</p>
               )}
@@ -107,14 +107,13 @@ export function VisaModal({ destination: dest, accent, onClose }: { destination:
           </div>
         )}
 
-        <p className="text-xs italic mt-5" style={{ color: 'var(--color-subtle)' }}>
+        <p className="text-xs mt-5" style={{ color: 'var(--color-subtle)' }}>
           AI-generated guidance that can be out of date. Always confirm with the embassy or an official government source before you travel.
         </p>
         <div className="flex flex-wrap gap-2 mt-3">
           {advisoryLinks(dest.country).map(l => (
             <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 min-h-9 px-3 rounded-full text-xs"
-              style={{ border: '1px solid color-mix(in srgb, var(--color-text) 14%, transparent)', color: 'var(--color-text)' }}>
+              className="mono-chip is-outline inline-flex items-center gap-1 min-h-9 px-3 rounded-full text-xs">
               {l.label} <ExternalLink size={11} aria-hidden="true" />
             </a>
           ))}

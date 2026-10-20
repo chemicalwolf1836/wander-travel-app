@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowRight, ArrowLeft, Utensils, Landmark, Compass, Calendar, CalendarCheck, Heart, Share2, Luggage,
+  ArrowRight, ArrowLeft, Calendar, CalendarCheck, Heart, Share2, Luggage,
   Map as MapIcon, Sparkles, Wallet, Tag, ShieldCheck, Coins, Languages, Thermometer,
   Sun, Cloud, CloudRain, CloudDrizzle, Snowflake, CloudLightning, CloudFog, type LucideIcon,
 } from 'lucide-react'
@@ -87,15 +87,12 @@ export function DestinationDetailCard({
     { icon: ShieldCheck, label: 'Visa', action: () => setShowVisa(true) },
     { icon: Sparkles, label: 'Similar', action: () => setShowSimilar(true) },
   ]
-  const tileStyle = {
-    backgroundColor: 'color-mix(in srgb, var(--color-text) 5%, transparent)',
-    border: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)',
-  }
+  const sectionLabel = 'text-[13px] font-medium mb-3'
   const heroButton = 'w-11 h-11 rounded-full flex items-center justify-center'
 
   return (
     <motion.div className="w-full my-auto"
-      style={{ maxWidth: 1180 }}
+      style={{ maxWidth: 1180, fontFamily: 'var(--font-outfit), sans-serif' }}
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.05, ease: 'easeOut' }}>
@@ -146,8 +143,8 @@ export function DestinationDetailCard({
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
-            <h2 className="text-5xl sm:text-6xl md:text-7xl leading-[0.95] text-white mb-2"
-              style={{ fontFamily: 'var(--font-playfair)', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
+            <h2 className="text-6xl sm:text-7xl md:text-8xl leading-[0.92] text-white mb-3 font-extralight"
+              style={{ fontFamily: 'var(--font-outfit), sans-serif', letterSpacing: '-0.03em', textShadow: '0 2px 12px rgba(0,0,0,0.45)' }}>
               {dest.city}
             </h2>
             <p className="text-base flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.92)', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>
@@ -158,12 +155,12 @@ export function DestinationDetailCard({
 
         {/* Details */}
         <div className="flex-1 min-w-0 flex flex-col md:min-h-0">
-        <div className="flex-1 md:overflow-y-auto px-5 sm:px-8 py-6 sm:py-8 flex flex-col gap-6">
+        <div className="flex-1 md:overflow-y-auto px-5 sm:px-8 py-6 sm:py-8 flex flex-col gap-7">
           <div>
-            <p className="text-lg italic leading-snug mb-2 font-medium" style={{ color: accentText }}>
+            <p className="text-xl leading-snug mb-2" style={{ color: accentText }}>
               {dest.tagline}
             </p>
-            <p className="text-[15px] leading-relaxed" style={{ color: 'var(--color-text)' }}>
+            <p className="text-[15px] leading-relaxed font-light" style={{ color: 'var(--color-text)' }}>
               {dest.description}
             </p>
           </div>
@@ -171,39 +168,39 @@ export function DestinationDetailCard({
           {stats.length > 0 && (
             <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
               {stats.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="rounded-2xl p-3.5 flex flex-col gap-1.5" style={tileStyle}>
-                  <Icon size={18} style={{ color: accentText }} aria-hidden="true" />
-                  <span className="text-[11px] tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>{label}</span>
-                  <span className="text-sm font-semibold leading-snug" style={{ color: 'var(--color-text)' }}>{value}</span>
+                <div key={label} className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }}>
+                  <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-subtle)' }}>
+                    <Icon size={14} style={{ color: accentText }} aria-hidden="true" />{label}
+                  </span>
+                  <span className="text-[15px] leading-snug" style={{ color: 'var(--color-text)' }}>{value}</span>
                 </div>
               ))}
             </div>
           )}
 
           <div>
-            <div className="text-xs tracking-widest uppercase mb-2.5" style={{ color: 'var(--color-subtle)' }}>Plan</div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>Plan</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {tools.map(({ icon: Icon, label, action }) => (
                 <button key={label} onClick={action}
-                  className="min-h-16 flex flex-col items-center justify-center gap-1.5 rounded-2xl text-xs font-medium transition-transform hover:scale-[1.03]"
-                  style={{ ...tileStyle, color: 'var(--color-text)' }}>
-                  <Icon size={18} style={{ color: accentText }} aria-hidden="true" />
+                  className="mono-tile min-h-[56px] flex items-center gap-2.5 pl-2 pr-3 rounded-[14px] text-sm text-left"
+                  style={{ '--icon': accentText } as CSSProperties}>
+                  <span className="mono-icon w-10 h-10 flex-shrink-0 rounded-[10px] flex items-center justify-center">
+                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+                  </span>
                   {label}
                 </button>
               ))}
             </div>
           </div>
 
-
           {dest.attractions.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <Landmark size={13} style={{ color: 'var(--color-subtle)' }} aria-hidden="true" />
-                <span className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>See</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
+              <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>See</div>
+              <div className="flex flex-wrap gap-1.5">
                 {dest.attractions.slice(0, 5).map((a) => (
-                  <ItemChip key={a} label={a} accent={accentText} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
+                  <ItemChip key={a} label={a} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
                 ))}
               </div>
             </div>
@@ -211,18 +208,15 @@ export function DestinationDetailCard({
 
           {dest.food.dishes.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <Utensils size={13} style={{ color: 'var(--color-subtle)' }} aria-hidden="true" />
-                <span className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>Eat</span>
-              </div>
+              <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>Eat</div>
               {dest.food.summary && (
-                <p className="text-xs italic leading-snug mb-2.5" style={{ color: 'var(--color-subtle)' }}>
+                <p className="text-sm font-light leading-snug -mt-1 mb-3" style={{ color: 'var(--color-subtle)' }}>
                   {dest.food.summary}
                 </p>
               )}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {dest.food.dishes.slice(0, 5).map((d) => (
-                  <ItemChip key={d} label={d} accent={accentText} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
+                  <ItemChip key={d} label={d} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
                 ))}
               </div>
             </div>
@@ -230,11 +224,8 @@ export function DestinationDetailCard({
 
           {dest.bestFor.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <Compass size={13} style={{ color: 'var(--color-subtle)' }} aria-hidden="true" />
-                <span className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>Best for</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
+              <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>Best for</div>
+              <div className="flex flex-wrap gap-1.5">
                 {dest.bestFor.slice(0, 6).map((b) => (
                   <ExperienceChip key={b} label={b} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
                 ))}
@@ -245,27 +236,22 @@ export function DestinationDetailCard({
           {facts.length > 0 && (
             <div className="flex flex-col gap-2">
               {facts.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-start gap-2.5 text-sm" style={{ color: 'var(--color-text)' }}>
-                  <Icon size={16} className="mt-0.5 flex-shrink-0" style={{ color: accentText }} aria-hidden="true" />
-                  <span><span style={{ color: 'var(--color-subtle)' }}>{label}:</span> {value}</span>
+                <div key={label} className="flex items-start gap-2.5 text-sm font-light" style={{ color: 'var(--color-text)' }}>
+                  <Icon size={16} strokeWidth={1.75} className="mt-0.5 flex-shrink-0" style={{ color: accentText }} aria-hidden="true" />
+                  <span><span style={{ color: 'var(--color-subtle)' }}>{label}</span> {value}</span>
                 </div>
               ))}
             </div>
           )}
-
         </div>
 
         {/* Explore stays in view while the details scroll */}
         <div className="px-5 sm:px-8 py-4 flex-shrink-0"
-          style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)' }}>
+          style={{ borderTop: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
           <button onClick={onExplore}
-            className="w-full flex items-center justify-center gap-2 min-h-[54px] rounded-2xl text-base font-semibold transition-all hover:scale-[1.015] active:scale-[0.99]"
-            style={{
-              backgroundColor: theme.accent,
-              color: textOn(theme.accent),
-              boxShadow: `0 0 40px color-mix(in srgb, ${theme.accent} 45%, transparent), 0 4px 16px rgba(0,0,0,0.3)`,
-            }}>
-            Explore {dest.city} <ArrowRight size={17} />
+            className="mono-cta w-full flex items-center justify-between gap-2 min-h-[56px] px-6 rounded-[14px] text-base font-medium"
+            style={{ backgroundColor: theme.accent, color: textOn(theme.accent) }}>
+            Explore {dest.city} <ArrowRight size={18} />
           </button>
         </div>
         </div>

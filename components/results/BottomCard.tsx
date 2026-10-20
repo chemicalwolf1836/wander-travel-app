@@ -156,24 +156,24 @@ export function BottomCard({
       {/* Content */}
       <div className="absolute inset-x-0 bottom-0 flex flex-col p-5"
         style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
-        <h3 className="text-[32px] leading-none mb-1.5 font-semibold"
-          style={{ fontFamily: 'var(--font-playfair)', color: '#ffffff' }}>
+        <h3 className="text-[32px] leading-none mb-1.5 font-light"
+          style={{ fontFamily: 'var(--font-outfit)', color: '#ffffff' }}>
           {dest.city}
         </h3>
         <p className="text-sm mb-1.5 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.92)' }}>
           <Flag code={dest.countryCode} size={16} /> {dest.country}
         </p>
-        <p className="text-sm italic line-clamp-1 mb-4" style={{ color: taglineColor }}>
+        <p className="text-sm line-clamp-1 mb-4" style={{ color: taglineColor }}>
           {dest.tagline}
         </p>
 
         <div className="flex gap-2.5" style={{ textShadow: 'none' }}>
           <button
-            className="flex-1 flex items-center justify-center gap-2 min-h-12 rounded-xl text-sm font-semibold"
+            className="mono-cta flex-1 flex items-center justify-center gap-2 min-h-12 rounded-[14px] text-sm font-semibold"
             style={{
               backgroundColor: active || comparePending ? theme.accent : '#ffffff',
               color: active || comparePending ? onAccent : '#111827',
-              transition: 'background-color 0.3s ease, color 0.3s ease',
+              transition: 'background-color 0.3s ease, color 0.3s ease, filter 200ms ease, transform 200ms ease',
             }}
             onClick={(e) => { e.stopPropagation(); onClick() }}
           >
@@ -182,7 +182,7 @@ export function BottomCard({
               : <>View details <ArrowRight size={15} aria-hidden="true" /></>}
           </button>
           <button
-            className="flex items-center justify-center rounded-xl w-12 min-h-12"
+            className="flex items-center justify-center rounded-[14px] w-12 min-h-12"
             style={{
               backgroundColor: isComparing ? theme.accent : 'rgba(255,255,255,0.14)',
               color: isComparing ? onAccent : '#ffffff',

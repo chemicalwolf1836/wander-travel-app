@@ -45,7 +45,7 @@ export function BudgetModal({ destination: dest, accent, onClose }: { destinatio
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
         <div className="flex items-center gap-2">
           <Wallet size={16} style={{ color: accent }} />
-          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Daily budget for {dest.city}</h3>
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}>Daily budget for {dest.city}</h3>
         </div>
         <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
@@ -53,11 +53,9 @@ export function BudgetModal({ destination: dest, accent, onClose }: { destinatio
         <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Style:</span>
         {STYLES.map(s => (
           <button key={s.id} onClick={() => { setStyle(s.id); fetchBudget(s.id) }}
-            className="text-xs px-2.5 py-1 rounded-full transition-colors"
-            style={{
-              backgroundColor: style === s.id ? accent : 'color-mix(in srgb, var(--color-text) 8%, transparent)',
-              color: style === s.id ? '#fff' : 'var(--color-subtle)',
-            }}>{s.label}</button>
+            className="mono-chip text-xs px-2.5 py-1 rounded-full"
+            aria-pressed={style === s.id}
+            style={style === s.id ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}>{s.label}</button>
         ))}
       </div>
       <div className="overflow-y-auto flex-1 px-6 py-4">
@@ -69,7 +67,7 @@ export function BudgetModal({ destination: dest, accent, onClose }: { destinatio
           <div>
             {/* Headline daily total */}
             <div className="flex items-baseline gap-2 mb-5">
-              <span className="text-2xl font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-playfair)' }}>{estimate.dailyTotal}</span>
+              <span className="text-2xl font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-outfit)' }}>{estimate.dailyTotal}</span>
               <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>per day · {estimate.currency}</span>
             </div>
             <div className="space-y-2.5">
@@ -84,7 +82,7 @@ export function BudgetModal({ destination: dest, accent, onClose }: { destinatio
                 </div>
               ))}
             </div>
-            <p className="text-xs italic mt-4" style={{ color: 'var(--color-subtle)' }}>
+            <p className="text-xs mt-4" style={{ color: 'var(--color-subtle)' }}>
               Estimates only — actual costs vary by season and choices.
             </p>
           </div>

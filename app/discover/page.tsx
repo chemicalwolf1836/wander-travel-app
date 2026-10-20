@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { Send, PenLine, Sparkles, RotateCcw, ArrowLeft, CalendarDays } from 'lucide-react'
 import { MONTHS, getTravelMonth, setTravelMonth, withMonth } from '@/lib/travelMonth'
@@ -266,12 +266,7 @@ export default function DiscoverPage() {
               value={month}
               onChange={(e) => handleMonthChange(e.target.value)}
               disabled={searching}
-              className="min-h-9 px-3 rounded-full text-xs outline-none cursor-pointer"
-              style={{
-                backgroundColor: month ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : 'color-mix(in srgb, var(--color-text) 6%, transparent)',
-                color: 'var(--color-text)',
-                border: '1px solid color-mix(in srgb, var(--color-text) 14%, transparent)',
-              }}
+              className={`mono-chip ${month ? '' : 'is-outline'} min-h-9 px-3 rounded-xl text-xs outline-none cursor-pointer`}
             >
               <option value="">Any time</option>
               {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -320,23 +315,14 @@ export default function DiscoverPage() {
                 transition={{ duration: 0.22 }}
               >
                 {currentChoices.map((c) => (
-                  <motion.button
+                  <button
                     key={c}
                     onClick={() => handleChipClick(c)}
-                    className="text-xs px-4 py-2 rounded-full"
-                    style={{
-                      color: c === selectedChip ? 'var(--color-bg)' : 'var(--color-accent)',
-                      backgroundColor: c === selectedChip
-                        ? 'var(--color-accent)'
-                        : 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
-                      border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
-                    }}
-                    whileHover={{ scale: 1.05, backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={{ duration: 0.15 }}
+                    className="mono-chip text-xs px-4 py-2 rounded-xl"
+                    style={c === selectedChip ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}
                   >
                     {c}
-                  </motion.button>
+                  </button>
                 ))}
               </motion.div>
             )}
@@ -377,14 +363,14 @@ export default function DiscoverPage() {
                   <button
                     onClick={handleGuidedBack}
                     disabled={!showGuideChoices}
-                    className="flex items-center gap-1 text-xs min-h-8 px-2 rounded-full opacity-70 hover:opacity-100 transition-opacity disabled:opacity-30"
+                    className="flex items-center gap-1 text-xs min-h-8 px-2 rounded-xl opacity-70 hover:opacity-100 transition-opacity disabled:opacity-30"
                     style={{ color: 'var(--color-text)' }}
                   >
                     <ArrowLeft size={12} aria-hidden="true" /> Back
                   </button>
                   <button
                     onClick={handleStartOver}
-                    className="text-xs min-h-8 px-2 rounded-full opacity-70 hover:opacity-100 transition-opacity"
+                    className="text-xs min-h-8 px-2 rounded-xl opacity-70 hover:opacity-100 transition-opacity"
                     style={{ color: 'var(--color-text)' }}
                   >
                     Start over
@@ -406,12 +392,7 @@ export default function DiscoverPage() {
               >
                 <button
                   onClick={retryFn}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
-                    color: 'var(--color-accent)',
-                    border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
-                  }}
+                  className="mono-chip flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
                 >
                   <RotateCcw size={11} />
                   Try again
@@ -438,12 +419,7 @@ export default function DiscoverPage() {
                     <button
                       key={p}
                       onClick={() => sendMessage(p)}
-                      className="text-xs min-h-9 px-4 rounded-full transition-colors hover:bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)]"
-                      style={{
-                        color: 'var(--color-text)',
-                        backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)',
-                        border: '1px solid color-mix(in srgb, var(--color-text) 14%, transparent)',
-                      }}
+                      className="mono-chip is-outline text-xs min-h-9 px-4 rounded-xl"
                     >
                       {p}
                     </button>
@@ -505,12 +481,8 @@ export default function DiscoverPage() {
                 onClick={() => sendMessage()}
                 aria-label="Send"
                 disabled={loading || searching || !input.trim()}
-                className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: 'var(--color-accent)',
-                  color: 'var(--color-on-accent)',
-                  boxShadow: `0 0 20px color-mix(in srgb, var(--color-accent) 50%, transparent)`,
-                }}
+                className="mono-cta flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
               >
                 <Send size={16} />
               </button>
@@ -524,23 +496,16 @@ export default function DiscoverPage() {
 
 function ModeCard({ icon, label, sub, onClick }: { icon: React.ReactNode; label: string; sub: string; onClick: () => void }) {
   return (
-    <motion.button
+    <button
       onClick={onClick}
-      className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-left"
-      style={{
-        backgroundColor: 'var(--color-card-bg)',
-        border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
-        color: 'var(--color-text)',
-      }}
-      whileHover={{ borderColor: 'var(--color-accent)', scale: 1.02 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ duration: 0.15 }}
+      className="mono-tile flex items-center gap-2.5 px-4 py-3 rounded-2xl text-left"
     >
-      <span style={{ color: 'var(--color-accent)' }}>{icon}</span>
+      <span className="mono-icon w-8 h-8 rounded-xl flex items-center justify-center"
+        style={{ '--icon': 'var(--color-accent-text, var(--color-accent))' } as CSSProperties}>{icon}</span>
       <div>
         <p className="text-sm font-medium leading-none mb-0.5">{label}</p>
-        <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>{sub}</p>
+        <p className="text-xs opacity-70">{sub}</p>
       </div>
-    </motion.button>
+    </button>
   )
 }

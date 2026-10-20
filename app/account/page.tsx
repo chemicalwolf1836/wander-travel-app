@@ -32,7 +32,7 @@ export default function AccountPage() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
       <Navbar />
       <main className="flex-1 w-full max-w-md mx-auto px-6 pt-28 pb-16">
-        <h1 className="text-4xl mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>Your account</h1>
+        <h1 className="text-4xl mb-2" style={{ fontFamily: 'var(--font-outfit)' }}>Your account</h1>
         <p className="text-sm mb-8 leading-relaxed" style={{ color: 'var(--color-subtle)' }}>
           Sign in to keep your saved places, notes, trip dates and plans on every device.
         </p>
@@ -52,12 +52,11 @@ export default function AccountPage() {
                 </p>
               </div>
             </div>
-            <Link href="/saved" className="inline-flex items-center justify-center min-h-12 rounded-full text-sm font-semibold"
+            <Link href="/saved" className="mono-cta inline-flex items-center justify-center min-h-12 rounded-[14px] text-sm font-semibold"
               style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
               Go to saved places
             </Link>
-            <button onClick={signOut} className="inline-flex items-center justify-center gap-2 min-h-12 rounded-full text-sm"
-              style={{ border: '1px solid color-mix(in srgb, var(--color-text) 18%, transparent)' }}>
+            <button onClick={signOut} className="mono-tile inline-flex items-center justify-center gap-2 min-h-12 rounded-[14px] text-sm">
               <LogOut size={16} aria-hidden="true" /> Sign out
             </button>
             <p className="text-xs" style={{ color: 'var(--color-subtle)' }}>
@@ -96,7 +95,7 @@ export default function AccountPage() {
             />
             {error && <p className="text-xs" role="alert" style={{ color: '#f87171' }}>{error}</p>}
             <button type="submit" disabled={sending || !email.trim()}
-              className="inline-flex items-center justify-center gap-2 min-h-12 rounded-full text-sm font-semibold disabled:opacity-50"
+              className="mono-cta inline-flex items-center justify-center gap-2 min-h-12 rounded-[14px] text-sm font-semibold disabled:opacity-50"
               style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
               <Mail size={16} aria-hidden="true" /> {sending ? 'Sending…' : 'Email me a sign-in link'}
             </button>
