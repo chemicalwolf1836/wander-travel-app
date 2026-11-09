@@ -153,7 +153,7 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
             >
               <h2
                 className="text-lg"
-                style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+                style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
               >
                 Personalize
               </h2>
@@ -220,10 +220,9 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                             aspectRatio: '1',
                             borderRadius: 12,
                             background: `linear-gradient(145deg, ${preset.card} 0%, ${preset.accent} 130%)`,
-                            outline: active ? `2px solid ${preset.accent}` : '2px solid transparent',
+                            outline: active ? '2px solid var(--color-text)' : '2px solid transparent',
                             outlineOffset: 3,
-                            transition: 'outline-color 0.2s ease, box-shadow 0.2s ease',
-                            boxShadow: active ? `0 0 10px color-mix(in srgb, ${preset.accent} 45%, transparent)` : 'none',
+                            transition: 'outline-color 0.2s ease',
                           }}
                         />
                         <span className="text-xs truncate w-full text-center" style={{ color: active ? 'var(--color-text)' : 'var(--color-subtle)', fontSize: 10 }}>
@@ -291,10 +290,7 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
 
               {/* Font size — segmented control with Aa preview */}
               <Section label="Font size">
-                <div
-                  className="flex gap-1 p-1 rounded-xl"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
-                >
+                <div className="flex gap-2">
                   {([
                     { key: 'default', label: 'Normal', size: 13 },
                     { key: 'large', label: 'Large', size: 17 },
@@ -304,13 +300,11 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       <button
                         key={key}
                         onClick={() => save({ fontSize: key })}
-                        className="flex-1 flex flex-col items-center py-2 rounded-lg transition-all gap-0.5"
-                        style={{
-                          backgroundColor: active ? settings.accentColor : 'transparent',
-                          color: active ? '#fff' : 'var(--color-subtle)',
-                        }}
+                        className="mono-tile flex-1 flex flex-col items-center py-2 rounded-[14px] gap-0.5"
+                        aria-pressed={active}
+                        style={active ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}
                       >
-                        <span style={{ fontSize: size, fontFamily: 'var(--font-playfair)', lineHeight: 1 }}>Aa</span>
+                        <span style={{ fontSize: size, fontFamily: 'var(--font-outfit)', lineHeight: 1 }}>Aa</span>
                         <span style={{ fontSize: 10 }}>{label}</span>
                       </button>
                     )
@@ -327,23 +321,16 @@ export function CustomizationPanel({ open, onClose }: CustomizationPanelProps) {
                       <button
                         key={value}
                         onClick={() => save({ mapStyle: value })}
-                        className="flex flex-col items-center gap-2 py-3 rounded-xl transition-all"
-                        style={{
-                          backgroundColor: active
-                            ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)'
-                            : 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
-                          border: `1.5px solid ${active ? settings.accentColor : 'transparent'}`,
-                          boxShadow: active
-                            ? `0 0 12px color-mix(in srgb, ${settings.accentColor} 20%, transparent)`
-                            : 'none',
-                        }}
+                        className="mono-tile flex flex-col items-center gap-2 py-3 rounded-[14px]"
+                        aria-pressed={active}
+                        style={active ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}
                       >
-                        <div style={{ color: active ? settings.accentColor : 'var(--color-subtle)' }}>
+                        <div>
                           {icon}
                         </div>
                         <span
                           className="text-xs"
-                          style={{ color: active ? 'var(--color-text)' : 'var(--color-subtle)', fontWeight: active ? 500 : 400 }}
+                          style={{ fontWeight: active ? 500 : 400 }}
                         >
                           {label}
                         </span>
@@ -365,7 +352,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   return (
     <div>
       <div className="flex items-center gap-3 mb-3">
-        <p className="text-xs font-medium uppercase tracking-widest flex-shrink-0" style={{ color: 'var(--color-subtle)' }}>
+        <p className="text-[13px] font-medium flex-shrink-0" style={{ color: 'var(--color-subtle)' }}>
           {label}
         </p>
         <div className="flex-1" style={{ height: 1, backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }} />

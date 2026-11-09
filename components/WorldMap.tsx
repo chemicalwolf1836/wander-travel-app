@@ -208,7 +208,7 @@ export function WorldMap({ destinations, activeIndex, onPinClick, exiting, mapSt
       {/* Zoom hint */}
       {zoom === 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
-          <p className="text-xs tracking-widest uppercase opacity-30"
+          <p className="text-[13px] font-medium opacity-30"
             style={{ color: 'var(--color-text)' }}>
             scroll to zoom
           </p>

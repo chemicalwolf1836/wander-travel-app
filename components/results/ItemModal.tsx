@@ -59,7 +59,7 @@ export function ItemModal({ item, city, accent, onClose }: { item: string; city:
           maxHeight: '80vh',
           backgroundColor: 'var(--color-card-bg)',
           border: `1px solid color-mix(in srgb, ${accent} 30%, transparent)`,
-          boxShadow: `0 0 60px color-mix(in srgb, ${accent} 25%, transparent), 0 24px 48px rgba(0,0,0,0.5)`,
+          boxShadow: `0 0 60px color-mix(in srgb, ${accent} 12%, transparent), 0 24px 48px rgba(0,0,0,0.5)`,
         }}
         initial={{ scale: 0.82, y: 24, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -83,7 +83,7 @@ export function ItemModal({ item, city, accent, onClose }: { item: string; city:
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)' }} />
           <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
             <h3 className="text-2xl text-white leading-tight"
-              style={{ fontFamily: 'var(--font-playfair)', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+              style={{ fontFamily: 'var(--font-outfit)', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
               {item}
             </h3>
           </div>
@@ -108,7 +108,7 @@ export function ItemModal({ item, city, accent, onClose }: { item: string; city:
                 {data.description}
               </p>
             ) : (
-              <p className="text-sm italic" style={{ color: 'var(--color-subtle)' }}>
+              <p className="text-sm" style={{ color: 'var(--color-subtle)' }}>
                 No information available.
               </p>
             )}

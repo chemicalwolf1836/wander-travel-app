@@ -85,9 +85,9 @@ export function VoteView({ id }: { id: string }) {
   if (missing) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
-        <h1 className="text-3xl" style={{ fontFamily: 'var(--font-playfair)' }}>This vote doesn&apos;t exist</h1>
+        <h1 className="text-3xl" style={{ fontFamily: 'var(--font-outfit)' }}>This vote doesn&apos;t exist</h1>
         <p className="text-sm opacity-80">Check the link with whoever sent it.</p>
-        <Link href="/" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold" style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>Go to Wander</Link>
+        <Link href="/" className="mono-cta inline-flex items-center justify-center min-h-11 px-6 rounded-[14px] text-sm font-semibold" style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>Go to Wander</Link>
       </div>
     )
   }
@@ -107,13 +107,13 @@ export function VoteView({ id }: { id: string }) {
           <>
             <div className="flex items-center gap-3 mb-1">
               <Vote size={20} style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-              <h1 className="text-3xl" style={{ fontFamily: 'var(--font-playfair)' }}>{poll.title}</h1>
+              <h1 className="text-3xl" style={{ fontFamily: 'var(--font-outfit)' }}>{poll.title}</h1>
             </div>
             <p className="text-sm mb-5" style={{ color: 'var(--color-subtle)' }}>
               Tap every place you&apos;d be happy with, then save your vote.
             </p>
 
-            <button onClick={copyLink} className="inline-flex items-center gap-2 min-h-10 px-4 mb-6 rounded-full text-sm" style={{ border }}>
+            <button onClick={copyLink} className="mono-chip is-outline inline-flex items-center gap-2 min-h-10 px-4 mb-6 rounded-xl text-sm">
               <Copy size={14} aria-hidden="true" /> Copy link to share
             </button>
 
@@ -160,7 +160,7 @@ export function VoteView({ id }: { id: string }) {
                 className="min-h-12 px-4 rounded-2xl text-sm outline-none"
                 style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border }} />
               <button type="submit" disabled={saving || !name.trim()}
-                className="min-h-14 rounded-full text-base font-semibold disabled:opacity-50"
+                className="mono-cta min-h-14 rounded-[14px] text-base font-semibold disabled:opacity-50"
                 style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
                 {saving ? 'Saving…' : choices.length ? `Save my vote (${choices.length})` : 'Save my vote'}
               </button>

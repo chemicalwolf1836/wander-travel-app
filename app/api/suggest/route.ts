@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { getAnthropic, extractText, parseClaudeJson, ClaudeJsonError } from '@/lib/ai'
+import { cleanItemEmoji } from '@/lib/itemEmoji'
 import { rateLimit, clientIp } from '@/lib/rateLimit'
 import type { Destination } from '@/types'
 
@@ -94,6 +95,7 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
   "language": string,
   "visaInfo": string,
   "monthFit": string,
+  "itemEmoji": { [item: string]: string },
   "culturalTheme": {
     "primary": string,
     "accent": string,
@@ -105,6 +107,8 @@ Respond with ONLY a valid JSON array of exactly 3 destinations using this schema
 }
 
 If the user preferences name a travel month, pick places that are good in that month and set "monthFit" to under 12 words on what that month is like there (e.g. "Dry, 24°C and before the summer crowds"). If no month is named, omit "monthFit".
+
+Set "itemEmoji" to an object with one key for every string in "attractions", "food.dishes" and "bestFor", copied exactly, whose value is the single emoji that best shows that item (e.g. "Belém Tower": "🏰", "Pastel de nata": "🥧", "Coast": "🌊").
 
 No markdown. No extra text. Only the JSON array.`
 
@@ -134,6 +138,9 @@ No markdown. No extra text. Only the JSON array.`
     }
     return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
   }
+
+  // Keep only one-emoji values for items the destination actually lists.
+  suggestions = suggestions.map(cleanItemEmoji)
 
   // Step 4: Cache result
   await supabase

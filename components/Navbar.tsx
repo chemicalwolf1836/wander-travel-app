@@ -61,7 +61,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
           <Link href="/" className="flex items-center gap-2">
             <span
               className="text-2xl tracking-tight"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+              style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
             >
               Wander
             </span>
@@ -128,7 +128,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
               } catch { /* ignore */ }
               setTheme(theme === 'dark' ? 'light' : 'dark')
             }}
-            className="w-11 h-11 flex items-center justify-center rounded-full hover:opacity-70 transition-opacity"
+            className="w-11 h-11 flex items-center justify-center rounded-full transition-colors hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]"
             style={{ color: 'var(--color-text)' }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
@@ -149,7 +149,7 @@ export function Navbar({ onSettingsOpen, onBack }: NavbarProps) {
         {onSettingsOpen && (
           <button
             onClick={onSettingsOpen}
-            className="w-11 h-11 flex items-center justify-center rounded-full hover:opacity-70 transition-opacity"
+            className="w-11 h-11 flex items-center justify-center rounded-full transition-colors hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]"
             style={{ color: 'var(--color-text)' }}
             aria-label="Open personalise panel"
           >
@@ -177,10 +177,9 @@ function NavLink({ href, label, ariaLabel, active, children }: {
       title={label}
       aria-current={active ? 'page' : undefined}
       className="relative flex items-center justify-center w-11 h-11 rounded-full text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]"
-      style={{
-        color: 'var(--color-text)',
-        backgroundColor: active ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : undefined,
-      }}
+      style={active
+        ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' }
+        : { color: 'var(--color-text)' }}
     >
       {children}
     </Link>

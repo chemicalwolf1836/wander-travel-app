@@ -57,7 +57,6 @@ export default function PlanPage() {
     navigator.clipboard.writeText(lines.join('\n')).then(() => toast('Route copied'), () => toast.error("Couldn't copy"))
   }
 
-  const muted = 'color-mix(in srgb, var(--color-text) 8%, transparent)'
   const border = '1px solid color-mix(in srgb, var(--color-text) 12%, transparent)'
 
   if (!mounted) return null
@@ -68,7 +67,7 @@ export default function PlanPage() {
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
         <div className="flex items-center gap-3 mb-1">
           <RouteIcon size={20} style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-          <h1 className="text-3xl" style={{ fontFamily: 'var(--font-playfair)' }}>Plan a route</h1>
+          <h1 className="text-3xl" style={{ fontFamily: 'var(--font-outfit)' }}>Plan a route</h1>
         </div>
         <p className="text-sm mb-6" style={{ color: 'var(--color-subtle)' }}>
           Chain your saved places into one trip and set how long to stay in each.
@@ -77,7 +76,7 @@ export default function PlanPage() {
         {saved.length === 0 ? (
           <div className="rounded-3xl p-8 text-center" style={{ backgroundColor: 'var(--color-card-bg)', border }}>
             <p className="mb-4">Save a few places first, then come back to link them up.</p>
-            <Link href="/discover" className="inline-flex items-center justify-center min-h-11 px-6 rounded-full text-sm font-semibold"
+            <Link href="/discover" className="mono-cta inline-flex items-center justify-center min-h-11 px-6 rounded-[14px] text-sm font-semibold"
               style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>Find destinations</Link>
           </div>
         ) : (
@@ -119,7 +118,7 @@ export default function PlanPage() {
                 <span style={{ color: 'var(--color-subtle)' }}> · {stops.length} {stops.length === 1 ? 'stop' : 'stops'}{totalKm > 0 && ` · about ${totalKm.toLocaleString()} km between them`}</span>
               </p>
               {stops.length > 0 && (
-                <button onClick={copyRoute} className="inline-flex items-center gap-2 min-h-10 px-4 rounded-full text-sm" style={{ border }}>
+                <button onClick={copyRoute} className="mono-chip is-outline inline-flex items-center gap-2 min-h-10 px-4 rounded-xl text-sm">
                   <Copy size={14} aria-hidden="true" /> Copy route
                 </button>
               )}
@@ -140,30 +139,30 @@ export default function PlanPage() {
                       </div>
                       <div className="flex items-center gap-1" role="group" aria-label={`Days in ${d.city}`}>
                         <button onClick={() => update(setDays(route, s.city, s.days - 1))} disabled={s.days <= MIN_DAYS}
-                          aria-label={`One day less in ${d.city}`} className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30" style={{ backgroundColor: muted }}>
+                          aria-label={`One day less in ${d.city}`} className="mono-chip w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30">
                           <Minus size={14} />
                         </button>
                         <span className="w-16 text-center text-sm tabular-nums">{s.days} {s.days === 1 ? 'day' : 'days'}</span>
                         <button onClick={() => update(setDays(route, s.city, s.days + 1))} disabled={s.days >= MAX_DAYS}
-                          aria-label={`One more day in ${d.city}`} className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30" style={{ backgroundColor: muted }}>
+                          aria-label={`One more day in ${d.city}`} className="mono-chip w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30">
                           <Plus size={14} />
                         </button>
                       </div>
                       <div className="flex items-center gap-1">
                         <button onClick={() => update(moveStop(route, route.stops.indexOf(s), -1))} disabled={i === 0}
-                          aria-label={`Move ${d.city} earlier`} className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30" style={{ backgroundColor: muted }}>
+                          aria-label={`Move ${d.city} earlier`} className="mono-chip w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30">
                           <ArrowUp size={14} />
                         </button>
                         <button onClick={() => update(moveStop(route, route.stops.indexOf(s), 1))} disabled={i === stops.length - 1}
-                          aria-label={`Move ${d.city} later`} className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30" style={{ backgroundColor: muted }}>
+                          aria-label={`Move ${d.city} later`} className="mono-chip w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-30">
                           <ArrowDown size={14} />
                         </button>
                         <Link href={`/trip/${encodeURIComponent(d.city)}`} aria-label={`Trip plan for ${d.city}`}
-                          className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: muted }}>
+                          className="mono-chip w-9 h-9 rounded-full flex items-center justify-center">
                           <CalendarRange size={14} />
                         </Link>
                         <button onClick={() => update(removeStop(route, s.city))}
-                          aria-label={`Remove ${d.city} from the route`} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: muted }}>
+                          aria-label={`Remove ${d.city} from the route`} className="mono-chip w-9 h-9 rounded-full flex items-center justify-center">
                           <X size={14} />
                         </button>
                       </div>
@@ -181,14 +180,13 @@ export default function PlanPage() {
             {/* Add saved places */}
             {notInRoute.length > 0 && (
               <section>
-                <h2 className="text-lg mb-3" style={{ fontFamily: 'var(--font-playfair)' }}>
+                <h2 className="text-lg mb-3" style={{ fontFamily: 'var(--font-outfit)' }}>
                   {stops.length === 0 ? 'Pick your first stop' : 'Add another stop'}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {notInRoute.map(d => (
                     <button key={d.city} onClick={() => update(addStop(route, d.city))}
-                      className="inline-flex items-center gap-1.5 min-h-10 px-4 rounded-full text-sm"
-                      style={{ backgroundColor: muted, border }}>
+                      className="mono-chip inline-flex items-center gap-1.5 min-h-10 px-4 rounded-xl text-sm">
                       <Plus size={14} aria-hidden="true" /> {d.city}
                     </button>
                   ))}

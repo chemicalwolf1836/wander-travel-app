@@ -80,8 +80,8 @@ export default function MapInner({ lat, lng, cityName, darkMode, onFlyComplete }
           transition={{ duration: 1 }}
         >
           <p
-            className="text-4xl md:text-6xl"
-            style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}
+            className="text-4xl md:text-6xl font-light"
+            style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}
           >
             {cityName}
           </p>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, Inter, Manrope } from 'next/font/google'
+import { Cormorant_Garamond, Inter, Manrope, Outfit } from 'next/font/google'
 import { ThemeProvider, ThemedToaster } from '@/components/ThemeProvider'
 import './globals.css'
 
@@ -19,6 +19,12 @@ const inter = Inter({
 const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-manrope',
+  display: 'swap',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
   display: 'swap',
 })
 
@@ -56,10 +62,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${inter.variable} ${manrope.variable}`}
+      className={`${cormorant.variable} ${inter.variable} ${manrope.variable} ${outfit.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen antialiased" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+      <body className="min-h-screen antialiased" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
         <ThemeProvider>
           {children}
           <ThemedToaster />

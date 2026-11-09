@@ -108,11 +108,10 @@ export function TripView({ city }: { city: string }) {
             <ArrowLeft size={15} /> Saved
           </Link>
           <div className="flex items-center gap-2">
-            <button onClick={handleCopy} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full"
-              style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-text)' }}>
+            <button onClick={handleCopy} className="mono-chip inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl">
               <Copy size={13} /> Copy plan
             </button>
-            <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full"
+            <button onClick={() => window.print()} className="mono-cta inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl"
               style={{ backgroundColor: accent, color: 'var(--color-on-accent)' }}>
               <Printer size={13} /> Print trip
             </button>
@@ -126,7 +125,7 @@ export function TripView({ city }: { city: string }) {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.1))' }} />
             <div className="absolute bottom-0 left-0 right-0 p-5">
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-playfair)' }}>{dest.city}</h1>
+                <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-outfit)' }}>{dest.city}</h1>
                 {weather && <WeatherBadge weather={weather} />}
               </div>
               <p className="text-sm text-white/80">{dest.country}{dest.tagline ? ` · ${dest.tagline}` : ''}</p>
@@ -135,7 +134,7 @@ export function TripView({ city }: { city: string }) {
         )}
 
         {!dest && (
-          <h1 className="text-3xl mb-6" style={{ fontFamily: 'var(--font-playfair)' }}>{city}</h1>
+          <h1 className="text-3xl mb-6" style={{ fontFamily: 'var(--font-outfit)' }}>{city}</h1>
         )}
 
         {/* Dates + notes */}
@@ -143,13 +142,13 @@ export function TripView({ city }: { city: string }) {
           <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {date && (
               <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
-                <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-1" style={{ color: accentText }}><CalendarDays size={13} /> Dates</p>
+                <p className="flex items-center gap-2 text-[13px] font-medium mb-1" style={{ color: accentText }}><CalendarDays size={13} /> Dates</p>
                 <p className="text-sm" style={{ color: 'var(--color-text)' }}>{date} · {countdownLabel(date)}</p>
               </div>
             )}
             {note && (
               <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
-                <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-1" style={{ color: accentText }}><StickyNote size={13} /> Notes</p>
+                <p className="flex items-center gap-2 text-[13px] font-medium mb-1" style={{ color: accentText }}><StickyNote size={13} /> Notes</p>
                 <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--color-text)' }}>{note}</p>
               </div>
             )}
@@ -159,7 +158,7 @@ export function TripView({ city }: { city: string }) {
         {/* Itinerary */}
         {plan.itinerary && (
           <section className="mb-8">
-            <h2 className="text-xl mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>Itinerary · {plan.itinerary.tripDays} days</h2>
+            <h2 className="text-xl mb-4" style={{ fontFamily: 'var(--font-outfit)' }}>Itinerary · {plan.itinerary.tripDays} days</h2>
             <div className="space-y-5">
               {plan.itinerary.days.map(d => (
                 <div key={d.day} className="break-inside-avoid">
@@ -173,7 +172,7 @@ export function TripView({ city }: { city: string }) {
                       <p className="text-xs leading-relaxed">{text}</p>
                     </div>
                   ))}
-                  {d.tip && <p className="text-xs italic mt-1.5 pl-1 border-l-2" style={{ color: accentText, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
+                  {d.tip && <p className="text-xs mt-1.5 pl-1 border-l-2" style={{ color: accentText, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
                 </div>
               ))}
             </div>
@@ -183,11 +182,11 @@ export function TripView({ city }: { city: string }) {
         {/* Packing */}
         {plan.packing && (
           <section className="mb-8">
-            <h2 className="text-xl mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>Packing list · {plan.packing.tripDays} days</h2>
+            <h2 className="text-xl mb-4" style={{ fontFamily: 'var(--font-outfit)' }}>Packing list · {plan.packing.tripDays} days</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {plan.packing.categories.map(cat => (
                 <div key={cat.name} className="break-inside-avoid">
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accentText }}>{cat.name}</p>
+                  <p className="text-[13px] font-medium mb-2" style={{ color: accentText }}>{cat.name}</p>
                   <ul className="space-y-1">
                     {cat.items.map(item => (
                       <li key={item} className="flex items-start gap-2 text-xs"><span style={{ color: accentText, marginTop: 2 }}>·</span>{item}</li>

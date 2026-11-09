@@ -39,7 +39,7 @@ export function SimilarModal({ destination: dest, accent, onClose }: { destinati
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
         <div className="flex items-center gap-2">
           <Sparkles size={16} style={{ color: accent }} />
-          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>Similar to {dest.city}</h3>
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}>Similar to {dest.city}</h3>
         </div>
         <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
@@ -57,7 +57,7 @@ export function SimilarModal({ destination: dest, accent, onClose }: { destinati
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{s.city}</p>
                   <p className="text-xs mb-1" style={{ color: 'var(--color-subtle)' }}>{s.country} · {s.region}</p>
-                  <p className="text-xs italic line-clamp-2" style={{ color: readableOn(s.culturalTheme.accent, surface) }}>{s.tagline}</p>
+                  <p className="text-xs line-clamp-2" style={{ color: readableOn(s.culturalTheme.accent, surface) }}>{s.tagline}</p>
                 </div>
               </div>
             ))}

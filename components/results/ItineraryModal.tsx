@@ -43,7 +43,7 @@ export function ItineraryModal({ destination: dest, accent, onClose }: { destina
       <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)' }}>
         <div className="flex items-center gap-2">
           <MapIcon size={16} style={{ color: accent }} />
-          <h3 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>{dest.city} itinerary</h3>
+          <h3 className="text-lg" style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}>{dest.city} itinerary</h3>
         </div>
         <button onClick={onClose} aria-label="Close panel" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: 'var(--color-subtle)' }}><X size={14} /></button>
       </div>
@@ -51,8 +51,9 @@ export function ItineraryModal({ destination: dest, accent, onClose }: { destina
         <span className="text-xs" style={{ color: 'var(--color-subtle)' }}>Days:</span>
         {[3, 5, 7, 10].map(d => (
           <button key={d} onClick={() => { setTripDays(d); fetchItinerary(d) }}
-            className="text-xs px-2.5 py-1 rounded-full transition-colors"
-            style={{ backgroundColor: tripDays === d ? accent : 'color-mix(in srgb, var(--color-text) 8%, transparent)', color: tripDays === d ? '#fff' : 'var(--color-subtle)' }}>{d}</button>
+            className="mono-chip text-xs px-2.5 py-1 rounded-full"
+            aria-pressed={tripDays === d}
+            style={tripDays === d ? { backgroundColor: 'var(--color-text)', color: 'var(--color-card-bg)' } : undefined}>{d}</button>
         ))}
       </div>
       <div className="overflow-y-auto flex-1 px-6 py-4 space-y-5">
@@ -72,7 +73,7 @@ export function ItineraryModal({ destination: dest, accent, onClose }: { destina
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>{text}</p>
               </div>
             ))}
-            {d.tip && <p className="text-xs italic mt-1.5 pl-1 border-l-2" style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
+            {d.tip && <p className="text-xs mt-1.5 pl-1 border-l-2" style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 40%, transparent)` }}>💡 {d.tip}</p>}
           </div>
         )) : <p className="text-sm text-center py-8" style={{ color: 'var(--color-subtle)' }}>Failed to load. Try again.</p>}
       </div>

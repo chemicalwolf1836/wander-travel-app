@@ -174,7 +174,7 @@ export default function ResultsPage() {
         <p className="text-4xl">😕</p>
         <p className="text-lg">Something went wrong finding your destinations.</p>
         <button onClick={() => router.push('/discover')}
-          className="flex items-center gap-2 px-6 py-3 rounded-full text-sm"
+          className="mono-cta flex items-center gap-2 min-h-12 px-6 rounded-[14px] text-sm font-medium"
           style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
           <RefreshCw size={14} /> Try Again
         </button>
@@ -205,7 +205,7 @@ export default function ResultsPage() {
                 <div className="flex flex-col items-center justify-center h-full gap-6">
                   <div className="w-40 h-40 rounded-full border border-dashed animate-pulse opacity-20"
                     style={{ borderColor: 'var(--color-accent)' }} />
-                  <p className="text-xs tracking-widest uppercase animate-pulse"
+                  <p className="text-[13px] font-medium animate-pulse"
                     style={{ color: 'var(--color-subtle)' }}>
                     Finding your perfect destinations…
                   </p>
@@ -244,11 +244,7 @@ export default function ResultsPage() {
                     </span>
                     <button
                       onClick={() => setCompareIndex(null)}
-                      className="flex items-center gap-1 text-xs min-h-8 px-3 rounded-full flex-shrink-0"
-                      style={{
-                        backgroundColor: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
-                        border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
-                      }}
+                      className="mono-chip flex items-center gap-1 text-xs min-h-8 px-3 rounded-full flex-shrink-0"
                     >
                       <X size={12} aria-hidden="true" /> Cancel
                     </button>
@@ -265,18 +261,17 @@ export default function ResultsPage() {
                 {/* Keyboard hint + controls */}
                 <div className="flex items-center justify-between px-4 pt-2 pb-1">
                   <div className="hidden md:flex items-center gap-4">
-                    <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>
+                    <p className="text-[13px] font-medium" style={{ color: 'var(--color-subtle)' }}>
                       ← → to browse
                     </p>
-                    <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--color-subtle)' }}>
+                    <p className="text-[13px] font-medium" style={{ color: 'var(--color-subtle)' }}>
                       {destinations.length} destination{destinations.length !== 1 ? 's' : ''} found
                     </p>
                   </div>
                   <div className="flex items-center gap-3 ml-auto">
                     <button
                       onClick={handleTryAgain}
-                      className="flex items-center gap-1.5 text-xs min-h-8 opacity-70 hover:opacity-100 transition-opacity"
-                      style={{ color: 'var(--color-text)' }}
+                      className="mono-chip flex items-center gap-1.5 text-xs min-h-8 px-3 rounded-full"
                     >
                       <RotateCcw size={11} /> Try different preferences
                     </button>
@@ -330,8 +325,8 @@ export default function ResultsPage() {
                     <button
                       onClick={handleLoadMore}
                       disabled={loadingMore}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-opacity hover:opacity-80"
-                      style={{ height: 180, width: 120, border: '1.5px dashed color-mix(in srgb, var(--color-text) 20%, transparent)', color: 'var(--color-subtle)' }}
+                      className="mono-tile flex flex-col items-center justify-center gap-2 rounded-[20px] cursor-pointer disabled:opacity-50"
+                      style={{ height: 'clamp(260px, 36vh, 340px)', width: 120 }}
                     >
                       {loadingMore
                         ? <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
@@ -355,7 +350,7 @@ export default function ResultsPage() {
         {/* ── DETAIL VIEW: single full card ── */}
         {view === 'detail' && destinations[selectedIndex] && (
           <motion.div key="detail"
-            className="absolute inset-0 top-16 flex flex-col items-center justify-center px-4 md:px-8 overflow-y-auto py-6"
+            className="absolute inset-0 top-16 flex flex-col items-center px-4 md:px-8 overflow-y-auto py-6"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}>
             <DestinationDetailCard
@@ -375,13 +370,12 @@ export default function ResultsPage() {
             transition={{ duration: 0.4 }}>
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg" style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-text)' }}>
+                <h2 className="text-lg" style={{ fontFamily: 'var(--font-outfit)', color: 'var(--color-text)' }}>
                   Comparing destinations
                 </h2>
                 <button
                   onClick={() => { setView('split'); setCompareIndex(null) }}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full opacity-80 hover:opacity-100 transition-opacity"
-                  style={{ color: 'var(--color-text)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)' }}
+                  className="mono-chip is-outline flex items-center gap-1.5 text-xs min-h-8 px-3 rounded-full"
                 >
                   <ArrowLeft size={11} /> Back
                 </button>
