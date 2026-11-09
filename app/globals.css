@@ -244,3 +244,9 @@
 .mono-cta:hover svg:last-child:not(:first-child) {
   transform: translateX(5px);
 }
+
+/* Colour emoji used as icons: the platform emoji font, never the text font's glyphs. */
+.emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  line-height: 1;
+}

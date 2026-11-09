@@ -1,14 +1,11 @@
 'use client'
 
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowRight, ArrowLeft, Calendar, CalendarCheck, Heart, Share2, Luggage,
-  Map as MapIcon, Sparkles, Wallet, Tag, ShieldCheck, Coins, Languages, Thermometer,
-  Sun, Cloud, CloudRain, CloudDrizzle, Snowflake, CloudLightning, CloudFog, type LucideIcon,
-} from 'lucide-react'
+import { ArrowRight, ArrowLeft, Heart, Share2 } from 'lucide-react'
 import { isFavourite, toggleFavourite } from '@/lib/favourites'
 import { useDestinationImage } from '@/lib/useDestinationImage'
+import { emojiFor, weatherEmoji } from '@/lib/itemEmoji'
 import { prefetchItem } from '@/lib/itemInfoCache'
 import { DestImage } from '@/components/DestImage'
 import { Flag } from './Flag'
@@ -25,10 +22,6 @@ import { PricesModal } from './PricesModal'
 import { VisaModal } from './VisaModal'
 import type { Destination, WeatherData } from '@/types'
 
-const WEATHER_ICON: Record<string, LucideIcon> = {
-  Clear: Sun, Clouds: Cloud, Rain: CloudRain, Drizzle: CloudDrizzle,
-  Snow: Snowflake, Thunderstorm: CloudLightning, Mist: CloudFog, Fog: CloudFog, Haze: CloudFog,
-}
 
 /* ── Full detail card (used in detail view) ── */
 export function DestinationDetailCard({
@@ -68,24 +61,23 @@ export function DestinationDetailCard({
     setShowShareCard(true)
   }
 
-  const weatherIcon = weather ? (WEATHER_ICON[weather.condition] ?? Thermometer) : Thermometer
   const stats = [
-    weather && { icon: weatherIcon, label: 'Now', value: `${weather.temp}°C, ${weather.description}` },
-    dest.monthFit && { icon: CalendarCheck, label: 'Your month', value: dest.monthFit },
-    dest.bestSeasons?.length && { icon: Calendar, label: 'Best time', value: dest.bestSeasons.join(', ') },
-  ].filter(Boolean) as { icon: LucideIcon; label: string; value: string }[]
+    weather && { emoji: weatherEmoji(weather.condition), label: 'Now', value: `${weather.temp}°C, ${weather.description}` },
+    dest.monthFit && { emoji: '📅', label: 'Your month', value: dest.monthFit },
+    dest.bestSeasons?.length && { emoji: '🌸', label: 'Best time', value: dest.bestSeasons.join(', ') },
+  ].filter(Boolean) as { emoji: string; label: string; value: string }[]
   const facts = [
-    dest.currency && { icon: Coins, label: 'Currency', value: dest.currency },
-    dest.language && { icon: Languages, label: 'Language', value: dest.language },
-    dest.visaInfo && { icon: ShieldCheck, label: 'Entry', value: dest.visaInfo },
-  ].filter(Boolean) as { icon: LucideIcon; label: string; value: string }[]
+    dest.currency && { emoji: '💶', label: 'Currency', value: dest.currency },
+    dest.language && { emoji: '🗣️', label: 'Language', value: dest.language },
+    dest.visaInfo && { emoji: '🛂', label: 'Entry', value: dest.visaInfo },
+  ].filter(Boolean) as { emoji: string; label: string; value: string }[]
   const tools = [
-    { icon: Luggage, label: 'Packing', action: () => setShowPacking(true) },
-    { icon: MapIcon, label: 'Itinerary', action: () => setShowItinerary(true) },
-    { icon: Wallet, label: 'Budget', action: () => setShowBudget(true) },
-    { icon: Tag, label: 'Prices', action: () => setShowPrices(true) },
-    { icon: ShieldCheck, label: 'Visa', action: () => setShowVisa(true) },
-    { icon: Sparkles, label: 'Similar', action: () => setShowSimilar(true) },
+    { emoji: '🧳', label: 'Packing', action: () => setShowPacking(true) },
+    { emoji: '🗺️', label: 'Itinerary', action: () => setShowItinerary(true) },
+    { emoji: '💰', label: 'Budget', action: () => setShowBudget(true) },
+    { emoji: '🏷️', label: 'Prices', action: () => setShowPrices(true) },
+    { emoji: '🛂', label: 'Visa', action: () => setShowVisa(true) },
+    { emoji: '✨', label: 'Similar', action: () => setShowSimilar(true) },
   ]
   const sectionLabel = 'text-[13px] font-medium mb-3'
   const heroButton = 'w-11 h-11 rounded-full flex items-center justify-center'
@@ -167,11 +159,11 @@ export function DestinationDetailCard({
 
           {stats.length > 0 && (
             <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-              {stats.map(({ icon: Icon, label, value }) => (
+              {stats.map(({ emoji, label, value }) => (
                 <div key={label} className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
                   style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 6%, transparent)' }}>
                   <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-subtle)' }}>
-                    <Icon size={14} style={{ color: accentText }} aria-hidden="true" />{label}
+                    <span className="emoji text-[15px]" aria-hidden="true">{emoji}</span>{label}
                   </span>
                   <span className="text-[15px] leading-snug" style={{ color: 'var(--color-text)' }}>{value}</span>
                 </div>
@@ -182,12 +174,11 @@ export function DestinationDetailCard({
           <div>
             <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>Plan</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {tools.map(({ icon: Icon, label, action }) => (
+              {tools.map(({ emoji, label, action }) => (
                 <button key={label} onClick={action}
-                  className="mono-tile min-h-[56px] flex items-center gap-2.5 pl-2 pr-3 rounded-[14px] text-sm text-left"
-                  style={{ '--icon': accentText } as CSSProperties}>
-                  <span className="mono-icon w-10 h-10 flex-shrink-0 rounded-[10px] flex items-center justify-center">
-                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+                  className="mono-tile min-h-[56px] flex items-center gap-2.5 pl-2 pr-3 rounded-[14px] text-sm text-left">
+                  <span className="mono-icon emoji w-10 h-10 flex-shrink-0 rounded-[10px] flex items-center justify-center text-xl" aria-hidden="true">
+                    {emoji}
                   </span>
                   {label}
                 </button>
@@ -200,7 +191,7 @@ export function DestinationDetailCard({
               <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>See</div>
               <div className="flex flex-wrap gap-1.5">
                 {dest.attractions.slice(0, 5).map((a) => (
-                  <ItemChip key={a} label={a} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
+                  <ItemChip key={a} label={a} emoji={emojiFor(a, 'see')} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
                 ))}
               </div>
             </div>
@@ -216,7 +207,7 @@ export function DestinationDetailCard({
               )}
               <div className="flex flex-wrap gap-1.5">
                 {dest.food.dishes.slice(0, 5).map((d) => (
-                  <ItemChip key={d} label={d} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
+                  <ItemChip key={d} label={d} emoji={emojiFor(d, 'eat')} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
                 ))}
               </div>
             </div>
@@ -227,7 +218,7 @@ export function DestinationDetailCard({
               <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>Best for</div>
               <div className="flex flex-wrap gap-1.5">
                 {dest.bestFor.slice(0, 6).map((b) => (
-                  <ExperienceChip key={b} label={b} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
+                  <ExperienceChip key={b} label={b} emoji={emojiFor(b, 'vibe')} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
                 ))}
               </div>
             </div>
@@ -235,9 +226,9 @@ export function DestinationDetailCard({
 
           {facts.length > 0 && (
             <div className="flex flex-col gap-2">
-              {facts.map(({ icon: Icon, label, value }) => (
+              {facts.map(({ emoji, label, value }) => (
                 <div key={label} className="flex items-start gap-2.5 text-sm font-light" style={{ color: 'var(--color-text)' }}>
-                  <Icon size={16} strokeWidth={1.75} className="mt-0.5 flex-shrink-0" style={{ color: accentText }} aria-hidden="true" />
+                  <span className="emoji flex-shrink-0" aria-hidden="true">{emoji}</span>
                   <span><span style={{ color: 'var(--color-subtle)' }}>{label}</span> {value}</span>
                 </div>
               ))}
