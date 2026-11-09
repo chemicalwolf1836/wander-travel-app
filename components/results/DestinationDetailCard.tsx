@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ArrowLeft, Heart, Share2 } from 'lucide-react'
 import { isFavourite, toggleFavourite } from '@/lib/favourites'
 import { useDestinationImage } from '@/lib/useDestinationImage'
-import { emojiFor, weatherEmoji } from '@/lib/itemEmoji'
+import { itemEmoji, weatherEmoji } from '@/lib/itemEmoji'
 import { prefetchItem } from '@/lib/itemInfoCache'
 import { DestImage } from '@/components/DestImage'
 import { Flag } from './Flag'
@@ -191,7 +191,7 @@ export function DestinationDetailCard({
               <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>See</div>
               <div className="flex flex-wrap gap-1.5">
                 {dest.attractions.slice(0, 5).map((a) => (
-                  <ItemChip key={a} label={a} emoji={emojiFor(a, 'see')} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
+                  <ItemChip key={a} label={a} emoji={itemEmoji(dest, a, 'see')} onClick={() => setActiveItem(a)} onPrefetch={() => prefetchItem(a, dest.city)} />
                 ))}
               </div>
             </div>
@@ -207,7 +207,7 @@ export function DestinationDetailCard({
               )}
               <div className="flex flex-wrap gap-1.5">
                 {dest.food.dishes.slice(0, 5).map((d) => (
-                  <ItemChip key={d} label={d} emoji={emojiFor(d, 'eat')} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
+                  <ItemChip key={d} label={d} emoji={itemEmoji(dest, d, 'eat')} onClick={() => setActiveItem(d)} onPrefetch={() => prefetchItem(d, dest.city)} />
                 ))}
               </div>
             </div>
@@ -218,7 +218,7 @@ export function DestinationDetailCard({
               <div className={sectionLabel} style={{ color: 'var(--color-subtle)' }}>Best for</div>
               <div className="flex flex-wrap gap-1.5">
                 {dest.bestFor.slice(0, 6).map((b) => (
-                  <ExperienceChip key={b} label={b} emoji={emojiFor(b, 'vibe')} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
+                  <ExperienceChip key={b} label={b} emoji={itemEmoji(dest, b, 'vibe')} onClick={() => setActiveItem(b)} onPrefetch={() => prefetchItem(b, dest.city)} />
                 ))}
               </div>
             </div>

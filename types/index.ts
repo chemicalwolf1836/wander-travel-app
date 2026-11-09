@@ -19,6 +19,8 @@ export interface Destination {
   visaInfo?: string
   /** How the destination suits the chosen travel month, when one was given. */
   monthFit?: string
+  /** One emoji per attraction, dish and bestFor item, keyed by the item's exact text. */
+  itemEmoji?: Record<string, string>
 }
 
 export interface CulturalTheme {

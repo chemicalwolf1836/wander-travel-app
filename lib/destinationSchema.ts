@@ -28,4 +28,5 @@ export const destinationSchema = z.object({
   language: z.string().max(120).optional(),
   visaInfo: z.string().max(400).optional(),
   monthFit: z.string().max(200).optional(),
+  itemEmoji: z.record(z.string().max(120), z.string().max(16)).optional(),
 })
